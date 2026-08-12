@@ -244,7 +244,7 @@ export default function RoomPage({
 
   // Bloom celebration: only trigger once when transitioning from non-bloom to bloom
   useEffect(() => {
-    if (!data) return;
+    if (!data?.room) return; // 错误/无权访问的响应无 room，跳过（否则崩溃）
     const currentStage = data.room.stage;
     const prevStage = prevStageRef.current;
 
