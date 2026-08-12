@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft } from "lucide-react";
+import { CourierBird } from "@/components/world";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -162,13 +163,13 @@ export default function NewSeedPage() {
                 {/* Bird flying-away animation */}
                 {publishing && (
                   <motion.span
-                    className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 text-3xl"
-                    style={{ top: -16 }}
-                    initial={{ y: 0, opacity: 1 }}
-                    animate={{ y: -100, opacity: 0 }}
+                    className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2"
+                    style={{ top: -28 }}
+                    initial={{ y: 0, x: 0, opacity: 1 }}
+                    animate={{ y: -110, x: 60, opacity: 0 }}
                     transition={{ duration: 1.0, ease: "easeIn" }}
                   >
-                    🐦
+                    <CourierBird state="carrying" size={44} />
                   </motion.span>
                 )}
                 <button
@@ -248,8 +249,8 @@ function TypewriterBubble({ text }: { text: string }) {
 function BirdBubble({ text }: { text: string }) {
   return (
     <div className="mb-4 flex items-start gap-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint text-base">
-        🐦
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
+        <CourierBird state="idle" size={30} />
       </span>
       <div className="font-kai max-w-[75%] rounded-2xl rounded-tl-sm bg-mint px-4 py-2.5 text-sm leading-relaxed text-olive">
         {text || (
@@ -273,8 +274,8 @@ function UserBubble({ text }: { text: string }) {
 function BirdThinking() {
   return (
     <div className="mb-4 flex items-start gap-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint text-base">
-        🐦
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
+        <CourierBird state="thinking" size={30} />
       </span>
       <div className="rounded-2xl rounded-tl-sm bg-mint px-4 py-3">
         <div className="flex items-center gap-1.5">
