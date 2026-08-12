@@ -1,4 +1,18 @@
-const initialUi = () => ({
+const MAIL_READ_KEY = "cobloom.mailbox.read.v1";
+
+function unreadMailCount() {
+  try { return localStorage.getItem(MAIL_READ_KEY) === "1" ? 0 : 3; }
+  catch { return 3; }
+}
+
+function markMailboxRead() {
+  ui.unreadMail = 0;
+  try { localStorage.setItem(MAIL_READ_KEY, "1"); } catch {}
+}
+
+const initialUi = () => {
+  const unreadMail = unreadMailCount();
+  return ({
   tab: "garden",
   route: null,
   toast: "",
@@ -23,19 +37,31 @@ const initialUi = () => ({
   completionOpen: false,
   memoryText: "",
   mailboxMode: "received",
+  mailboxOverlay: unreadMail > 0,
+  welcomeLetter: unreadMail > 0,
+  unreadMail,
+  openingObject: "",
   decorated: false,
   petMood: "idle",
-});
+  });
+};
 
 let ui = initialUi();
 let server = { stage: "SEED", published: false, selectedCandidate: null, messages: [], slots: { people: false, time: false, place: false }, checkedIn: false, archived: false };
 let toastTimer;
 
 const seeds = [
-  { id: "hike", title: "周六一起去爬山", type: "户外", time: "周六 08:30", place: "学校周边", peer: "小蓝", color: "sage", asset: "flower-1.png", tags: ["新手友好", "当天往返"], reason: "你们周六上午都有空，都接受新手路线，也都希望当天往返。" },
-  { id: "show", title: "一起去看话剧", type: "文艺", time: "周日 19:00", place: "市中心大剧院", peer: "小雨", color: "pink", asset: "flower-2.png", tags: ["已有票", "周日晚"], reason: "你们收藏了同一部剧，也都偏好周日晚上出发。" },
-  { id: "ride", title: "周末骑行环湖", type: "运动", time: "周日 09:00", place: "西湖环线", peer: "阿杰", color: "gold", asset: "flower-3.png", tags: ["轻松骑行", "20 km"], reason: "你们都接受 20 公里轻量路线，空闲时段有 3 小时重合。" },
+  { id: "hike", title: "周六一起去爬山", type: "户外", time: "周六 08:30", place: "学校周边", peer: "小蓝", color: "sage", asset: "flower-1.png", petAsset: "pet-mail.png", preview: "看到你也想去爬山，要不要一起走一条轻松的路线？", letter: "嗨，小周：\n\n看到你也想在周六出去走走。我去过磨山两次，有一条不陡、沿途也很好拍照的路线。我们可以慢慢走，累了就停下来看看风景，新手也完全没问题。\n\n如果你愿意，我们周六早上从学校北门出发，当天回来。", tags: ["新手友好", "当天往返"], reason: "你们周六上午都有空，都接受新手路线，也都希望当天往返。" },
+  { id: "show", title: "一起去看话剧", type: "文艺", time: "周日 19:00", place: "市中心大剧院", peer: "小雨", color: "pink", asset: "flower-2.png", petAsset: "pet-talk.png", preview: "我刚好也收藏了这部剧，散场后还可以一起聊聊。", letter: "小周，你好：\n\n我发现我们都收藏了周日晚上的那场话剧。我已经买好票了，旁边的位置还空着。如果你也想去，我们可以提前半小时在剧院门口碰面。\n\n散场后要是不太晚，还可以找个安静的地方聊聊最喜欢的片段。", tags: ["已有票", "周日晚"], reason: "你们收藏了同一部剧，也都偏好周日晚上出发。" },
+  { id: "ride", title: "周末骑行环湖", type: "运动", time: "周日 09:00", place: "西湖环线", peer: "阿杰", color: "gold", asset: "flower-3.png", petAsset: "pet-idle.png", preview: "想约一次不赶速度的环湖骑行，二十公里左右。", letter: "嗨：\n\n这周日天气看起来不错，想找一位搭子轻松环湖。不追配速，大约二十公里，中间会停下来喝水和拍照。\n\n如果你的车需要简单检查，我也可以提前帮忙看看胎压和刹车。", tags: ["轻松骑行", "20 km"], reason: "你们都接受 20 公里轻量路线，空闲时段有 3 小时重合。" },
 ];
+
+const gardenPlants = {
+  current: { title: "周六一起爬磨山", status: "active", asset: "tree.png", peer: "小蓝", date: "本周六", copy: "时间和地点还在确认中。回到行动群聊继续推进。" },
+  ride: { title: "东湖的夏日晚风", status: "memory", asset: "flower-1.png", peer: "阿澄", date: "7 月 26 日", copy: "湖边的风很轻，我们停下来拍了很久的落日。" },
+  photo: { title: "樱花季扫街", status: "memory", asset: "flower-4.png", peer: "小满", date: "4 月 5 日", copy: "一边走，一边交换镜头里的春天。" },
+  study: { title: "周末旧书店寻宝", status: "memory", asset: "flower-3.png", peer: "鹿鸣", date: "6 月 16 日", copy: "找到了彼此小时候都读过的那一本。" },
+};
 
 const candidates = [
   { name: "小林", avatar: "林", match: "经验匹配", note: "有稳定的同行记录", facts: ["周六上午有空", "完成过 6 次结伴行动", "会提前确认安排"], reason: "过往行动中守时、会照顾同行节奏，这次时间与活动偏好也吻合。" },
@@ -166,7 +192,7 @@ function plant(stage = server.stage, size = "md", palette = "green") {
 }
 
 function pet(small = false) {
-  return `<div class="pet ${small ? "pet-small" : ""}" role="img" aria-label="信使小绿"><img src="assets/pet-agent.png" alt=""></div>`;
+  return `<div class="pet ${small ? "pet-small" : ""}" role="img" aria-label="花匠小绿"><img src="assets/pet-actions/pet-idle.png" alt=""></div>`;
 }
 
 function icon(name) {
@@ -264,24 +290,29 @@ function nav() {
 
 function WorldGardenPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
-  return `<main class="world-screen garden-world-screen">
+  const world = window.WorldLayer;
+  return `<main class="world-screen garden-world-screen ${ui.mailboxOverlay ? "has-world-modal" : ""}">
     <section class="game-hud"><div><small>小周的社交森林</small><strong>${server.selectedCandidate ? `1 株植物 · ${meta[0]}` : "花园里还有空地"}</strong></div><button data-action="world-help">?</button></section>
     <div class="world-scene">
-      ${sceneImage("assets/garden-background.png", "绘本风社交花园：小屋、信箱、长椅、草地与小溪")}
+      ${sceneImage(world.scenes.garden.image, "绘本风社交花园：小屋、信箱、花圃、小桥和溪流")}
       <div class="garden-growth-layer" aria-label="花园中的行动植物">
-        ${server.selectedCandidate ? `<button class="real-plant-slot slot-one" data-world="plot"><img src="assets/${server.stage === "FOREST" ? "flower-7.png" : server.stage === "BLOOM" ? "flower-6.png" : "tree.png"}" alt="${escapeHtml(actionTitle())}的植物"><span>${meta[0]}</span></button>` : `<button class="empty-real-plot" data-world="plot"><span>＋</span><b>种一颗行动种子</b></button>`}
-        <button class="real-plant-slot slot-two" data-world="forest"><img src="assets/flower-1.png" alt="东湖骑行的植物"><span>东湖骑行</span></button>
-        <button class="real-plant-slot slot-three" data-world="forest"><img src="assets/flower-4.png" alt="樱花摄影的植物"><span>樱花摄影</span></button>
-        <button class="real-plant-slot slot-four" data-world="forest"><img src="assets/flower-3.png" alt="周末自习的植物"><span>周末自习</span></button>
+        ${server.selectedCandidate ? `<button class="real-plant-slot" data-plot-id="current" style="${world.plantStyle("current")}" data-plant="current" aria-label="打开${escapeHtml(actionTitle())}"><img src="assets/${server.stage === "FOREST" ? "flower-7.png" : server.stage === "BLOOM" ? "flower-6.png" : "tree.png"}" alt=""></button>` : ""}
+        <button class="real-plant-slot" data-plot-id="ride" style="${world.plantStyle("ride")}" data-plant="ride" aria-label="打开东湖骑行回忆"><img src="assets/flower-1.png" alt=""></button>
+        <button class="real-plant-slot" data-plot-id="photo" style="${world.plantStyle("photo")}" data-plant="photo" aria-label="打开樱花摄影回忆"><img src="assets/flower-4.png" alt=""></button>
+        <button class="real-plant-slot" data-plot-id="study" style="${world.plantStyle("study")}" data-plant="study" aria-label="打开周末自习回忆"><img src="assets/flower-3.png" alt=""></button>
       </div>
-      <button class="world-hotspot hotspot-house" data-world="home"><span class="hotspot-ring"></span><b>我的家</b><small>回家看看小绿</small></button>
-      <button class="world-hotspot hotspot-mailbox" data-world="mailbox"><span class="hotspot-ring"></span><b>种子信箱</b><small>3 封新信</small><i>3</i></button>
-      <button class="world-hotspot hotspot-forest" data-world="forest"><span class="hotspot-ring"></span><b>回忆林</b><small>8 段共同经历</small></button>
-      <button class="world-hotspot hotspot-bridge" data-world="actions"><span class="hotspot-ring"></span><b>行动溪</b><small>${server.selectedCandidate ? `去找${partnerName()}` : "暂无同行"}</small></button>
-      <button class="world-pet ${ui.petMood === "happy" ? "is-happy" : ""}" data-action="pet-talk" aria-label="和小绿说话">${pet()}<span>${ui.petMood === "happy" ? "嘿嘿，今天的花园很热闹！" : "点点我"}</span></button>
+      ${world.objectEffectsMarkup(ui.openingObject)}
+      <button class="world-hotspot" data-anchor="home" style="${world.anchorStyle("garden", "home")}" data-action="open-home" aria-label="进入我的家"></button>
+      <button class="world-hotspot mailbox-object" data-anchor="mailbox" style="${world.anchorStyle("garden", "mailbox")}" data-action="open-mailbox-overlay" aria-label="打开种子信箱">${ui.unreadMail ? `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>` : ""}</button>
+      ${ui.mailboxOverlay ? MailboxOverlay(ui.welcomeLetter) : ""}
     </div>
     <div class="world-dock"><button data-world="home"><img src="assets/nav-profile-v2.png" alt=""><small>家</small></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button class="dock-seed" data-action="publish" aria-label="发布需求"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>行动</small></button><button data-world="forest"><img src="assets/nav-garden-v2.png" alt=""><small>森林</small></button></div>
   </main>`;
+}
+
+function MailboxOverlay(showWelcome = false) {
+  if (showWelcome) return `<div class="world-modal-backdrop welcome-backdrop"><section class="world-mailbox-panel welcome-letter" role="dialog" aria-modal="true" aria-label="小绿带回的第一封信"><header><div><small>小绿的旅行见闻</small><h2>今天带回了一颗新种子</h2></div><button data-action="close-welcome-letter" aria-label="稍后再看">×</button></header><div class="welcome-letter-body"><img src="assets/pet-actions/pet-mail.png" alt="小绿带回信件"><p>小周，我在花园外遇见了小蓝的花匠。你们都想在周六去磨山，也都喜欢沿途拍照。</p><blockquote>“要不要一起走一条轻松的路线？”</blockquote><button data-seed="hike">拆开这封信</button></div><button class="mailbox-expand" data-action="show-mailbox-preview">看看另外 ${Math.max(0, ui.unreadMail - 1)} 封来信</button></section></div>`;
+  return `<div class="world-modal-backdrop" data-action="close-mailbox-overlay"><section class="world-mailbox-panel" role="dialog" aria-modal="true" aria-label="种子信箱预览"><header><div><small>花园邮便</small><h2>种子信箱</h2></div><button data-action="close-mailbox-overlay" aria-label="关闭">×</button></header><div class="mail-preview-list">${seeds.slice(0, 2).map(seed => `<button data-seed="${seed.id}"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"><span><strong>${seed.peer}</strong><small>${seed.preview}</small></span><i>›</i></button>`).join("")}</div><button class="mailbox-expand" data-action="expand-mailbox">打开完整信箱 <span>↗</span></button></section></div>`;
 }
 
 function HomeWorldPage() {
@@ -290,14 +321,13 @@ function HomeWorldPage() {
     <div class="world-scene room-scene">
       ${sceneImage("assets/home-interior.png", "绘本风小屋室内：床、书架、旅行背包和行动桌")}
       ${ui.decorated ? `<div class="home-decoration"><img src="assets/flower-7.png" alt="新摆放的牡丹装饰"><i></i></div>` : ""}
-      <button class="world-hotspot home-bed" data-action="pet-sleep"><span class="hotspot-ring"></span><b>小绿的床</b><small>睡一会儿</small></button>
-      <button class="world-hotspot home-table" data-world="actions"><span class="hotspot-ring"></span><b>行动桌</b><small>整理约定</small></button>
-      <button class="world-hotspot home-books" data-world="profile"><span class="hotspot-ring"></span><b>记忆书架</b><small>它有多了解你</small></button>
-      <button class="world-hotspot home-bag" data-world="mailbox"><span class="hotspot-ring"></span><b>旅行背包</b><small>准备去送信</small></button>
-      <button class="world-pet indoor-pet ${ui.petMood === "sleep" ? "is-sleeping" : ""}" data-action="pet-talk" aria-label="和小绿互动"><img class="pet-asset" src="assets/pet-agent.png" alt="小绿行动信使"><span>${ui.petMood === "sleep" ? "Z z z…" : "今天要一起把什么事做成？"}</span></button>
+      <button class="world-hotspot" data-anchor="bed" style="${window.WorldLayer.anchorStyle("home", "bed")}" data-action="pet-sleep" aria-label="让小绿去床上休息"></button>
+      <button class="world-hotspot" data-anchor="table" style="${window.WorldLayer.anchorStyle("home", "table")}" data-world="actions" aria-label="打开行动桌"></button>
+      <button class="world-hotspot" data-anchor="books" style="${window.WorldLayer.anchorStyle("home", "books")}" data-world="profile" aria-label="打开记忆书架"></button>
+      <button class="world-pet indoor-pet ${ui.petMood === "sleep" ? "is-sleeping" : ""}" data-action="pet-talk" aria-label="和小绿互动"><img class="pet-asset" src="assets/pet-actions/${ui.petMood === "sleep" ? "pet-sleep" : "pet-talk"}.png" alt="小绿"><span>${ui.petMood === "sleep" ? "Z z z…" : "今天要一起把什么事做成？"}</span></button>
       <div class="decorate-tip ${ui.decorated ? "show" : ""}">新地毯和花灯已经摆好啦！</div>
     </div>
-    <div class="room-toolbar"><button data-action="decorate"><span>✦</span><b>${ui.decorated ? "已装扮" : "装扮"}</b></button><button data-action="pet-talk"><span>☻</span><b>互动</b></button><button data-action="publish"><span>＋</span><b>聊愿望</b></button></div>
+    <div class="room-toolbar compact-room-toolbar"><button data-action="decorate"><span>✦</span><b>${ui.decorated ? "已装扮" : "装扮"}</b></button><button data-action="pet-talk"><span>☻</span><b>互动</b></button></div>
   </main>`;
 }
 
@@ -336,20 +366,20 @@ function GardenPage() {
 }
 
 function MailboxPage() {
-  return `<main class="screen github-aligned-page">
+  return `<main class="screen github-aligned-page mailbox-full-page">
     ${topbar("种子信箱", "与你匹配的找搭子需求", true)}
     <div class="tabs"><button class="${ui.mailboxMode === "received" ? "active" : ""}" data-mailbox="received">收到的种子 3</button><button class="${ui.mailboxMode === "sent" ? "active" : ""}" data-mailbox="sent">我发出的 ${server.published ? 1 : 0}</button></div>
-    ${ui.mailboxMode === "received" ? `<div class="seed-list">${seeds.map((seed, index) => `<article class="seed-card" data-seed="${seed.id}"><div class="seed-art"><img src="assets/flower-${index + 4}.png" alt=""></div><div class="seed-main"><div class="seed-title-row"><div><p class="seed-from">${seed.peer} 发来的同行邀请</p><h3>${seed.title}</h3></div><span class="chevron">›</span></div><div class="seed-meta"><span>${seed.time}</span><span>${seed.place}</span></div><div class="seed-tags">${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div><p class="seed-reason">${seed.reason}</p></div></article>`).join("")}</div>` : `<section class="card sent-seed">${plant(server.stage, "md", "green")}<span class="mini-label">${server.published ? "匹配进行中" : "还没有发出的种子"}</span><h2>${server.published ? escapeHtml(actionTitle()) : "种下一件想做的事"}</h2><p>${server.published ? "小绿正在寻找时间合适的同行者。" : "一句话就可以开始。"}</p><button class="primary" data-action="${server.published ? "view-candidates" : "publish"}">${server.published ? "查看候选" : "去种一颗"}</button></section>`}
+    ${ui.mailboxMode === "received" ? `<div class="letter-list">${seeds.map(seed => `<button class="letter-row" data-seed="${seed.id}"><span class="letter-avatar"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><span class="letter-summary"><b>${seed.peer}</b><strong>${seed.title}</strong><small>${seed.preview}</small></span><time>${seed.time.split(" ")[0]}</time><i>›</i></button>`).join("")}</div>` : `<section class="card sent-seed">${plant(server.stage, "md", "green")}<span class="mini-label">${server.published ? "匹配进行中" : "还没有发出的种子"}</span><h2>${server.published ? escapeHtml(actionTitle()) : "种下一件想做的事"}</h2><p>${server.published ? "小绿正在寻找时间合适的同行者。" : "一句话就可以开始。"}</p><button class="primary" data-action="${server.published ? "view-candidates" : "publish"}">${server.published ? "查看候选" : "去种一颗"}</button></section>`}
   </main>`;
 }
 
 function SeedDetailPage(id) {
   const seed = seeds.find(item => item.id === id) || seeds[0];
-  return `<main class="screen detail-page">
-    ${topbar("种子详情", "小绿带回的明信片", true)}
-    <section class="postcard card"><div class="postcard-art ${seed.color}"><img class="postcard-scene" src="assets/garden-scene.png" alt="花园明信片"><img class="postcard-plant" src="assets/${seed.asset}" alt="${seed.title}的植物"></div><span class="stamp">新鲜送达</span><h2>${seed.title}</h2><div class="fact-row"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span><span>${icon("people")} 3–4 人</span></div><p class="postcard-note">“想找愿意慢慢走、沿途拍照的搭子，新手也完全没问题。”</p></section>
+  return `<main class="screen detail-page letter-detail-page">
+    ${topbar(seed.title, "小绿带回的一封信", true)}
+    <section class="paper-letter"><header><span class="letter-avatar large"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><div><small>来自花园外</small><strong>${seed.peer} · 校园已认证</strong></div><span class="paper-stamp">小绿<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.peer}<br><time>${seed.time}</time></footer></section>
+    <div class="letter-facts"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span>${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div>
     <section class="match-box"><div>${pet(true)}</div><p><strong>为什么带给你</strong>${seed.reason}</p></section>
-    <section class="person-row"><span class="avatar">${seed.peer.slice(-1)}</span><div><strong>${seed.peer} · 校园已认证</strong><small>完成过 5 次行动 · 户外新手友好</small></div></section>
     <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button><button class="primary" data-action="join-seed">愿意加入</button></div>
   </main>`;
 }
@@ -437,12 +467,27 @@ function CompletePage() {
 
 function MemoryPage() {
   const memories = [
-    { image: server.archived ? "flower-7.png" : "flower-3.png", label: "最近开花", title: server.archived ? actionTitle() : "东湖的夏日晚风", copy: ui.memoryText || "湖边的光比想象中更好看。", peer: server.archived ? partnerName() : "阿澄" },
-    { image: "flower-2.png", label: "被采种 3 次", title: "樱花季扫街", copy: "一边走，一边交换镜头里的春天。", peer: "小满" },
-    { image: "flower-5.png", label: "一起完成", title: "周末旧书店寻宝", copy: "找到了彼此小时候都读过的那一本。", peer: "鹿鸣" },
-    { image: "flower-8.png", label: "上周开花", title: "夏夜草地音乐会", copy: "散场很晚，但我们都舍不得先走。", peer: "小雨" },
+    { id: server.archived ? "current" : "ride", image: server.archived ? "flower-7.png" : "flower-3.png", label: "最近开花", title: server.archived ? actionTitle() : "东湖的夏日晚风", copy: ui.memoryText || "湖边的光比想象中更好看。", peer: server.archived ? partnerName() : "阿澄" },
+    { id: "photo", image: "flower-2.png", label: "被采种 3 次", title: "樱花季扫街", copy: "一边走，一边交换镜头里的春天。", peer: "小满" },
+    { id: "study", image: "flower-5.png", label: "一起完成", title: "周末旧书店寻宝", copy: "找到了彼此小时候都读过的那一本。", peer: "鹿鸣" },
+    { id: "music", image: "flower-8.png", label: "上周开花", title: "夏夜草地音乐会", copy: "散场很晚，但我们都舍不得先走。", peer: "小雨" },
   ];
-  return `<main class="screen memories-screen github-aligned-page">${topbar("全部回忆", "我的花园", ui.route === "memory")}<p class="memory-intro">每一次真实同行，都会在这里长成一段可以重访的记忆。</p><div class="memory-waterfall">${memories.map((memory, index) => `<article class="memory-tile ${index % 2 === 0 ? "tall" : ""}"><div class="memory-tile-art"><img src="assets/${memory.image}" alt=""></div><div class="memory-tile-body"><p>和${memory.peer} · 共同完成</p><h3>${memory.title}</h3><blockquote>${memory.copy}</blockquote><button data-action="again">让它结出新种子 <span>›</span></button></div></article>`).join("")}</div></main>`;
+  return `<main class="screen memories-screen github-aligned-page">${topbar("全部回忆", "我的花园", ui.route === "memory")}<p class="memory-intro">每一次真实同行，都会在这里长成一段可以重访的记忆。</p><div class="memory-waterfall">${memories.map((memory, index) => `<button class="memory-tile ${index % 2 === 0 ? "tall" : ""}" data-memory="${memory.id}"><div class="memory-tile-art"><img src="assets/${memory.image}" alt=""></div><div class="memory-tile-body"><p>和${memory.peer} · 共同完成</p><h3>${memory.title}</h3><blockquote>${memory.copy}</blockquote><span class="memory-open">打开这段回忆 <i>›</i></span></div></button>`).join("")}</div></main>`;
+}
+
+function PlantDetailPage(id) {
+  const item = gardenPlants[id] || gardenPlants.ride;
+  if (item.status === "active") return `<main class="screen plant-detail-page">${topbar(actionTitle(), "正在生长", true)}<section class="plant-detail-hero active">${sceneImage("assets/garden-scene.png", "花园里的行动植物")}<img src="assets/${server.stage === "BLOOM" ? "flower-6.png" : "tree.png"}" alt="${escapeHtml(actionTitle())}"></section><span class="plant-state">${stageMeta[server.stage]?.[0] || "生长中"}</span><h2>${escapeHtml(actionTitle())}</h2><p>${item.copy}</p><section class="plant-timeline"><span class="done">种下愿望</span><span class="done">找到同行者</span><span>确认行动细节</span><span>完成并开花</span></section><button class="primary full" data-action="open-plant-chat">回到行动对话</button></main>`;
+  return MemoryDetailPage(id, item);
+}
+
+function MemoryDetailPage(id, source) {
+  const fallback = { title: "夏夜草地音乐会", asset: "flower-8.png", peer: "小雨", date: "上周", copy: "散场很晚，但我们都舍不得先走。" };
+  const item = source || gardenPlants[id] || fallback;
+  const title = id === "current" && server.archived ? actionTitle() : item.title;
+  const peer = id === "current" && server.archived ? partnerName() : item.peer;
+  const copy = id === "current" && ui.memoryText ? ui.memoryText : item.copy;
+  return `<main class="screen memory-detail-page">${topbar(title, "这株花保存的共同回忆", true)}<section class="memory-cover"><img src="assets/garden-scene.png" alt="${title}的花园回忆"><img class="memory-flower" src="assets/${item.asset || "flower-7.png"}" alt="${title}开出的花"></section><section class="memory-letter"><small>${item.date || "最近"} · 和${peer}</small><h2>${title}</h2><p>${copy}</p><div class="memory-photo-grid"><figure><img src="assets/garden-background.png" alt="行动途中的花园留影"><figcaption>路上遇见的风景</figcaption></figure><figure><img src="assets/home-interior.png" alt="行动后的手账留影"><figcaption>小绿收好的手账</figcaption></figure></div></section><section class="history-chat"><h3>当时的对话</h3><div class="message them">今天真的很开心，下次还走这条路吗？</div><div class="message me">好呀，下次换个季节再来。</div></section><div class="memory-detail-actions"><button class="secondary full" data-action="open-all-memories">查看全部回忆</button><button class="primary full" data-action="again">从这里再种一颗种子</button></div></main>`;
 }
 
 function ProfilePage() {
@@ -452,6 +497,8 @@ function ProfilePage() {
 function page() {
   if (ui.route === "world-home") return HomeWorldPage();
   if (ui.route?.startsWith("seed:")) return SeedDetailPage(ui.route.split(":")[1]);
+  if (ui.route?.startsWith("plant:")) return PlantDetailPage(ui.route.split(":")[1]);
+  if (ui.route?.startsWith("memory:")) return MemoryDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("candidate-space:")) return CandidateSpacePage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("candidate-a2a:")) return CandidateA2APage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("candidate:")) return CandidateDetailPage(ui.route.split(":")[1]);
@@ -463,10 +510,14 @@ function page() {
 function render() {
   document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
   requestAnimationFrame(() => { const log = document.querySelector("#chat-log"); if (log) log.scrollTop = log.scrollHeight; });
+  requestAnimationFrame(() => window.WorldLayer?.mount());
 }
 
 function goBack() {
   if (ui.route === "world-home") { ui.route = null; ui.tab = "garden"; }
+  else if (ui.route?.startsWith("seed:")) { ui.route = null; ui.tab = "mailbox"; }
+  else if (ui.route?.startsWith("plant:")) { ui.route = null; ui.tab = "garden"; }
+  else if (ui.route?.startsWith("memory:")) { ui.route = "memory"; }
   else if (ui.route?.startsWith("candidate-space:") || ui.route?.startsWith("candidate-a2a:")) ui.route = `candidate:${ui.route.split(":")[1]}`;
   else if (ui.route?.startsWith("candidate:")) ui.route = "candidates";
   else if (ui.route === "chat" || ui.route === "memory") { const previous = ui.route; ui.route = null; ui.tab = previous === "chat" ? "actions" : "garden"; }
@@ -476,11 +527,14 @@ function goBack() {
 }
 
 document.addEventListener("click", async event => {
-  const target = event.target.closest("button, [data-route], [data-seed]");
+  if (event.target.closest(".world-mailbox-panel") && !event.target.closest("button, [data-seed], [data-action]")) return;
+  const target = event.target.closest("button, [data-route], [data-seed], [data-plant], [data-memory], [data-action]");
   if (!target) return;
   if (target.dataset.tab) { ui.tab = target.dataset.tab; ui.route = null; return render(); }
   if (target.dataset.route) { ui.route = target.dataset.route; return render(); }
-  if (target.dataset.seed) { ui.route = `seed:${target.dataset.seed}`; return render(); }
+  if (target.dataset.seed) { ui.mailboxOverlay = false; markMailboxRead(); ui.route = `seed:${target.dataset.seed}`; return render(); }
+  if (target.dataset.plant) { ui.route = `plant:${target.dataset.plant}`; return render(); }
+  if (target.dataset.memory) { ui.route = `memory:${target.dataset.memory}`; return render(); }
   if (target.dataset.mailbox) { ui.mailboxMode = target.dataset.mailbox; return render(); }
   if (target.dataset.world) {
     const destination = target.dataset.world;
@@ -525,12 +579,21 @@ document.addEventListener("click", async event => {
 
   const action = target.dataset.action;
   if (action === "back") return goBack();
-  if (action === "world-help") return notify("试试点击房子、信箱、花圃、桥和小绿，它们都是入口");
+  if (action === "world-help") return notify("房子进入我的家，信箱查看来信；底部加号使用 GitHub 最新播种流程");
+  if (action === "open-home") { ui.route = "world-home"; return render(); }
+  if (action === "open-mailbox-overlay") { markMailboxRead(); ui.openingObject = "mailbox"; ui.mailboxOverlay = true; ui.welcomeLetter = false; render(); setTimeout(() => { ui.openingObject = ""; render(); }, 560); return; }
+  if (action === "close-mailbox-overlay") { ui.mailboxOverlay = false; return render(); }
+  if (action === "close-welcome-letter") { ui.mailboxOverlay = false; ui.welcomeLetter = false; return render(); }
+  if (action === "show-mailbox-preview") { markMailboxRead(); ui.welcomeLetter = false; return render(); }
+  if (action === "expand-mailbox") { markMailboxRead(); ui.mailboxOverlay = false; ui.route = null; ui.tab = "mailbox"; return render(); }
+  if (action === "pet-talk" && document.querySelector(".garden-world-screen")) { window.WorldLayer?.interactPet(); return; }
   if (action === "pet-talk") { ui.petMood = ui.petMood === "happy" ? "idle" : "happy"; return render(); }
   if (action === "pet-sleep") { ui.petMood = "sleep"; notify("小绿睡着了，等会儿还会自己醒来"); return render(); }
   if (action === "decorate") { ui.decorated = !ui.decorated; notify(ui.decorated ? "摆上了新地毯和花灯" : "已收起本次装扮"); return render(); }
   if (action === "notify") return notify("3 个新机会已经放进信箱");
   if (action === "publish") return startPublishFlow();
+  if (action === "open-plant-chat") { ui.route = "chat"; return render(); }
+  if (action === "open-all-memories") { ui.route = "memory"; return render(); }
   if (action === "view-candidates") { ui.route = "candidates"; return render(); }
   if (action === "confirm-time") {
     if (!ui.selectedDate || !ui.selectedPeriod) return notify("请先选好日期和时段");
@@ -574,7 +637,7 @@ document.addEventListener("click", async event => {
     return render();
   }
   if (action === "again") { ui.route = "publish"; ui.publishStep = 1; ui.draft.idea = "再约一次磨山轻徒步"; return render(); }
-  if (action === "reset-demo") { await api("/api/demo/reset", {}); ui = initialUi(); notify("演示进度已重置"); return render(); }
+  if (action === "reset-demo") { await api("/api/demo/reset", {}); try { localStorage.removeItem(MAIL_READ_KEY); } catch {} ui = initialUi(); notify("演示进度已重置"); return render(); }
 });
 
 document.addEventListener("submit", async event => {
