@@ -173,9 +173,8 @@ await step("decline-other", async () => {
   await third.page.getByText(seedTitle, { exact: true }).first().click();
   await third.page.waitForURL("**/invite/**");
   await third.page.getByText("暂不感兴趣", { exact: false }).click();
-  await third.page.waitForTimeout(1500);
-  await third.page.goto(`${BASE}/mailbox`);
-  await third.page.getByText("已婉拒", { exact: false }).first().waitFor({ timeout: 10000 });
+  // 方案 A：婉拒后邀请页转为「你已婉拒」，且该种子从信箱主列表移除
+  await third.page.getByText("你已婉拒", { exact: false }).first().waitFor({ timeout: 10000 });
   await shot(third.page, "08b-declined");
 });
 
@@ -187,22 +186,34 @@ await step("owner-choose", async () => {
   await owner.page.getByText("选择 TA 一起出发", { exact: false }).first().waitFor({ timeout: 20000 });
   await shot(owner.page, "09-intents");
   await owner.page.getByText("选择 TA 一起出发", { exact: false }).first().click();
+  // 方案 A：确认弹层
+  await owner.page.getByText("确认邀请", { exact: true }).waitFor({ timeout: 8000 });
+  await owner.page.getByText("确认邀请", { exact: true }).click();
   await owner.page.waitForURL("**/room/**", { timeout: 90000 });
   roomPath = new URL(owner.page.url()).pathname;
   await shot(owner.page, "09b-room-created");
 });
 
 await step("closed-notice", async () => {
-  // 第三位（未回应未被选）候选人应看到「种子已找到同行者」
+  // 第三位（未回应未被选）候选人的邀请应转为「种子已找到同行者」
   const remaining = otherCandidates.slice(1);
   if (remaining.length === 0) {
     console.log("  (无第三位候选，跳过落选关闭校验)");
     return;
   }
+  const seedId = seedPath.split("/").pop();
+  // 从发起人视角拿到该候选人的 matchId
+  const detail = await owner.page.evaluate(async (id) => {
+    const r = await fetch(`/api/seeds/${id}`);
+    return r.json();
+  }, seedId);
+  const target = (detail.intents ?? []).find((i) => i.candidate.name === remaining[0]);
+  if (!target) throw new Error("找不到落选候选人的投递");
+  // 该候选人登录后直接打开邀请详情（关闭态种子已从信箱主列表移除，符合 Spec）
   await third.page.goto(`${BASE}/welcome`);
   await third.page.getByText(remaining[0], { exact: true }).first().click();
   await third.page.waitForURL("**/garden");
-  await third.page.goto(`${BASE}/mailbox`);
+  await third.page.goto(`${BASE}/invite/${target.matchId}`);
   await third.page
     .getByText("种子已找到同行者", { exact: false })
     .first()
@@ -210,9 +221,10 @@ await step("closed-notice", async () => {
   await shot(third.page, "09c-closed-notice");
 });
 
-await step("room-icebreak", async () => {
-  await owner.page.getByText("小苗", { exact: false }).first().waitFor({ timeout: 15000 });
-  await shot(owner.page, "10-icebreak");
+await step("room-handoff", async () => {
+  // 方案 A：成局后是「交接提示」系统消息，第一句由真人发（不再自动破冰）
+  await owner.page.getByText("已完成交接", { exact: false }).first().waitFor({ timeout: 15000 });
+  await shot(owner.page, "10-handoff");
 });
 
 await step("chat-both", async () => {

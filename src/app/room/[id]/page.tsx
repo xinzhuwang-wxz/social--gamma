@@ -232,7 +232,7 @@ export default function RoomPage({
   // Auto-scroll to bottom when messages arrive
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [data?.messages.length]);
+  }, [data?.messages?.length]);
 
   // 有约定卡后自动收起对方摘要卡（只收一次，用户仍可手动展开）
   useEffect(() => {
@@ -373,6 +373,19 @@ export default function RoomPage({
     return (
       <div className="flex h-dvh items-center justify-center">
         <span className="text-sm text-ink-3">加载中…</span>
+      </div>
+    );
+  }
+
+  // 错误 / 无权访问的房间：优雅降级，不崩溃（Spec §6 错误处理）
+  if (!data.room || !data.messages) {
+    return (
+      <div className="flex h-dvh flex-col items-center justify-center gap-3 px-8 text-center">
+        <span className="text-4xl">🌿</span>
+        <p className="text-sm text-ink-2">这个行动房间不存在，或你不在其中。</p>
+        <Link href="/actions" className="btn-secondary px-5 py-2 text-sm">
+          回到行动
+        </Link>
       </div>
     );
   }

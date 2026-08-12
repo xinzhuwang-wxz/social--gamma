@@ -123,19 +123,15 @@ function PlotPlant({ plant, plot }: { plant: PlantItem; plot: { x: number; y: nu
         zIndex: Math.round(plot.y),
       }}
     >
+      {/* 只留植物图形，名字在下方「正在生长」列表，避免 Hero 内标签拥挤 */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 14 }}
+        title={plant.title}
       >
-        <Plant stage={toPlantStage[plant.stage] ?? "seed"} family={familyOf(plant.id)} size={56} />
+        <Plant stage={toPlantStage[plant.stage] ?? "seed"} family={familyOf(plant.id)} size={54} />
       </motion.div>
-      <span
-        className="mt-0.5 max-w-[76px] truncate rounded-full px-1.5 py-px text-center text-[10px] font-medium text-olive"
-        style={{ background: "rgba(255,249,235,0.92)", border: "1px solid rgba(86,84,59,0.14)" }}
-      >
-        {plant.title}
-      </span>
     </Link>
   );
 }
