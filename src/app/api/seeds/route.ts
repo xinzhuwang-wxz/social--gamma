@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { seedCardSchema } from "@/lib/ai/schemas";
 import { runMatching } from "@/lib/matching";
+import { readJson, badRequest } from "@/lib/http";
 import { fabricatePersonas, partnersNeeded, simEnabled, simRespondToInvites } from "@/lib/sim";
 
 /** GET /api/seeds — 我发布的种子 */
@@ -22,7 +23,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return badRequest("invalid json");
   const parsed = seedCardSchema.safeParse(body.card);
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid card" }, { status: 400 });

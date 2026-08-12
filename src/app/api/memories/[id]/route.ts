@@ -19,7 +19,17 @@ export async function GET(
     .innerJoin(schema.seeds, eq(schema.rooms.seedId, schema.seeds.id))
     .where(eq(schema.memories.id, id));
 
-  if (!row || (row.room.ownerId !== me.id && row.room.partnerId !== me.id)) {
+  if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
+  // 访问控制用 roomMembers（群体房间第 3+ 成员也能看回忆），旧房间回退 owner/partner。
+  const roomMemberRows = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, row.room.id));
+  const isMember =
+    roomMemberRows.length > 0
+      ? roomMemberRows.some((m) => m.userId === me.id)
+      : row.room.ownerId === me.id || row.room.partnerId === me.id;
+  if (!isMember) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

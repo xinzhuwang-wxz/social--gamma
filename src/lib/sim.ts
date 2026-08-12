@@ -92,7 +92,7 @@ export async function fabricatePersonas(seed: SeedCard, count: number) {
   const colors = ["#DCE3AE", "#B8C88A", "#D8DE83", "#D7B67A"];
   for (const p of object.personas.slice(0, count)) {
     const row = {
-      id: `sim_${uid()}`,
+      id: `u_${uid()}`,
       name: p.name,
       emoji: p.emoji || "🌿",
       color: colors[Math.floor(Math.random() * colors.length)],

@@ -49,5 +49,19 @@ export async function GET(
     .from(schema.rooms)
     .where(eq(schema.rooms.seedId, id));
 
-  return NextResponse.json({ seed, isOwner, intents, roomId: room?.id ?? null });
+  // 剥离内部字段（directToUserId/reseedFromRoomId/ownerId 不对外，避免跨用户信息泄露）
+  const safeSeed = {
+    id: seed.id,
+    title: seed.title,
+    what: seed.what,
+    whenText: seed.whenText,
+    whereText: seed.whereText,
+    groupSize: seed.groupSize,
+    requirements: seed.requirements,
+    tags: seed.tags,
+    status: seed.status,
+    createdAt: seed.createdAt,
+  };
+
+  return NextResponse.json({ seed: safeSeed, isOwner, intents, roomId: room?.id ?? null });
 }

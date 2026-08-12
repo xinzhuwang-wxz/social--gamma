@@ -48,6 +48,14 @@ export async function GET(
 
   const [memory] = await db.select().from(schema.memories).where(eq(schema.memories.roomId, id));
 
+  // 回忆三态（隐私红线）：form=待我填写 / collecting=已记录待生成（对方拒绝或未提交都归此，不可区分）
+  // / created=已生成共同回忆。绝不暴露「对方拒绝」信号。
+  const memoryStatus: "form" | "collecting" | "created" | null = memory
+    ? "created"
+    : myMemoryDone
+      ? "collecting"
+      : "form";
+
   // roomMembers（新房间才有）
   const roomMemberRows = await db
     .select()
@@ -167,7 +175,7 @@ export async function GET(
       createdAt: m.createdAt,
     })),
     pact: enrichedPact,
-    myMemoryDone,
+    memoryStatus,
     memoryId: memory?.id ?? null,
   });
 }

@@ -17,6 +17,15 @@ export async function POST(
   const room = await roomForUser(id, me.id);
   if (!room) return NextResponse.json({ error: "not found" }, { status: 404 });
 
+  // 幂等：已开花的房间不再处理（重复点击/网络重试不会重复插入开花系统消息）
+  if (room.stage === "bloom") {
+    return NextResponse.json({ ok: true, both: true });
+  }
+  // 状态机：只有约定确认（花苞）后才能确认完成
+  if (room.stage !== "bud") {
+    return NextResponse.json({ error: "not ready to complete" }, { status: 409 });
+  }
+
   const isOwner = room.ownerId === me.id;
 
   // 检查 roomMembers（新房间）

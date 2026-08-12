@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
+import { readJson, badRequest } from "@/lib/http";
 import { simOnHumanMessage } from "@/lib/sim";
 
 /** POST /api/rooms/:id/messages — { content } 发送真人消息 */
@@ -17,7 +18,9 @@ export async function POST(
   const room = await roomForUser(id, me.id);
   if (!room) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const { content } = await req.json();
+  const body = await readJson<{ content?: string }>(req);
+  if (!body) return badRequest("invalid json");
+  const { content } = body;
   const text = String(content ?? "").trim();
   if (!text) return NextResponse.json({ error: "empty" }, { status: 400 });
 

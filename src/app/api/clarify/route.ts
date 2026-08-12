@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clarifyStep, type ClarifyMessage } from "@/lib/ai/clarify";
 import { currentUser } from "@/lib/session";
+import { readJson, badRequest } from "@/lib/http";
 
 /** POST /api/clarify — { history: [{role, content}] } → { ready, reply, card } */
 export async function POST(req: NextRequest) {
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const { history } = (await req.json()) as { history: ClarifyMessage[] };
+  const body = await readJson<{ history: ClarifyMessage[] }>(req);
+  if (!body) return badRequest("invalid json");
+  const { history } = body;
   if (!Array.isArray(history) || history.length === 0) {
     return NextResponse.json({ error: "history required" }, { status: 400 });
   }

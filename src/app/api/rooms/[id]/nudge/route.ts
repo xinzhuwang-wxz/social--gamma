@@ -17,6 +17,8 @@ export async function POST(
   const { id } = await params;
   const room = await roomForUser(id, me.id);
   if (!room) return NextResponse.json({ error: "not found" }, { status: 404 });
+  // 已开花的房间不再推进（浪费 AI token + 插入误导消息）
+  if (room.stage === "bloom") return NextResponse.json({ error: "room already completed" }, { status: 409 });
 
   const [seed] = await db.select().from(schema.seeds).where(eq(schema.seeds.id, room.seedId));
   const msgs = await db

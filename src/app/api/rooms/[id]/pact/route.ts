@@ -6,6 +6,7 @@ import { draftPact } from "@/lib/ai/room";
 import { seedToCard } from "@/lib/matching";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
+import { readJson, badRequest } from "@/lib/http";
 import { simOnPactConfirmed } from "@/lib/sim";
 
 /**
@@ -23,7 +24,14 @@ export async function POST(
   const room = await roomForUser(id, me.id);
   if (!room) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const { action } = await req.json();
+  // 状态机：已完成（开花）的房间不能再整理/确认约定，防止 bloom→bud 回退
+  if (room.stage === "bloom") {
+    return NextResponse.json({ error: "room already completed" }, { status: 409 });
+  }
+
+  const body = await readJson(req);
+  if (!body) return badRequest("invalid json");
+  const action = body.action;
   const isOwner = room.ownerId === me.id;
 
   const [latest] = await db

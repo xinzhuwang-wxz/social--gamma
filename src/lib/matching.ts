@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import { db, schema } from "./db/client";
 import { matchCandidates, a2aDialogue, type CandidateProfile } from "./ai/match";
 import type { SeedCard } from "./ai/schemas";

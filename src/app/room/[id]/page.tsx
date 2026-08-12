@@ -86,7 +86,7 @@ interface RoomData {
   } | null;
   messages: Msg[];
   pact: Pact | null;
-  myMemoryDone: boolean;
+  memoryStatus: "form" | "collecting" | "created" | null;
   memoryId: string | null;
 }
 
@@ -390,7 +390,7 @@ export default function RoomPage({
     );
   }
 
-  const { room, seed, other, a2a, messages, pact, myMemoryDone, memoryId, members } = data;
+  const { room, seed, other, a2a, messages, pact, memoryStatus, memoryId, members } = data;
 
   const isGroup = members && members.length > 2;
   // 我的 userId：如果 isOwner，找 role=owner 的成员；否则找不在 other 中的 partner
@@ -410,8 +410,8 @@ export default function RoomPage({
       : pact.ownerConfirmed
     : false;
 
-  const memoryDone = myMemoryDone || memorySubmitted;
-  const showMemoryForm = room.stage === "bloom" && !memoryDone;
+  const memoryDone = memoryStatus === "collecting" || memoryStatus === "created" || memorySubmitted;
+  const showMemoryForm = room.stage === "bloom" && memoryStatus === "form" && !memorySubmitted;
 
   // 完成人数（群体）
   const completedCount = members ? members.filter((m) => m.completed).length : null;
@@ -902,17 +902,23 @@ export default function RoomPage({
         {room.stage === "bloom" && memoryDone && (
           <div className="px-4 pb-3">
             <div className="card px-4 py-3 text-center">
-              <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
-                ✅ 已记录，感谢你留下这段回忆
-              </p>
-              {memoryId && (
-                <Link
-                  href={`/memory/${memoryId}`}
-                  className="mt-2 block text-sm font-medium"
-                  style={{ color: "var(--color-primary)" }}
-                >
-                  🌸 查看共同回忆
-                </Link>
+              {memoryId ? (
+                <>
+                  <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
+                    ✅ 已记录，感谢你留下这段回忆
+                  </p>
+                  <Link
+                    href={`/memory/${memoryId}`}
+                    className="mt-2 block text-sm font-medium"
+                    style={{ color: "var(--color-primary)" }}
+                  >
+                    🌸 查看共同回忆
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
+                  ✅ 已记录 · 这段回忆正在收集中…
+                </p>
               )}
             </div>
           </div>

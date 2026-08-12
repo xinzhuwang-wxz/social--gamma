@@ -34,6 +34,7 @@ export async function createSession(userId: string) {
   store.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });

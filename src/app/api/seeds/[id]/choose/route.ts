@@ -5,6 +5,7 @@ import { currentUser, uid } from "@/lib/session";
 import { roomKickoff, roomKickoffGroup } from "@/lib/ai/room";
 import { seedToCard, toProfile } from "@/lib/matching";
 import { simOnRoomCreated } from "@/lib/sim";
+import { readJson, badRequest } from "@/lib/http";
 
 /** POST /api/seeds/:id/choose
  * 单选：{ matchId }        → 1 对 1，兼容旧路径
@@ -17,7 +18,8 @@ export async function POST(
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
-  const body = await req.json();
+  const body = await readJson<{ matchIds?: string[]; matchId?: string }>(req);
+  if (!body) return badRequest("invalid json");
 
   // 兼容旧 matchId 字段
   const matchIds: string[] = body.matchIds ?? (body.matchId ? [body.matchId] : []);

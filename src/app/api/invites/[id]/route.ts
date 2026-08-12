@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser } from "@/lib/session";
+import { readJson, badRequest } from "@/lib/http";
 
 /** GET /api/invites/:id — 候选人查看一条投递（标记已读） */
 export async function GET(
@@ -66,7 +67,8 @@ export async function POST(
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
-  const body = await req.json();
+  const body = await readJson<{ interested?: boolean; note?: string }>(req);
+  if (!body) return badRequest("invalid json");
 
   const [match] = await db.select().from(schema.matches).where(eq(schema.matches.id, id));
   if (!match || match.candidateId !== me.id) {

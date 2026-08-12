@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser } from "@/lib/session";
+import { publicUser } from "@/lib/safe-user";
 
 export async function GET() {
   const me = await currentUser();
@@ -30,7 +31,7 @@ export async function GET() {
   const activeRooms = myRooms.filter((r) => r.stage !== "bloom").length;
 
   return NextResponse.json({
-    me,
+    me: publicUser(me),
     counts: { mailboxUnread, activeRooms },
   });
 }

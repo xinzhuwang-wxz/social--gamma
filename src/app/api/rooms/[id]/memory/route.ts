@@ -6,6 +6,7 @@ import { summarizeMemory } from "@/lib/ai/room";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
 import { simOnHumanMemory } from "@/lib/sim";
+import { readJson, badRequest } from "@/lib/http";
 import { generateMemoryIllustration } from "@/lib/ai/illustrate";
 
 /**
@@ -27,7 +28,8 @@ export async function POST(
     return NextResponse.json({ error: "not completed" }, { status: 400 });
   }
 
-  const body = await req.json();
+  const body = await readJson<{ willRejoin?: boolean; text?: string; tags?: string[] }>(req);
+  if (!body) return badRequest("invalid json");
   if (typeof body.willRejoin !== "boolean") {
     return NextResponse.json({ error: "willRejoin required" }, { status: 400 });
   }
@@ -107,5 +109,7 @@ export async function POST(
 
   emitRoom(id);
   if (!me.isSim && !allRejoin) simOnHumanMemory(req.nextUrl.origin, id);
-  return NextResponse.json({ ok: true, memoryCreated: allRejoin });
+  // 隐私红线：POST 不回传是否生成回忆（否则第二个提交者可即时反推对方拒绝）。
+  // 结果由房间 GET 的 memoryStatus 三态呈现，「对方拒绝」与「对方未提交」不可区分。
+  return NextResponse.json({ ok: true });
 }
