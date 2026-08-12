@@ -10,7 +10,8 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/lib/db/seed.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "node scripts/e2e-flow.mjs"
   },
   "dependencies": {
     "next": "16.3.0",

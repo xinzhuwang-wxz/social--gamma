@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { fastModel, NO_THINK } from "./provider";
-import { clarifyStepSchema } from "./schemas";
+import { clarifyStepSchema, seedCardSchema } from "./schemas";
 
 export const CLARIFY_SYSTEM = `你是「小绿」，用户的信使鸟——帮用户把模糊的行动愿望变成一颗清晰的行动种子。
 
@@ -31,8 +31,21 @@ export async function clarifyStep(history: ClarifyMessage[]) {
     providerOptions: NO_THINK,
     system:
       CLARIFY_SYSTEM +
-      `\n\n现在根据对话历史输出 JSON：ready（信息是否足够）、reply（你的下一句话）、card（ready 时的种子卡，否则 null）。`,
+      `\n\n现在根据对话历史输出 JSON：ready（信息是否足够）、reply（你的下一句话）、card（ready 时的种子卡，否则 null）。
+注意：用户明确表示「没有别的要求/就这样」时，视为信息已足够，ready 给 true。ready 为 true 时 card 必须完整给出。`,
     messages: history,
   });
+
+  // 兜底：模型偶发 ready=true 但 card=null 时，直接从对话抽取种子卡
+  if (object.ready && !object.card) {
+    const { object: card } = await generateObject({
+      model: fastModel,
+      schema: seedCardSchema,
+      providerOptions: NO_THINK,
+      system: "从下面的对话中抽取行动种子卡。只用对话中出现的信息，不编造。",
+      prompt: history.map((m) => `${m.role === "user" ? "用户" : "小绿"}: ${m.content}`).join("\n"),
+    });
+    return { ...object, card };
+  }
   return object;
 }
