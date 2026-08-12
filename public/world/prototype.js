@@ -19,7 +19,7 @@ const initialUi = () => {
   loading: false,
   publishStep: 0,
   selectedDate: "",
-  selectedPeriod: "",
+  selectedPeriods: [],
   draft: {
     idea: "",
     time: "",
@@ -33,6 +33,7 @@ const initialUi = () => {
   activityOptions: [],
   activityQuestionLoading: false,
   activityQuestionError: false,
+  activityQuestionRequestId: 0,
   proposalsOpen: false,
   completionOpen: false,
   memoryText: "",
@@ -119,11 +120,12 @@ function upcomingDates() {
 
 function startPublishFlow() {
   const fresh = initialUi();
+  ui.activityQuestionRequestId += 1;
   ui.route = "publish";
   ui.publishStep = 0;
   ui.draft = fresh.draft;
   ui.selectedDate = "";
-  ui.selectedPeriod = "";
+  ui.selectedPeriods = [];
   ui.activityQuestion = "";
   ui.activityOptions = [];
   ui.activityQuestionError = false;
@@ -132,6 +134,7 @@ function startPublishFlow() {
 }
 
 async function prepareActivityQuestion() {
+  const requestId = ++ui.activityQuestionRequestId;
   ui.publishStep = 5;
   ui.activityQuestion = "";
   ui.activityOptions = [];
@@ -165,12 +168,15 @@ async function prepareActivityQuestion() {
     }
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "AI 追问生成失败");
+    if (requestId !== ui.activityQuestionRequestId) return;
     ui.activityQuestion = result.reply;
     ui.activityOptions = result.options;
   } catch (error) {
+    if (requestId !== ui.activityQuestionRequestId) return;
     ui.activityQuestionError = true;
     notify(error.message || "小绿暂时没想好怎么追问");
   } finally {
+    if (requestId !== ui.activityQuestionRequestId) return;
     ui.activityQuestionLoading = false;
     render();
   }
@@ -306,7 +312,7 @@ function WorldGardenPage() {
       <button class="world-hotspot mailbox-object" data-anchor="mailbox" style="${world.anchorStyle("garden", "mailbox")}" data-action="open-mailbox-overlay" aria-label="打开种子信箱">${ui.unreadMail ? `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>` : ""}</button>
       ${ui.mailboxOverlay ? MailboxOverlay(ui.welcomeLetter) : ""}
     </div>
-    <div class="world-dock"><button data-world="home"><img src="assets/nav-profile-v2.png" alt=""><small>家</small></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button class="dock-seed" data-action="publish" aria-label="发布需求"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>行动</small></button><button data-world="forest"><img src="assets/nav-garden-v2.png" alt=""><small>森林</small></button></div>
+    <div class="world-dock"><button data-world="garden"><img src="assets/nav-garden-v2.png" alt=""><small>花园</small></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>聊天</small></button><button class="dock-seed" data-action="publish" aria-label="发布需求"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button data-world="home"><img src="assets/nav-profile-v2.png" alt=""><small>我的</small></button></div>
   </main>`;
 }
 
@@ -393,8 +399,8 @@ function PublishPage() {
   const dateOptions = upcomingDates();
   const steps = [
     `<div class="agent-bubble"><strong>最近想和别人一起做什么？</strong><br><span class="muted tiny">选一个最接近的，也可以自己填写</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="idea:轻松爬山">🥾 轻松爬山</button><button data-publish-choice="idea:一起自习">📚 一起自习</button><button data-publish-choice="idea:扫街摄影">📷 扫街摄影</button><button data-publish-choice="idea:看展或演出">🎵 看展／演出</button></div><form id="publish-form" class="custom-companion uniform-entry"><label for="publish-input">自定义想做的事</label><div class="inline-entry"><input id="publish-input" maxlength="40" placeholder="例如：一起练习羽毛球"><button>确定</button></div></form>`,
-    `<div class="answer-summary"><span>做什么</span><strong>${idea}</strong></div><div class="agent-bubble"><strong>你希望什么时候进行？</strong><br><span class="muted tiny">左右滑动，分别选择日期和时段</span></div><section class="time-picker-card flow-card"><label>选择日期</label><div class="date-strip">${dateOptions.map(date => `<button class="${ui.selectedDate === date.value ? "selected" : ""}" data-date="${date.value}"><small>${date.weekday}</small><strong>${date.day}</strong></button>`).join("")}</div><label>选择时段</label><div class="period-strip">${["上午", "下午", "晚上"].map(period => `<button class="${ui.selectedPeriod === period ? "selected" : ""}" data-period="${period}">${period}</button>`).join("")}</div><button class="primary full flow-next" data-action="confirm-time" ${ui.selectedDate && ui.selectedPeriod ? "" : "disabled"}>确认时间</button></section>`,
-    `<div class="answer-summary"><span>时间</span><strong>${escapeHtml(ui.draft.time)}</strong></div><div class="agent-bubble"><strong>活动范围放在哪里比较合适？</strong><br><span class="muted tiny">选择常用范围，或输入具体地址</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="place:校内">校内</button><button data-publish-choice="place:学校附近">学校附近</button><button data-publish-choice="place:市内都可以">市内都可以</button><button data-action="use-location">⌖ 使用我的定位</button></div><form id="place-form" class="custom-companion uniform-entry"><label for="place-input">自定义地点 / 地址</label><div class="inline-entry"><input id="place-input" maxlength="60" placeholder="例如：图书馆东门"><button>确定</button></div></form>`,
+    `<div class="agent-bubble"><strong>你希望什么时候进行？</strong><br><span class="muted tiny">选择一个日期；时段可以多选</span></div><section class="time-picker-card flow-card"><label for="date-select">选择日期</label><div class="date-select-wrap"><select id="date-select"><option value="">请选择日期</option>${dateOptions.map(date => `<option value="${date.value}" ${ui.selectedDate === date.value ? "selected" : ""}>${date.weekday} · ${date.day}</option>`).join("")}</select><span>⌄</span></div><label>选择时段 <small>可多选</small></label><div class="period-strip">${["上午", "下午", "晚上"].map(period => `<button class="${ui.selectedPeriods.includes(period) ? "selected" : ""}" data-period="${period}">${period}</button>`).join("")}</div><button class="primary full flow-next" data-action="confirm-time" ${ui.selectedDate && ui.selectedPeriods.length ? "" : "disabled"}>确认时间</button></section>`,
+    `<div class="agent-bubble"><strong>活动范围放在哪里比较合适？</strong><br><span class="muted tiny">选择常用范围，或输入具体地址</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="place:校内">校内</button><button data-publish-choice="place:学校附近">学校附近</button><button data-publish-choice="place:市内都可以">市内都可以</button><button data-action="use-location">⌖ 使用我的定位</button></div><form id="place-form" class="custom-companion uniform-entry"><label for="place-input">自定义地点 / 地址</label><div class="inline-entry"><input id="place-input" maxlength="60" placeholder="例如：图书馆东门"><button>确定</button></div></form>`,
     `<div class="agent-bubble"><strong>你希望同行的人是什么样的？</strong><br><span class="muted tiny">选最看重的一点，也可以自己补充</span></div><div class="preference-list"><button data-companion="聊得来，气氛轻松"><span>💬</span><div><strong>聊得来，气氛轻松</strong><small>愿意分享，也尊重彼此表达</small></div><b>›</b></button><button data-companion="守时靠谱"><span>⏱</span><div><strong>守时靠谱</strong><small>确定后尽量不临时变动</small></div><b>›</b></button><button data-companion="愿意一起做决定"><span>🤝</span><div><strong>愿意一起做决定</strong><small>安排可以共同商量</small></div><b>›</b></button><button data-companion="没有特别要求"><span>🌱</span><div><strong>没有特别要求</strong><small>合适就好，保持开放</small></div><b>›</b></button></div><form id="companion-form" class="custom-companion"><label for="companion-input">自定义同行者要求</label><div class="inline-entry"><input id="companion-input" maxlength="40" placeholder="例如：希望对方也有拍摄经验"><button>确定</button></div></form>`,
     `<div class="agent-bubble"><strong>相处时，有什么习惯想提前说清楚？</strong><br><span class="muted tiny">这不是硬性条件，只是帮助彼此更自在</span></div><div class="habit-options"><button data-habit="喜欢边做边聊">边做边聊</button><button data-habit="慢热，先做事再熟悉">我比较慢热</button><button data-habit="不抽烟，少饮酒">不抽烟 / 少饮酒</button><button data-habit="没有特别习惯">没有特别习惯</button></div>`,
     ui.activityQuestionLoading
@@ -402,9 +408,12 @@ function PublishPage() {
       : ui.activityQuestionError
         ? `<section class="activity-confirm-state"><div class="activity-ai-error"><span>🌿</span><strong>专项问题暂时没有生成</strong><small>这一步必须由 Agent 根据活动来判断，不使用固定问题代替。</small><button class="primary" data-action="retry-activity-question">请小绿再想一次</button></div></section>`
         : `<div class="agent-bubble activity-question"><span class="ai-generated-label">AI 活动专项追问</span><strong>${escapeHtml(ui.activityQuestion)}</strong><small>这是根据“${idea}”临时生成的最后一问</small></div><div class="activity-option-list">${ui.activityOptions.map(option => `<button data-activity-detail="${escapeHtml(option)}">${escapeHtml(option)}<span>›</span></button>`).join("")}</div><form id="activity-detail-form" class="custom-companion"><label for="activity-detail-input">我想自己补充</label><div class="inline-entry"><input id="activity-detail-input" maxlength="60" placeholder="用一句话告诉小绿"><button>确定</button></div></form>`,
-    `<div class="agent-bubble">我已经把标准信息和这次活动的特殊要求都整理好了。你确认后，我才会发布。</div><section class="card github-seed-preview detailed"><span class="pill">待发布</span><h2>${idea}</h2><div class="draft-summary"><p><span>◷</span><b>时间</b>${escapeHtml(ui.draft.time)}</p><p><span>⌖</span><b>地点</b>${escapeHtml(ui.draft.place)}</p><p><span>☺</span><b>同行者</b>${companion}</p><p><span>♡</span><b>相处习惯</b>${habit}</p><p class="activity-detail-summary"><span>✦</span><b>活动确认</b>${activityDetail}</p></div></section><div class="button-row"><button class="secondary" data-action="publish-reset">重新选择</button><button class="primary" data-action="confirm-publish">确认并发布</button></div>`,
+    `<div class="agent-bubble">我已经把标准信息和这次活动的特殊要求都整理好了。你确认后，我才会发布。</div><section class="card github-seed-preview detailed"><span class="pill">待发布</span><h2>${idea}</h2><div class="draft-summary"><p><span>◷</span><b>时间</b>${escapeHtml(ui.draft.time)}</p><p><span>⌖</span><b>地点</b>${escapeHtml(ui.draft.place)}</p><p><span>☺</span><b>同行者</b>${companion}</p><p><span>♡</span><b>相处习惯</b>${habit}</p><p class="activity-detail-summary"><span>✦</span><b>活动确认</b>${activityDetail}</p></div></section><div class="button-row"><button class="secondary" data-action="publish-prev">上一步</button><button class="primary" data-action="confirm-publish">确认并发布</button></div>`,
   ];
-  return `<main class="screen github-aligned-page publish-page">${topbar("种下一件想做的事", "和小绿聊聊", true)}<div class="agent-chat"><div class="profile-chip"><div class="agent-orb">${pet(true)}</div><div><strong>小绿 · 你的个人 Agent</strong><small>标准信息之后，我会针对活动再确认一项</small></div><span class="step-count">${Math.min(ui.publishStep + 1, 7)}/7</span></div><div class="publish-progress">${progress.map((label, index) => `<div class="${index < ui.publishStep ? "done" : index === ui.publishStep ? "active" : ""}"><i></i><span>${label}</span></div>`).join("")}</div>${steps[Math.min(ui.publishStep, 6)]}</div></main>`;
+  const clarifyControls = ui.publishStep < 6
+    ? `<div class="clarify-actions"><button data-action="publish-prev">${ui.publishStep === 0 ? "退出" : "上一步"}</button><button data-action="publish-skip">暂时跳过</button></div>`
+    : "";
+  return `<main class="screen github-aligned-page publish-page">${topbar("种下一件想做的事", "和小绿聊聊", true)}<div class="agent-chat"><div class="profile-chip"><div class="agent-orb">${pet(true)}</div><div><strong>小绿 · 你的个人 Agent</strong><small>标准信息之后，我会针对活动再确认一项</small></div><span class="step-count">${Math.min(ui.publishStep + 1, 7)}/7</span></div><div class="publish-progress">${progress.map((label, index) => `<div class="${index < ui.publishStep ? "done" : index === ui.publishStep ? "active" : ""}"><i></i><span>${label}</span></div>`).join("")}</div>${steps[Math.min(ui.publishStep, 6)]}${clarifyControls}</div></main>`;
 }
 
 function MatchingPage() {
@@ -418,7 +427,7 @@ function CandidatesPage() {
 
 function CandidateDetailPage(index) {
   const person = candidateAt(index);
-  return `<main class="screen candidate-detail-page">${topbar("同行者资料", `来自 ${escapeHtml(person.name)} 的公开信息`, true)}<section class="candidate-profile-card card"><span class="avatar">${escapeHtml(person.avatar)}</span><div><h2>${escapeHtml(person.name)}</h2><p>校园已认证 · 资料仅用于本次匹配</p><span>${escapeHtml(person.match)}</span></div></section><section class="a2a-proof-lite"><div class="a2a-proof-head"><div class="agent-pair"><span>🐦</span><span>🦊</span></div><div><small>A2A 过往经历总结</small><h3>为什么选择${escapeHtml(person.name)}</h3></div></div><p class="proof-intro">小绿与${escapeHtml(person.name)}的 Agent 核对了与这次行动有关的过往经历，只保留能支持你判断的部分。</p><div class="proof-facts">${person.facts.map(fact => `<span><i>✓</i>${escapeHtml(fact)}</span>`).join("")}</div><blockquote>${escapeHtml(person.reason)}</blockquote></section><button class="primary full profile-space-button" data-person-space="${index}">进入${escapeHtml(person.name)}的个人空间</button><button class="secondary full a2a-record-button" data-a2a-record="${index}">查看完整 A2A 沟通记录</button><div class="candidate-detail-actions"><button class="ghost" data-action="back">继续比较</button><button class="primary" data-candidate="${escapeHtml(person.name)}">选择 ${escapeHtml(person.name)}</button></div></main>`;
+  return `<main class="screen candidate-detail-page">${topbar("同行者资料", `来自 ${escapeHtml(person.name)} 的公开信息`, true)}<section class="candidate-profile-card card"><span class="avatar">${escapeHtml(person.avatar)}</span><div><h2>${escapeHtml(person.name)}</h2><p>校园已认证 · 资料仅用于本次匹配</p><span>${escapeHtml(person.match)}</span></div></section><section class="a2a-proof-lite"><div class="a2a-proof-head"><div class="agent-pair"><span>🐦</span><span>🦊</span></div><div><small>A2A 过往经历总结</small><h3>为什么选择${escapeHtml(person.name)}</h3></div></div><p class="proof-intro">小绿与${escapeHtml(person.name)}的 Agent 核对了与这次行动有关的过往经历，只保留能支持你判断的部分。</p><div class="proof-facts">${person.facts.map(fact => `<span><i>✓</i>${escapeHtml(fact)}</span>`).join("")}</div><blockquote>${escapeHtml(person.reason)}</blockquote></section><button class="primary full profile-space-button" data-person-space="${index}">进入${escapeHtml(person.name)}的个人空间</button><button class="secondary full a2a-record-button" data-a2a-record="${index}">查看双方 Agent 沟通记录</button><div class="candidate-detail-actions"><button class="ghost" data-action="back">继续比较</button><button class="primary" data-candidate="${escapeHtml(person.name)}">选择 ${escapeHtml(person.name)}</button></div></main>`;
 }
 
 function CandidateSpacePage(index) {
@@ -509,12 +518,28 @@ function page() {
 
 function render() {
   document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
-  requestAnimationFrame(() => { const log = document.querySelector("#chat-log"); if (log) log.scrollTop = log.scrollHeight; });
+  requestAnimationFrame(() => {
+    syncPhoneScale();
+    const log = document.querySelector("#chat-log");
+    if (log) log.scrollTop = log.scrollHeight;
+  });
   requestAnimationFrame(() => window.WorldLayer?.mount());
 }
 
+function syncPhoneScale() {
+  const scale = Math.min(1, (window.innerWidth - 20) / 390, (window.innerHeight - 20) / 780);
+  document.documentElement.style.setProperty("--phone-scale", String(Math.max(.5, scale)));
+}
+
 function goBack() {
-  if (ui.route === "world-home") { ui.route = null; ui.tab = "garden"; }
+  if (ui.route === "publish" && ui.publishStep > 0) {
+    if (ui.publishStep === 5) {
+      ui.activityQuestionRequestId += 1;
+      ui.activityQuestionLoading = false;
+    }
+    ui.publishStep -= 1;
+  }
+  else if (ui.route === "world-home") { ui.route = null; ui.tab = "garden"; }
   else if (ui.route?.startsWith("seed:")) { ui.route = null; ui.tab = "mailbox"; }
   else if (ui.route?.startsWith("plant:")) { ui.route = null; ui.tab = "garden"; }
   else if (ui.route?.startsWith("memory:")) { ui.route = "memory"; }
@@ -548,8 +573,13 @@ document.addEventListener("click", async event => {
     return render();
   }
   if (target.dataset.idea) { ui.draft.idea = target.dataset.idea; ui.publishStep = 1; return render(); }
-  if (target.dataset.date) { ui.selectedDate = target.dataset.date; return render(); }
-  if (target.dataset.period) { ui.selectedPeriod = target.dataset.period; return render(); }
+  if (target.dataset.period) {
+    const period = target.dataset.period;
+    ui.selectedPeriods = ui.selectedPeriods.includes(period)
+      ? ui.selectedPeriods.filter(item => item !== period)
+      : [...ui.selectedPeriods, period];
+    return render();
+  }
   if (target.dataset.publishChoice) {
     const [field, value] = target.dataset.publishChoice.split(":");
     if (field === "idea") { ui.draft.idea = value; ui.publishStep = 1; }
@@ -596,8 +626,8 @@ document.addEventListener("click", async event => {
   if (action === "open-all-memories") { ui.route = "memory"; return render(); }
   if (action === "view-candidates") { ui.route = "candidates"; return render(); }
   if (action === "confirm-time") {
-    if (!ui.selectedDate || !ui.selectedPeriod) return notify("请先选好日期和时段");
-    ui.draft.time = `${ui.selectedDate} ${ui.selectedPeriod}`;
+    if (!ui.selectedDate || !ui.selectedPeriods.length) return notify("请先选好日期和至少一个时段");
+    ui.draft.time = `${ui.selectedDate} ${ui.selectedPeriods.join(" / ")}`;
     ui.publishStep = 2;
     return render();
   }
@@ -612,6 +642,43 @@ document.addEventListener("click", async event => {
       () => notify("没有取得定位权限，可以直接输入地址")
     );
     return;
+  }
+  if (action === "publish-prev") {
+    if (ui.publishStep === 0) {
+      ui.route = null;
+      ui.tab = "garden";
+      return render();
+    }
+    if (ui.publishStep === 5) {
+      ui.activityQuestionRequestId += 1;
+      ui.activityQuestionLoading = false;
+    }
+    ui.publishStep -= 1;
+    return render();
+  }
+  if (action === "publish-skip") {
+    if (ui.publishStep === 0) {
+      ui.draft.idea = "还没想好，想听听建议";
+      ui.publishStep = 1;
+    } else if (ui.publishStep === 1) {
+      ui.draft.time = "时间可商量";
+      ui.publishStep = 2;
+    } else if (ui.publishStep === 2) {
+      ui.draft.place = "地点可商量";
+      ui.publishStep = 3;
+    } else if (ui.publishStep === 3) {
+      ui.draft.companion = "没有特别要求";
+      ui.publishStep = 4;
+    } else if (ui.publishStep === 4) {
+      ui.draft.habit = "没有特别习惯";
+      return prepareActivityQuestion();
+    } else if (ui.publishStep === 5) {
+      ui.activityQuestionRequestId += 1;
+      ui.activityQuestionLoading = false;
+      ui.draft.activityDetail = "暂无补充，后续共同确认";
+      ui.publishStep = 6;
+    }
+    return render();
   }
   if (action === "retry-activity-question") return prepareActivityQuestion();
   if (action === "publish-reset") return startPublishFlow();
@@ -678,5 +745,12 @@ document.addEventListener("submit", async event => {
   }
 });
 
+document.addEventListener("change", event => {
+  if (event.target.id !== "date-select") return;
+  ui.selectedDate = event.target.value;
+  render();
+});
+
 window.addEventListener("popstate", render);
+window.addEventListener("resize", syncPhoneScale);
 api("/api/demo").then(render);

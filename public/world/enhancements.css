@@ -134,3 +134,52 @@
 .a2a-chat-row.peer > span { background: #f4dfcf; }
 .a2a-chat-row b { color: #607067; font-size: 8px; }
 .a2a-chat-row p { margin: 4px 0 0; font-size: 9px; line-height: 1.6; }
+
+/* Mobile publish-flow type scale and native date selection. */
+.publish-page .agent-bubble strong { font-size: 16px; line-height: 1.45; }
+.publish-page .agent-bubble .tiny { margin-top: 7px; font-size: 12px; line-height: 1.55; }
+.publish-page .flow-card > label { margin-bottom: 10px; font-size: 12px; }
+.publish-page .flow-card > label:not(:first-child) { margin-top: 22px; }
+.publish-page .flow-card > label small { margin-left: 5px; color: var(--muted); font-size: 10px; font-weight: 600; }
+.date-select-wrap { position: relative; }
+.date-select-wrap select { width: 100%; height: 58px; appearance: none; border: 1px solid rgba(63,120,81,.16); border-radius: 16px; outline: none; padding: 0 44px 0 16px; color: var(--primary); background: white; font-size: 14px; font-weight: 800; }
+.date-select-wrap select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(63,120,81,.12); }
+.date-select-wrap > span { position: absolute; right: 17px; top: 50%; color: var(--primary); font-size: 18px; pointer-events: none; transform: translateY(-55%); }
+.publish-page .period-strip { gap: 14px; }
+.publish-page .period-strip button { height: 56px; font-size: 13px; }
+.publish-page .uniform-choice-grid { gap: 12px; }
+.publish-page .uniform-choice-grid button, .publish-page .habit-options button, .publish-page .activity-option-list button { font-size: 13px; }
+.publish-page .preference-list button strong { font-size: 13px; }
+.publish-page .preference-list button small { font-size: 10px; }
+.publish-page .custom-companion label { font-size: 12px; }
+.publish-page .inline-entry input, .publish-page .inline-entry button { font-size: 12px; }
+.clarify-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 2px; }
+.clarify-actions button { height: 48px; border: 1px solid rgba(63,120,81,.16); border-radius: 15px; color: var(--primary); background: rgba(255,255,255,.76); font-size: 12px; font-weight: 800; }
+.clarify-actions button:last-child { border-color: transparent; color: var(--muted); background: transparent; }
+
+/* A fixed 390 × 780 design canvas; the whole phone scales, its layout never stretches. */
+.app-shell { position: relative; overflow: hidden; }
+.demo-guide { display: none !important; }
+.phone { width: 390px; height: 780px; min-height: 780px; flex: 0 0 auto; border: 8px solid #28543d; border-radius: 42px; background: #fbfcf7; box-shadow: 0 24px 64px rgba(40,84,61,.24), inset 0 0 0 2px rgba(255,255,255,.82); transform: scale(var(--phone-scale,1)); transform-origin: center; }
+.phone::before { content: ""; position: absolute; z-index: 200; left: 50%; top: 7px; width: 76px; height: 19px; border-radius: 999px; background: #78957c; box-shadow: inset 0 1px 2px rgba(56,81,61,.18); transform: translateX(-50%); pointer-events: none; }
+.world-screen .game-hud { top: 31px; }
+.garden-world-screen .world-scene { inset: 0; }
+
+/* Candidate detail: readable on a phone without zooming. */
+.candidate-detail-page .candidate-profile-card p { font-size: 11px; line-height: 1.5; }
+.candidate-detail-page .candidate-profile-card div > span { font-size: 10px; }
+.candidate-detail-page .a2a-proof-head small { font-size: 11px; }
+.candidate-detail-page .a2a-proof-head h3 { font-size: 18px; }
+.candidate-detail-page .proof-intro { font-size: 13px; line-height: 1.7; }
+.candidate-detail-page .proof-facts { gap: 8px; }
+.candidate-detail-page .proof-facts span { padding: 7px 10px; font-size: 11px; line-height: 1.4; }
+.candidate-detail-page .a2a-proof-lite blockquote { font-size: 13px; line-height: 1.75; }
+.candidate-detail-page .profile-space-button, .candidate-detail-page .a2a-record-button { min-height: 54px; font-size: 14px; }
+.candidate-detail-page .candidate-detail-actions { position: static; }
+.candidate-detail-page .candidate-detail-actions button { font-size: 12px; }
+
+@media (max-width: 820px) {
+  body { overflow: hidden; background: #e6ede4; }
+  .app-shell { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0; background: radial-gradient(circle at 50% 10%,#fbfcf8,#e2ebe1); }
+  .phone { width: 390px; height: 780px; min-height: 780px; border: 8px solid #28543d; border-radius: 42px; }
+}
