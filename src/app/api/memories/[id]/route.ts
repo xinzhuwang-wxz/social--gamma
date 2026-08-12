@@ -31,12 +31,17 @@ export async function GET(
     .where(eq(schema.memoryEntries.roomId, row.room.id));
   const myEntry = entries.find((e) => e.userId === me.id);
 
+  const imageUrl = row.memory.imageFile
+    ? `/api/images/${row.memory.imageFile}`
+    : null;
+
   return NextResponse.json({
     memory: {
       id: row.memory.id,
       title: row.memory.title,
       summary: row.memory.summary,
       date: new Date(row.memory.createdAt).toLocaleDateString("zh-CN"),
+      imageUrl,
     },
     seed: { whenText: row.seed.whenText, whereText: row.seed.whereText, tags: row.seed.tags },
     other: { name: other?.name, emoji: other?.emoji, color: other?.color },

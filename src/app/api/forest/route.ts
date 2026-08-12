@@ -19,6 +19,9 @@ export async function GET() {
   for (const { memory, room } of rows) {
     const otherId = room.ownerId === me.id ? room.partnerId : room.ownerId;
     const [other] = await db.select().from(schema.users).where(eq(schema.users.id, otherId));
+    const imageUrl = memory.imageFile
+      ? `/api/images/${memory.imageFile}`
+      : null;
     memories.push({
       id: memory.id,
       title: memory.title,
@@ -26,6 +29,7 @@ export async function GET() {
       withName: other?.name ?? "",
       withEmoji: other?.emoji ?? "",
       date: new Date(memory.createdAt).toLocaleDateString("zh-CN"),
+      imageUrl,
     });
   }
 

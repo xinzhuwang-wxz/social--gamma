@@ -13,6 +13,7 @@ interface MemoryData {
     title: string;
     summary: string | null;
     date: string;
+    imageUrl: string | null;
   };
   seed: {
     whenText: string;
@@ -40,7 +41,11 @@ export default function MemoryPage({
   const { id } = use(params);
   const router = useRouter();
 
-  const { data } = useSWR<MemoryData>(`/api/memories/${id}`, fetcher);
+  const { data } = useSWR<MemoryData>(`/api/memories/${id}`, fetcher, {
+    // 当插画还未生成时轮询（每 5 秒），有图后停止
+    refreshInterval: (latest) =>
+      latest && !latest.memory.imageUrl ? 5000 : 0,
+  });
 
   // Reseed form state
   const [reseedOpen, setReseedOpen] = useState(false);
@@ -111,10 +116,24 @@ export default function MemoryPage({
         行动记录
       </Link>
 
-      {/* Big flower emoji */}
-      <div className="text-center mb-4">
-        <span className="text-6xl">🌸</span>
-      </div>
+      {/* Illustration or flower emoji */}
+      {memory.imageUrl ? (
+        <div className="mb-4 overflow-hidden rounded-lg" style={{ animation: "fadeIn 0.6s ease" }}>
+          <img
+            src={memory.imageUrl}
+            alt={memory.title}
+            className="w-full object-cover rounded-lg"
+            style={{ maxHeight: "320px", objectFit: "cover" }}
+          />
+        </div>
+      ) : (
+        <div className="text-center mb-4">
+          <span className="text-6xl">🌸</span>
+          <p className="text-xs mt-2" style={{ color: "var(--color-ink-3)" }}>
+            插画正在生成…
+          </p>
+        </div>
+      )}
 
       {/* Title */}
       <h1

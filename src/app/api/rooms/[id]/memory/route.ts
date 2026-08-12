@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { summarizeMemory } from "@/lib/ai/room";
 import { roomForUser } from "@/lib/room-access";
+import { generateMemoryIllustration } from "@/lib/ai/illustrate";
 
 /**
  * POST /api/rooms/:id/memory — { willRejoin: boolean, text?: string }
@@ -74,13 +75,25 @@ export async function POST(
       console.error("memory summary failed", e);
     }
 
+    const memoryId = `mem_${uid()}`;
     await db.insert(schema.memories).values({
-      id: `mem_${uid()}`,
+      id: memoryId,
       roomId: id,
       title: seed.title,
       summary: summary || null,
       createdAt: new Date(),
     });
+
+    // 异步生图，不阻塞响应
+    const entryTexts = all.map((e) => e.text).filter((t): t is string => !!t);
+    generateMemoryIllustration({ memoryId, title: seed.title, entryTexts })
+      .then((filename) =>
+        db
+          .update(schema.memories)
+          .set({ imageFile: filename })
+          .where(eq(schema.memories.id, memoryId))
+      )
+      .catch((err) => console.error("[illustrate] failed:", err));
   }
 
   return NextResponse.json({ ok: true, memoryCreated: bothRejoin });

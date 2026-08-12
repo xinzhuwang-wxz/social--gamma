@@ -146,5 +146,6 @@ export const memories = sqliteTable("memories", {
   roomId: text("room_id").notNull().references(() => rooms.id),
   title: text("title").notNull(),
   summary: text("summary"), // AI 一句话总结（可选）
+  imageFile: text("image_file"), // seedream 生成的插画文件名（可空）
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });

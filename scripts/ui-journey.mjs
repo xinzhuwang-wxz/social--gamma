@@ -149,6 +149,36 @@ await step("respond-interested", async () => {
   await shot(cand.page, "08-responded");
 });
 
+// ───────────────────────── 边缘路径：他人婉拒 ─────────────────────────
+
+let otherCandidates = [];
+const third = await mk();
+await step("decline-other", async () => {
+  const seedId = seedPath.split("/").pop();
+  const data = await owner.page.evaluate(async (id) => {
+    const r = await fetch(`/api/seeds/${id}`);
+    return r.json();
+  }, seedId);
+  otherCandidates = data.intents
+    .filter((i) => i.status === "delivered")
+    .map((i) => i.candidate.name);
+  if (otherCandidates.length === 0) {
+    console.log("  (仅一位候选，跳过婉拒路径)");
+    return;
+  }
+  await third.page.goto(`${BASE}/welcome`);
+  await third.page.getByText(otherCandidates[0], { exact: true }).first().click();
+  await third.page.waitForURL("**/garden");
+  await third.page.goto(`${BASE}/mailbox`);
+  await third.page.getByText(seedTitle, { exact: true }).first().click();
+  await third.page.waitForURL("**/invite/**");
+  await third.page.getByText("暂不感兴趣", { exact: false }).click();
+  await third.page.waitForTimeout(1500);
+  await third.page.goto(`${BASE}/mailbox`);
+  await third.page.getByText("已婉拒", { exact: false }).first().waitFor({ timeout: 10000 });
+  await shot(third.page, "08b-declined");
+});
+
 // ───────────────────────── 成局与房间 ─────────────────────────
 
 let roomPath = "";
@@ -160,6 +190,24 @@ await step("owner-choose", async () => {
   await owner.page.waitForURL("**/room/**", { timeout: 90000 });
   roomPath = new URL(owner.page.url()).pathname;
   await shot(owner.page, "09b-room-created");
+});
+
+await step("closed-notice", async () => {
+  // 第三位（未回应未被选）候选人应看到「种子已找到同行者」
+  const remaining = otherCandidates.slice(1);
+  if (remaining.length === 0) {
+    console.log("  (无第三位候选，跳过落选关闭校验)");
+    return;
+  }
+  await third.page.goto(`${BASE}/welcome`);
+  await third.page.getByText(remaining[0], { exact: true }).first().click();
+  await third.page.waitForURL("**/garden");
+  await third.page.goto(`${BASE}/mailbox`);
+  await third.page
+    .getByText("种子已找到同行者", { exact: false })
+    .first()
+    .waitFor({ timeout: 15000 });
+  await shot(third.page, "09c-closed-notice");
 });
 
 await step("room-icebreak", async () => {
@@ -231,8 +279,36 @@ await step("forest-and-reseed", async () => {
   await owner.page.getByText("让它结出一颗新种子", { exact: false }).waitFor();
   await shot(owner.page, "16-memory-page");
   await owner.page.getByText("让它结出一颗新种子", { exact: false }).click();
-  await owner.page.getByPlaceholder(/时间|周/).first().fill("下周六早上");
+  await owner.page.getByPlaceholder("例：下周六下午").fill("下周六早上");
   await shot(owner.page, "16b-reseed-form");
+  await owner.page.getByText("种下新种子", { exact: true }).click();
+  await owner.page.waitForURL("**/seed/s_*", { timeout: 30000 });
+});
+
+await step("reseed-delivered", async () => {
+  // 原搭子信箱应收到定向新邀请（同名种子 + 新的邀请标记）
+  await cand.page.goto(`${BASE}/mailbox`);
+  await cand.page.waitForFunction(
+    (t) => {
+      const cards = Array.from(document.querySelectorAll("a"));
+      return cards.some(
+        (c) => c.innerText.includes(t) && c.innerText.includes("新的邀请")
+      );
+    },
+    seedTitle,
+    { timeout: 180000, polling: 3000 }
+  );
+  await shot(cand.page, "18-reseed-mailbox");
+});
+
+await step("my-seeds-list", async () => {
+  await owner.page.goto(`${BASE}/seed/mine`);
+  await owner.page.waitForFunction(
+    (t) => document.body.innerText.split(t).length - 1 >= 2,
+    seedTitle,
+    { timeout: 15000 }
+  );
+  await shot(owner.page, "19-my-seeds");
 });
 
 await browser.close();

@@ -21,6 +21,7 @@ export default function ForestPage() {
     withName: string;
     withEmoji: string;
     date: string;
+    imageUrl: string | null;
   }[] = data?.memories ?? [];
 
   return (
@@ -41,8 +42,18 @@ export default function ForestPage() {
         <div className="mt-4 flex flex-col gap-3 pb-6">
           {memories.map((m) => (
             <Link key={m.id} href={`/memory/${m.id}`} className="card flex items-center gap-4 p-4">
-              <div className="shrink-0 rounded-md bg-grass/30 p-1">
-                <Plant stage="bloom" family={familyOf(m.id)} size={64} />
+              <div className="shrink-0 rounded-md bg-grass/30 overflow-hidden" style={{ width: 72, height: 72 }}>
+                {m.imageUrl ? (
+                  <img
+                    src={m.imageUrl}
+                    alt={m.title}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center p-1">
+                    <Plant stage="bloom" family={familyOf(m.id)} size={64} />
+                  </div>
+                )}
               </div>
               <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="font-kai text-lg font-semibold text-ink">{m.title}</span>
