@@ -43,6 +43,7 @@ const initialUi = () => {
   openingObject: "",
   decorated: false,
   petMood: "idle",
+  profileReturn: null,
   });
 };
 
@@ -58,9 +59,53 @@ const seeds = [
 
 const gardenPlants = {
   current: { title: "周六一起爬磨山", status: "active", asset: "tree.png", peer: "小蓝", date: "本周六", copy: "时间和地点还在确认中。回到行动群聊继续推进。" },
-  ride: { title: "东湖的夏日晚风", status: "memory", asset: "flower-1.png", peer: "阿澄", date: "7 月 26 日", copy: "湖边的风很轻，我们停下来拍了很久的落日。" },
-  photo: { title: "樱花季扫街", status: "memory", asset: "flower-4.png", peer: "小满", date: "4 月 5 日", copy: "一边走，一边交换镜头里的春天。" },
-  study: { title: "周末旧书店寻宝", status: "memory", asset: "flower-3.png", peer: "鹿鸣", date: "6 月 16 日", copy: "找到了彼此小时候都读过的那一本。" },
+  ride: { title: "沿着西湖骑一整圈夜风", status: "memory", asset: "flower-1.png", peer: "饭团、迟野", date: "2026 年 8 月 7 日", copy: "照片里没有风，但我每次看见它都能想起那晚。" },
+  photo: { title: "在花落完以前替朋友拍人像", status: "memory", asset: "flower-4.png", peer: "Bamboo、橘子汽水", date: "2026 年 4 月 5 日", copy: "花瓣落在肩上时，我们刚好在笑一个很普通的笑话。" },
+  study: { title: "用一卷胶片拍完校园的夏天", status: "memory", asset: "flower-3.png", peer: "橘子汽水、小满", date: "2026 年 6 月 19 日", copy: "不能重拍以后，我反而更敢按快门了。" },
+};
+
+const memoryJournals = {
+  ride: {
+    kicker: "追着晚风生长的花",
+    date: "2026 年 8 月 7 日",
+    place: "西湖沿线",
+    participants: ["一寸欢喜", "饭团", "迟野"],
+    note: "三辆共享单车停在湖边树下。我们碰了碰三瓶不同口味的汽水，又把骑行软件里那条闭合的轨迹看了一遍。照片没拍到风，但看到它，还是会想起那晚衣角一直被吹起来。",
+    quote: "照片里没有风，但我每次看见它都能想起那晚。",
+    chat: ["都骑到这里了，要不要把这一圈骑完？", "那就完整一圈。"],
+    captions: ["湖边树下 · 三辆车短暂停靠", "绕湖一圈 · 骑行轨迹已闭合"],
+    evidence: ["活动日期与地点", "3 张参与者确认的照片", "1 条本人感言", "2 句获准收录的聊天"],
+  },
+  photo: {
+    kicker: "来得及被春天看见的花",
+    date: "2026 年 4 月 5 日",
+    place: "校园樱花道",
+    participants: ["一寸欢喜", "Bamboo", "橘子汽水"],
+    note: "一寸欢喜举着相机，橘子汽水拿速写本找位置。Bamboo 没看镜头，只是被一句很普通的笑话逗笑，花瓣也刚好落在肩上。我们最后留下的，偏偏是没有排练过的那张。",
+    quote: "我确认，当时只是因为一个很普通的笑话。",
+    chat: ["不要看镜头。", "对，就是现在。"],
+    captions: ["肩上的花瓣 · 本人确认的人像", "玻璃倒影 · 摄影者也在照片里"],
+    evidence: ["活动日期与地点", "3 张参与者确认的照片", "1 条本人感言", "2 句获准收录的聊天"],
+  },
+  study: {
+    kicker: "只按一次快门的夏天",
+    date: "2026 年 6 月 19 日",
+    place: "校园各处",
+    participants: ["一寸欢喜", "橘子汽水", "小满"],
+    note: "一卷胶片分给三个人，不能回看，也不能重拍。旧教学楼墙上的树影、跑起来有点失焦的朋友、被风吹翻的一片叶子，都只有那一个版本。糊掉的那格没有被删掉，因为那一秒确实发生过。",
+    quote: "不能重拍以后，我反而更敢按快门了。",
+    chat: ["刚刚那张好像糊了。", "糊掉也是那一秒真的发生过。"],
+    captions: ["旧教学楼 · 墙面上的树影", "奔跑的人 · 略微失焦的一格"],
+    evidence: ["一卷胶片的活动规则", "3 张参与者确认的照片", "1 条本人感言", "2 句获准收录的聊天"],
+  },
+};
+
+const publicGardens = {
+  小蓝: { pet: "pet-water.png", tagline: "喜欢不赶时间的轻徒步，也会照顾第一次爬山的人。", flowers: ["flower-1.png", "flower-4.png", "flower-7.png"], interests: ["轻徒步", "沿途拍照", "当天往返"], memories: ["磨山的雾和热干面", "第一次带新手走完整条线"] },
+  小雨: { pet: "pet-talk.png", tagline: "常去剧场和小型演出，散场后喜欢慢慢聊一会儿。", flowers: ["flower-2.png", "flower-5.png", "flower-8.png"], interests: ["话剧", "现场音乐", "城市散步"], memories: ["没有节目单的草坪歌会", "散场后走回学校的一晚"] },
+  阿杰: { pet: "pet-idle.png", tagline: "骑车不追配速，路上看到好光线会停下来拍照。", flowers: ["flower-3.png", "flower-6.png", "flower-1.png"], interests: ["骑行", "摄影", "修车"], memories: ["西湖完整一圈", "帮朋友补好第一条内胎"] },
+  饭团: { pet: "pet-mail.png", tagline: "会为一个临时起意认真查路线，也愿意陪朋友多走一段。", flowers: ["flower-1.png", "flower-6.png", "flower-8.png"], interests: ["夜骑", "烧烤", "看球"], memories: ["绕湖一整圈的晚风", "窗外发白时的终场哨"] },
+  迟野: { pet: "pet-walk.png", tagline: "偏爱夜晚和清晨，背包里常有一瓶汽水。", flowers: ["flower-4.png", "flower-3.png", "flower-7.png"], interests: ["夜骑", "日出", "城市醒来"], memories: ["第一班车的空座位", "绕湖轨迹合上的那一刻"] },
 };
 
 const candidates = [
@@ -89,9 +134,27 @@ function partnerName() { return server.selectedCandidate || "小蓝"; }
 function candidateList() { return (server.candidates && server.candidates.length) ? server.candidates : candidates; }
 function candidateAt(index) { return candidateList()[Number(index)] || candidateList()[0]; }
 
-async function api(path, body) {
-  ui.loading = true;
-  render();
+function profileFor(name) {
+  const candidate = candidateList().find(person => person.name === name);
+  return publicGardens[name] || {
+    pet: "pet-walk.png",
+    tagline: candidate?.note || "这个花园还在慢慢长出主人的样子。",
+    flowers: ["flower-2.png", "flower-5.png", "flower-7.png"],
+    interests: candidate?.facts?.slice(0, 3) || ["校园同行", "新的体验", "认真赴约"],
+    memories: ["第一次和新搭子完成行动", "一件愿意再做一次的小事"],
+  };
+}
+
+function profileAvatar(name, label = `进入${name}的主页花园`) {
+  return `<button class="profile-avatar-link" data-profile="${escapeHtml(name)}" aria-label="${escapeHtml(label)}"><span>${escapeHtml(name.slice(-1))}</span><i>看花园</i></button>`;
+}
+
+async function api(path, body, options = {}) {
+  const silent = options.silent === true;
+  if (!silent) {
+    ui.loading = true;
+    render();
+  }
   try {
     const response = await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
     const result = await response.json();
@@ -102,7 +165,7 @@ async function api(path, body) {
     notify(error.message || "网络开了小差");
     return null;
   } finally {
-    ui.loading = false;
+    if (!silent) ui.loading = false;
     render();
   }
 }
@@ -377,7 +440,7 @@ function SeedDetailPage(id) {
   const seed = seeds.find(item => item.id === id) || seeds[0];
   return `<main class="screen detail-page letter-detail-page">
     ${topbar(seed.title, "小绿带回的一封信", true)}
-    <section class="paper-letter"><header><span class="letter-avatar large"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><div><small>来自花园外</small><strong>${seed.peer} · 校园已认证</strong></div><span class="paper-stamp">小绿<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.peer}<br><time>${seed.time}</time></footer></section>
+    <section class="paper-letter"><header>${profileAvatar(seed.peer)}<div><small>来自花园外</small><strong>${seed.peer} · 校园已认证</strong><button class="inline-profile-link" data-profile="${seed.peer}">看看 TA 的花园 ›</button></div><span class="paper-stamp">小绿<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.peer}<br><time>${seed.time}</time></footer></section>
     <div class="letter-facts"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span>${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div>
     <section class="match-box"><div>${pet(true)}</div><p><strong>为什么带给你</strong>${seed.reason}</p></section>
     <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button><button class="primary" data-action="join-seed">愿意加入</button></div>
@@ -418,17 +481,12 @@ function CandidatesPage() {
 
 function CandidateDetailPage(index) {
   const person = candidateAt(index);
-  return `<main class="screen candidate-detail-page">${topbar("同行者资料", `来自 ${escapeHtml(person.name)} 的公开信息`, true)}<section class="candidate-profile-card card"><span class="avatar">${escapeHtml(person.avatar)}</span><div><h2>${escapeHtml(person.name)}</h2><p>校园已认证 · 资料仅用于本次匹配</p><span>${escapeHtml(person.match)}</span></div></section><section class="a2a-proof-lite"><div class="a2a-proof-head"><div class="agent-pair"><span>🐦</span><span>🦊</span></div><div><small>A2A 过往经历总结</small><h3>为什么选择${escapeHtml(person.name)}</h3></div></div><p class="proof-intro">小绿与${escapeHtml(person.name)}的 Agent 核对了与这次行动有关的过往经历，只保留能支持你判断的部分。</p><div class="proof-facts">${person.facts.map(fact => `<span><i>✓</i>${escapeHtml(fact)}</span>`).join("")}</div><blockquote>${escapeHtml(person.reason)}</blockquote></section><button class="primary full profile-space-button" data-person-space="${index}">进入${escapeHtml(person.name)}的个人空间</button><button class="secondary full a2a-record-button" data-a2a-record="${index}">查看完整 A2A 沟通记录</button><div class="candidate-detail-actions"><button class="ghost" data-action="back">继续比较</button><button class="primary" data-candidate="${escapeHtml(person.name)}">选择 ${escapeHtml(person.name)}</button></div></main>`;
+  return `<main class="screen candidate-detail-page">${topbar("同行者资料", `来自 ${escapeHtml(person.name)} 的公开信息`, true)}<section class="candidate-profile-card card">${profileAvatar(person.name)}<div><h2>${escapeHtml(person.name)}</h2><p>校园已认证 · 头像可进入公开花园</p><span>${escapeHtml(person.match)}</span></div></section><section class="a2a-proof-lite"><div class="a2a-proof-head"><div class="agent-pair"><span>🐦</span><span>🦊</span></div><div><small>A2A 过往经历总结</small><h3>为什么选择${escapeHtml(person.name)}</h3></div></div><p class="proof-intro">小绿与${escapeHtml(person.name)}的 Agent 核对了与这次行动有关的过往经历，只保留能支持你判断的部分。</p><div class="proof-facts">${person.facts.map(fact => `<span><i>✓</i>${escapeHtml(fact)}</span>`).join("")}</div><blockquote>${escapeHtml(person.reason)}</blockquote></section><button class="primary full profile-space-button" data-profile="${escapeHtml(person.name)}">进入${escapeHtml(person.name)}的主页花园</button><button class="secondary full a2a-record-button" data-a2a-record="${index}">查看完整 A2A 沟通记录</button><div class="candidate-detail-actions"><button class="ghost" data-action="back">继续比较</button><button class="primary" data-candidate="${escapeHtml(person.name)}">选择 ${escapeHtml(person.name)}</button></div></main>`;
 }
 
-function CandidateSpacePage(index) {
-  const person = candidateAt(index);
-  const experiences = [
-    ["🌿", "周末兴趣同行", "提前确认安排，按约到场", "和 1 位搭子共同完成"],
-    ["📚", "校园共同计划", "会照顾彼此节奏，沟通自然", "和 2 位搭子共同完成"],
-    ["✨", "轻松体验活动", "结束后双方都愿意再次同行", "最近一次搭子经历"],
-  ];
-  return `<main class="screen candidate-space-page">${topbar(`${escapeHtml(person.name)}的个人空间`, "经本人授权展示", true)}<section class="space-hero card"><span class="avatar">${escapeHtml(person.avatar)}</span><h2>${escapeHtml(person.name)}</h2><p>用真实发生过的同行，代替抽象标签</p><div><span><b>6</b>共同经历</span><span><b>4</b>再次同行</span><span><b>100%</b>按约反馈</span></div></section><div class="space-section-title"><h3>过往搭子经历</h3><span>只展示双方同意公开的内容</span></div><div class="experience-list">${experiences.map(([emoji, title, note, meta]) => `<article class="experience-card card"><span>${emoji}</span><div><small>${meta}</small><h3>${title}</h3><p>${note}</p></div></article>`).join("")}</div></main>`;
+function PublicGardenPage(name) {
+  const garden = profileFor(name);
+  return `<main class="screen public-garden-page">${topbar(`${escapeHtml(name)}的花园`, "经本人授权公开", true)}<section class="visitor-garden-hero"><img src="assets/garden-world-v2.png" alt="${escapeHtml(name)}的个性化花园底图"><div class="visitor-garden-shade"></div><div class="visitor-garden-house-note">房子与信箱位置将保持一致<br><small>宠物、花和兴趣装饰会因主人不同而变化</small></div><img class="visitor-pet" src="assets/pet-actions/${garden.pet}" alt="${escapeHtml(name)}的宠物">${garden.flowers.map((flower, index) => `<img class="visitor-flower visitor-flower-${index + 1}" src="assets/${flower}" alt="${escapeHtml(name)}种下的花">`).join("")}</section><section class="visitor-profile-card"><div class="visitor-profile-head"><span class="profile-avatar-link public-profile-avatar"><span>${escapeHtml(name.slice(-1))}</span><i>花园主人</i></span><div><small>校园已认证 · 公开花园</small><h2>${escapeHtml(name)}</h2><p>${escapeHtml(garden.tagline)}</p></div></div><div class="visitor-interest-list">${garden.interests.map(item => `<span>${escapeHtml(item)}</span>`).join("")}</div></section><div class="space-section-title"><h3>TA 做过的有趣事情</h3><span>只展示本人同意公开的回忆</span></div><div class="public-memory-list">${garden.memories.map((memory, index) => `<article><img src="assets/${garden.flowers[index % garden.flowers.length]}" alt=""><div><small>${index ? "愿意再次同行" : "最近开花"}</small><h3>${escapeHtml(memory)}</h3><p>这段经历的具体手账由参与者共同决定是否公开。</p></div></article>`).join("")}</div><p class="garden-placeholder-note">个性化家园 Mock 仍在设计中。本页已经把头像入口、数据结构和稳定的房子／信箱布局留好，后续可直接替换主人专属底图。</p></main>`;
 }
 
 function CandidateA2APage(index) {
@@ -445,7 +503,7 @@ function ChatPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
   const messages = server.messages.map(message => `<div class="message ${message.author === "me" ? "me" : "them"}">${escapeHtml(message.text)}</div>`).join("");
   const allConfirmed = server.slots.people && server.slots.time && server.slots.place;
-  return `<main class="screen chat-screen github-aligned-page">${topbar(escapeHtml(actionTitle()), "4 位群聊成员", true)}
+  return `<main class="screen chat-screen github-aligned-page"><header class="chat-person-topbar"><button data-action="back" aria-label="返回">‹</button>${profileAvatar(partnerName())}<div><small>4 位群聊成员 · 点击头像看主页</small><h1>${escapeHtml(actionTitle())}</h1><button class="chat-profile-text" data-profile="${escapeHtml(partnerName())}">${escapeHtml(partnerName())}的花园 ›</button></div></header>
     <section class="chat-progress"><div class="growth-plant">${plant(server.stage, "sm", "green")}</div><div><strong>行动状态 · ${meta[0]}</strong><small>${meta[1]}</small></div></section>
     <div class="chat-log" id="chat-log">
       <div class="chat-divider"><span>匹配阶段 · 两位 Agent 的对话记录</span></div>
@@ -487,7 +545,18 @@ function MemoryDetailPage(id, source) {
   const title = id === "current" && server.archived ? actionTitle() : item.title;
   const peer = id === "current" && server.archived ? partnerName() : item.peer;
   const copy = id === "current" && ui.memoryText ? ui.memoryText : item.copy;
-  return `<main class="screen memory-detail-page">${topbar(title, "这株花保存的共同回忆", true)}<section class="memory-cover"><img src="assets/garden-scene.png" alt="${title}的花园回忆"><img class="memory-flower" src="assets/${item.asset || "flower-7.png"}" alt="${title}开出的花"></section><section class="memory-letter"><small>${item.date || "最近"} · 和${peer}</small><h2>${title}</h2><p>${copy}</p><div class="memory-photo-grid"><figure><img src="assets/garden-background.png" alt="行动途中的花园留影"><figcaption>路上遇见的风景</figcaption></figure><figure><img src="assets/home-interior.png" alt="行动后的手账留影"><figcaption>小绿收好的手账</figcaption></figure></div></section><section class="history-chat"><h3>当时的对话</h3><div class="message them">今天真的很开心，下次还走这条路吗？</div><div class="message me">好呀，下次换个季节再来。</div></section><div class="memory-detail-actions"><button class="secondary full" data-action="open-all-memories">查看全部回忆</button><button class="primary full" data-action="again">从这里再种一颗种子</button></div></main>`;
+  const journal = memoryJournals[id] || {
+    kicker: "一株刚刚收好的花",
+    date: item.date || "最近",
+    place: "共同抵达的地方",
+    participants: ["小周", ...String(peer).split("、")],
+    note: copy,
+    quote: copy,
+    chat: ["这段记忆已经收好。", "下次再一起出发。"],
+    captions: ["参与者确认的行动照片", "共同留下的记录"],
+    evidence: ["活动元数据", "参与者主动提交的感言"],
+  };
+  return `<main class="screen memory-detail-page memory-journal-page">${topbar(title, "这株花保存的共同回忆", true)}<article class="journal-book"><section class="journal-cover"><div class="journal-tape"></div><img src="assets/garden-scene.png" alt="${escapeHtml(title)}的花园回忆"><img class="journal-flower" src="assets/${item.asset || "flower-7.png"}" alt="${escapeHtml(title)}开出的花"><span>NO. ${id === "ride" ? "0807" : id === "photo" ? "0405" : "0619"}</span></section><section class="journal-paper"><div class="journal-meta"><span>${escapeHtml(journal.date)}</span><span>${escapeHtml(journal.place)}</span></div><p class="journal-kicker">${escapeHtml(journal.kicker)}</p><h2>${escapeHtml(title)}</h2><div class="journal-people"><span>那天在场</span>${journal.participants.map(name => `<button data-profile="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("")}</div><p class="journal-note">${escapeHtml(journal.note)}</p><blockquote class="journal-quote">“${escapeHtml(journal.quote)}”<small>参与者提交的感言</small></blockquote><div class="journal-photo-grid"><figure><img src="assets/garden-background.png" alt="${escapeHtml(journal.captions[0])}"><figcaption>${escapeHtml(journal.captions[0])}</figcaption></figure><figure><img src="assets/home-interior.png" alt="${escapeHtml(journal.captions[1])}"><figcaption>${escapeHtml(journal.captions[1])}</figcaption></figure></div><div class="journal-sticker sticker-one">一起<br>发生</div><div class="journal-sticker sticker-two">记住<br>这一天</div><div class="journal-doodle" aria-hidden="true">⌁ · · · ⌁</div><section class="journal-chat"><small>当时获准收录的两句话</small><p>${escapeHtml(journal.chat[0])}</p><p>${escapeHtml(journal.chat[1])}</p></section><details class="journal-evidence"><summary>这页手账用了哪些已确认材料</summary><ul>${journal.evidence.map(entry => `<li>${escapeHtml(entry)}</li>`).join("")}</ul><p>小花只整理参与者交给它的材料，不补写无法知道的现场细节。</p></details></section></article><div class="memory-detail-actions"><button class="secondary full" data-action="open-all-memories">查看全部回忆</button><button class="primary full" data-action="again">从这里再种一颗种子</button></div></main>`;
 }
 
 function ProfilePage() {
@@ -499,7 +568,7 @@ function page() {
   if (ui.route?.startsWith("seed:")) return SeedDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("plant:")) return PlantDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("memory:")) return MemoryDetailPage(ui.route.split(":")[1]);
-  if (ui.route?.startsWith("candidate-space:")) return CandidateSpacePage(ui.route.split(":")[1]);
+  if (ui.route?.startsWith("profile:")) return PublicGardenPage(decodeURIComponent(ui.route.slice(8)));
   if (ui.route?.startsWith("candidate-a2a:")) return CandidateA2APage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("candidate:")) return CandidateDetailPage(ui.route.split(":")[1]);
   return ({ publish: PublishPage, matching: MatchingPage, candidates: CandidatesPage, chat: ChatPage, complete: CompletePage, memory: MemoryPage }[ui.route]
@@ -518,6 +587,7 @@ function goBack() {
   else if (ui.route?.startsWith("seed:")) { ui.route = null; ui.tab = "mailbox"; }
   else if (ui.route?.startsWith("plant:")) { ui.route = null; ui.tab = "garden"; }
   else if (ui.route?.startsWith("memory:")) { ui.route = "memory"; }
+  else if (ui.route?.startsWith("profile:")) { ui.route = ui.profileReturn || null; ui.profileReturn = null; }
   else if (ui.route?.startsWith("candidate-space:") || ui.route?.startsWith("candidate-a2a:")) ui.route = `candidate:${ui.route.split(":")[1]}`;
   else if (ui.route?.startsWith("candidate:")) ui.route = "candidates";
   else if (ui.route === "chat" || ui.route === "memory") { const previous = ui.route; ui.route = null; ui.tab = previous === "chat" ? "actions" : "garden"; }
@@ -528,13 +598,14 @@ function goBack() {
 
 document.addEventListener("click", async event => {
   if (event.target.closest(".world-mailbox-panel") && !event.target.closest("button, [data-seed], [data-action]")) return;
-  const target = event.target.closest("button, [data-route], [data-seed], [data-plant], [data-memory], [data-action]");
+  const target = event.target.closest("button, [data-route], [data-seed], [data-plant], [data-memory], [data-action], [data-profile]");
   if (!target) return;
   if (target.dataset.tab) { ui.tab = target.dataset.tab; ui.route = null; return render(); }
   if (target.dataset.route) { ui.route = target.dataset.route; return render(); }
   if (target.dataset.seed) { ui.mailboxOverlay = false; markMailboxRead(); ui.route = `seed:${target.dataset.seed}`; return render(); }
   if (target.dataset.plant) { ui.route = `plant:${target.dataset.plant}`; return render(); }
   if (target.dataset.memory) { ui.route = `memory:${target.dataset.memory}`; return render(); }
+  if (target.dataset.profile) { ui.profileReturn = ui.route; ui.route = `profile:${encodeURIComponent(target.dataset.profile)}`; return render(); }
   if (target.dataset.mailbox) { ui.mailboxMode = target.dataset.mailbox; return render(); }
   if (target.dataset.world) {
     const destination = target.dataset.world;
@@ -679,4 +750,4 @@ document.addEventListener("submit", async event => {
 });
 
 window.addEventListener("popstate", render);
-api("/api/demo").then(render);
+api("/api/demo", undefined, { silent: true });
