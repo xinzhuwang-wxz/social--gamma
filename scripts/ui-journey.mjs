@@ -42,15 +42,23 @@ const owner = await mk();
 const cand = await mk();
 const shot = (p, n) => p.screenshot({ path: `${DIR}/${n}.png` }).catch(() => {});
 
+// 登录辅助：走 API（page.request 共享上下文 cookie），与欢迎页 UI 解耦
+async function createIdentity(page, name, bio) {
+  const r = await page.request.post(`${BASE}/api/auth`, { data: { name, bio } });
+  if (!r.ok()) throw new Error(`createIdentity ${name} → ${r.status()}`);
+}
+async function loginAs(page, userId) {
+  const r = await page.request.post(`${BASE}/api/auth`, { data: { userId } });
+  if (!r.ok()) throw new Error(`loginAs ${userId} → ${r.status()}`);
+}
+
 // ───────────────────────── 发起人侧 ─────────────────────────
 
 await step("welcome-create", async () => {
   await owner.page.goto(`${BASE}/welcome`);
-  await owner.page.getByText("创建我自己的身份").click();
-  await owner.page.getByPlaceholder("昵称").fill("journey小明");
-  await owner.page.getByPlaceholder("比如：想找人一起晨跑").fill("想找人一起周末爬山");
   await shot(owner.page, "01-welcome");
-  await owner.page.getByText("进入我的花园").click();
+  await createIdentity(owner.page, "journey小明", "想找人一起周末爬山");
+  await owner.page.goto(`${BASE}/garden`);
   await owner.page.waitForURL("**/garden");
   await shot(owner.page, "01b-garden-empty");
 });
@@ -102,6 +110,7 @@ await step("seed-publish", async () => {
 });
 
 let candidateName = "";
+let candidateId = "";
 let seedTitle = "";
 await step("matching-delivered", async () => {
   const seedId = seedPath.split("/").pop();
@@ -118,6 +127,7 @@ await step("matching-delivered", async () => {
   }, seedId);
   if (!data.intents?.length) throw new Error("无投递候选人");
   candidateName = data.intents[0].candidate.name;
+  candidateId = data.intents[0].candidate.id;
   seedTitle = data.seed.title;
   await shot(owner.page, "05-matching");
 });
@@ -125,9 +135,7 @@ await step("matching-delivered", async () => {
 // ───────────────────────── 候选人侧 ─────────────────────────
 
 await step("candidate-mailbox", async () => {
-  await cand.page.goto(`${BASE}/welcome`);
-  await cand.page.getByText(candidateName, { exact: true }).first().click();
-  await cand.page.waitForURL("**/garden");
+  await loginAs(cand.page, candidateId);
   await cand.page.goto(`${BASE}/mailbox`);
   await cand.page.getByText(seedTitle, { exact: true }).first().waitFor({ timeout: 15000 });
   await shot(cand.page, "06-mailbox");
@@ -161,14 +169,12 @@ await step("decline-other", async () => {
   }, seedId);
   otherCandidates = (data.intents ?? [])
     .filter((i) => i.status === "delivered")
-    .map((i) => i.candidate.name);
+    .map((i) => ({ id: i.candidate.id, name: i.candidate.name }));
   if (otherCandidates.length === 0) {
     console.log("  (仅一位候选，跳过婉拒路径)");
     return;
   }
-  await third.page.goto(`${BASE}/welcome`);
-  await third.page.getByText(otherCandidates[0], { exact: true }).first().click();
-  await third.page.waitForURL("**/garden");
+  await loginAs(third.page, otherCandidates[0].id);
   await third.page.goto(`${BASE}/mailbox`);
   await third.page.getByText(seedTitle, { exact: true }).first().click();
   await third.page.waitForURL("**/invite/**");
@@ -207,12 +213,10 @@ await step("closed-notice", async () => {
     const r = await fetch(`/api/seeds/${id}`);
     return r.json();
   }, seedId);
-  const target = (detail.intents ?? []).find((i) => i.candidate.name === remaining[0]);
+  const target = (detail.intents ?? []).find((i) => i.candidate.id === remaining[0].id);
   if (!target) throw new Error("找不到落选候选人的投递");
   // 该候选人登录后直接打开邀请详情（关闭态种子已从信箱主列表移除，符合 Spec）
-  await third.page.goto(`${BASE}/welcome`);
-  await third.page.getByText(remaining[0], { exact: true }).first().click();
-  await third.page.waitForURL("**/garden");
+  await loginAs(third.page, remaining[0].id);
   await third.page.goto(`${BASE}/invite/${target.matchId}`);
   await third.page
     .getByText("种子已找到同行者", { exact: false })
