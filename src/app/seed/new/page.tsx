@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Mic } from "lucide-react";
 import { CourierBird, SeedIllustration } from "@/components/world";
+import { useSpeech } from "@/lib/use-speech";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -207,6 +208,10 @@ export default function NewSeedPage() {
   const [publishing, setPublishing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const { supported: speechSupported, listening, toggle: toggleSpeech } = useSpeech({
+    onResult: setInput,
+  });
+
   // Auto-scroll to bottom whenever key state changes
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -364,6 +369,27 @@ export default function NewSeedPage() {
         style={{ borderColor: "var(--color-card-border)" }}
       >
         <div className="flex gap-2">
+          {speechSupported && (
+            <motion.button
+              onClick={toggleSpeech}
+              animate={listening ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+              transition={
+                listening
+                  ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                  : {}
+              }
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border ${
+                listening
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-sky text-ink-2"
+              }`}
+              style={listening ? {} : { borderColor: "var(--color-card-border)" }}
+              aria-label={listening ? "停止录音" : "语音输入"}
+              disabled={loading || publishing}
+            >
+              <Mic size={18} />
+            </motion.button>
+          )}
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
