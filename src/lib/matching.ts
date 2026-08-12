@@ -37,16 +37,21 @@ export async function runMatching(seedId: string) {
   if (!seed || seed.status !== "matching") return;
 
   const [owner] = await db.select().from(schema.users).where(eq(schema.users.id, seed.ownerId));
-  const pool = await db
+
+  // 仿真模式：只把种子投给「为本颗种子即时捏出的、正好合拍的仿真同伴」+ 真人用户，
+  // 不混入预设 persona（它们不会自动回应，会造成"投了却没人理"的死投递）。
+  const simOn = process.env.SIM_MODE !== "0";
+  const allOthers = await db
     .select()
     .from(schema.users)
-    .where(and(ne(schema.users.id, seed.ownerId), eq(schema.users.isPersona, true)));
-  // 非 persona 的真实用户也加入候选池
-  const realUsers = await db
-    .select()
-    .from(schema.users)
-    .where(and(ne(schema.users.id, seed.ownerId), eq(schema.users.isPersona, false)));
-  const candidates = [...pool, ...realUsers].map(toProfile);
+    .where(ne(schema.users.id, seed.ownerId));
+  const candidates = allOthers
+    .filter((u) =>
+      simOn
+        ? u.isSim || (!u.isPersona && !u.isSim) // 仿真同伴 + 真人
+        : !u.isSim // 无仿真回归：预设 persona + 真人
+    )
+    .map(toProfile);
   if (candidates.length === 0) return;
 
   const card = { ...seedToCard(seed), ownerName: owner.name };

@@ -220,10 +220,17 @@ async function main() {
       set: { name: p.name, bio: p.bio, traits: p.traits, emoji: p.emoji },
     });
   }
-  for (const s of personaSeeds) {
-    await db.insert(schema.seeds).values(s).onConflictDoNothing();
+  // SEED_PERSONAS_ONLY=1：只写登录身份，不写人工预设种子（仿真同伴引擎驱动一切）。
+  // 无仿真回归（SIM_MODE=0）仍需 persona 作候选池，但种子由测试脚本自建，故预设种子非必需。
+  const withSeeds = process.env.SEED_PERSONAS_ONLY !== "1";
+  if (withSeeds) {
+    for (const s of personaSeeds) {
+      await db.insert(schema.seeds).values(s).onConflictDoNothing();
+    }
   }
-  console.log(`seeded ${personas.length} personas, ${personaSeeds.length} seeds`);
+  console.log(
+    `seeded ${personas.length} personas${withSeeds ? `, ${personaSeeds.length} seeds` : " (personas only)"}`
+  );
 }
 
 main();
