@@ -1,0 +1,27 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# env & secrets
+.env
+.env.local
+.env.*.local
+
+# build
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# db
+*.db
+*.db-journal
+*.sqlite
+data/
+
+# misc
+.DS_Store
+*.log
+coverage/
+.turbo/
