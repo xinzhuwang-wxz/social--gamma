@@ -24,7 +24,15 @@ export type Snapshot = {
   stage: string;
   // 真实数据增量：仿真候选人 + 当前草稿
   candidates: DemoCandidate[];
-  draft: { idea: string; time: string; place: string; people: string } | null;
+  draft: {
+    idea: string;
+    time: string;
+    place: string;
+    people: string;
+    companion: string;
+    habit: string;
+    activityDetail: string;
+  } | null;
 };
 
 type DemoState = Omit<Snapshot, "stage">;

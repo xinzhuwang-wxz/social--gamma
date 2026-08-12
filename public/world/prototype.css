@@ -1,5 +1,5 @@
 :root {
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   color: #393825;
   background: #e8e4d7;
   font-synthesis: none;
@@ -24,7 +24,7 @@
   --agent-soft: #fff4d9;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; font-family: inherit; }
 body { margin: 0; min-height: 100vh; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
@@ -364,3 +364,4 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .memory-tile h3 { margin-top: 10px; margin-bottom: 5px; font-family: "Songti SC", STSong, serif; font-size: 12px; line-height: 1.35; }
 .memory-tile p { margin-top: 0; margin-bottom: 8px; color: var(--muted); font-size: 8px; line-height: 1.5; }
 .memory-tile small { display: block; color: #91876d; font-size: 7px; }
+.world-dock button, .world-dock small { font-family: inherit; }

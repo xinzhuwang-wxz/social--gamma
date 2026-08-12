@@ -37,6 +37,9 @@ export async function fabricateCandidates(draft: {
   time?: string;
   place?: string;
   people?: string;
+  companion?: string;
+  habit?: string;
+  activityDetail?: string;
 }): Promise<DemoCandidate[]> {
   const { object } = await generateObject({
     model: fastModel,
@@ -45,7 +48,7 @@ export async function fabricateCandidates(draft: {
     system: `为一个校园搭子行动即时生成 3 位真实可信、彼此不同的候选同行者。
 要求：每位都真心想参加、时间兼容；契合角度各不相同（经验型/热情新手型/顺路同好型）；
 细节具体可信，可带一个无伤大雅的小限制。不要用「小蓝/小雨/阿杰」这些名字。`,
-    prompt: `行动：${draft.idea ?? "一起做点事"}\n时间：${draft.time ?? "待定"}\n地点：${draft.place ?? "校园周边"}\n人数：${draft.people ?? "2-4 人"}\n生成 3 位候选人。`,
+    prompt: `行动：${draft.idea ?? "一起做点事"}\n时间：${draft.time ?? "待定"}\n地点：${draft.place ?? "校园周边"}\n人数：${draft.people ?? "2-4 人"}\n同行者期待：${draft.companion ?? "可以商量"}\n相处习惯：${draft.habit ?? "未特别说明"}\n活动专项信息：${draft.activityDetail ?? "未特别说明"}\n生成 3 位候选人。`,
   });
   return object.candidates.slice(0, 3);
 }
