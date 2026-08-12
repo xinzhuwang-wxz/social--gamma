@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq, or, inArray } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser } from "@/lib/session";
 

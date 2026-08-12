@@ -2,8 +2,15 @@
 
 import useSWR from "swr";
 import Link from "next/link";
+import { Plant } from "@/components/world";
 
 const fetcher = (u: string) => fetch(u).then((r) => r.json());
+
+function familyOf(id: string): 0 | 1 | 2 {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 997;
+  return (h % 3) as 0 | 1 | 2;
+}
 
 export default function ForestPage() {
   const { data } = useSWR("/api/forest", fetcher, { refreshInterval: 8000 });
@@ -23,7 +30,7 @@ export default function ForestPage() {
 
       {memories.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-3 text-center">
-          <span className="text-5xl">🌳</span>
+          <Plant stage="seed" family={1} size={72} />
           <p className="font-kai text-ink-2">
             森林还在等待第一棵开花的植物，
             <br />
@@ -31,15 +38,21 @@ export default function ForestPage() {
           </p>
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-4 flex flex-col gap-3 pb-6">
           {memories.map((m) => (
-            <Link key={m.id} href={`/memory/${m.id}`} className="card flex flex-col gap-1 p-4">
-              <span className="text-3xl">🌸</span>
-              <span className="font-kai text-lg font-semibold text-ink">{m.title}</span>
-              {m.summary && <span className="text-sm text-ink-2">{m.summary}</span>}
-              <span className="text-xs text-ink-3">
-                和 {m.withEmoji} {m.withName} · {m.date}
-              </span>
+            <Link key={m.id} href={`/memory/${m.id}`} className="card flex items-center gap-4 p-4">
+              <div className="shrink-0 rounded-md bg-grass/30 p-1">
+                <Plant stage="bloom" family={familyOf(m.id)} size={64} />
+              </div>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="font-kai text-lg font-semibold text-ink">{m.title}</span>
+                {m.summary && (
+                  <span className="line-clamp-2 text-sm text-ink-2">{m.summary}</span>
+                )}
+                <span className="text-xs text-ink-3">
+                  和 {m.withEmoji} {m.withName} · {m.date}
+                </span>
+              </div>
             </Link>
           ))}
         </div>

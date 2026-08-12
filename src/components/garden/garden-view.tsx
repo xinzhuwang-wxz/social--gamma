@@ -70,8 +70,8 @@ export function GardenView() {
             </div>
           )}
           {plants.length > 0 && anyMatching && (
-            <div className="absolute right-3 top-2">
-              <CourierBird state="flying" size={52} />
+            <div className="absolute left-8 top-6">
+              <CourierBird state="flying" size={48} />
             </div>
           )}
         </GardenScene>

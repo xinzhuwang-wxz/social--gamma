@@ -191,35 +191,28 @@ function BudStage({ family }: { family: PlantFamily }) {
   const dark = ["#5A7835", "#4E7030", "#486820"][family];
   const light = ["#7BA050", "#6A8A40", "#5E8030"][family];
 
-  const BudShape = () => {
-    if (family === 0) {
+  const budShape =
+    family === 0 ? (
       // Wildflower bud: rounded green bud
-      return (
-        <>
-          <ellipse cx="40" cy="30" rx="8" ry="11" fill={dark} />
-          <ellipse cx="40" cy="28" rx="5.5" ry="8" fill="#DCE3AE" />
-        </>
-      );
-    }
-    if (family === 1) {
+      <>
+        <ellipse cx="40" cy="30" rx="8" ry="11" fill={dark} />
+        <ellipse cx="40" cy="28" rx="5.5" ry="8" fill="#DCE3AE" />
+      </>
+    ) : family === 1 ? (
       // Tulip bud: tapered oval
-      return (
-        <>
-          <ellipse cx="40" cy="28" rx="7" ry="13" fill="#C87060" />
-          <path d="M 33 32 Q 40 14 47 32" fill="#B86050" />
-          <ellipse cx="40" cy="27" rx="3" ry="6" fill="#E89080" />
-        </>
-      );
-    }
-    // Sunflower bud: large round head, closed
-    return (
+      <>
+        <ellipse cx="40" cy="28" rx="7" ry="13" fill="#C87060" />
+        <path d="M 33 32 Q 40 14 47 32" fill="#B86050" />
+        <ellipse cx="40" cy="27" rx="3" ry="6" fill="#E89080" />
+      </>
+    ) : (
+      // Sunflower bud: large round head, closed
       <>
         <ellipse cx="40" cy="26" rx="11" ry="12" fill={dark} />
         <ellipse cx="40" cy="24" rx="7" ry="8" fill="#7BA050" />
         <ellipse cx="40" cy="22" rx="4" ry="5" fill="#DBA940" opacity="0.7" />
       </>
     );
-  };
 
   return (
     <>
@@ -231,7 +224,7 @@ function BudStage({ family }: { family: PlantFamily }) {
       <Leaf cx={53} cy={68} rx={11} ry={5.5} rotate={40} fill={dark} />
       {/* Bud calyx (green base) */}
       <ellipse cx="40" cy="40" rx="6" ry="5" fill={dark} />
-      <BudShape />
+      {budShape}
     </>
   );
 }
