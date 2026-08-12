@@ -27,6 +27,10 @@ interface Pact {
   ownerConfirmed: boolean;
   partnerConfirmed: boolean;
   version: number;
+  // 新字段（群体房间额外携带）
+  myConfirmed?: boolean;
+  confirmedCount?: number;
+  memberCount?: number;
 }
 
 interface Msg {
@@ -38,6 +42,15 @@ interface Msg {
   createdAt: string;
 }
 
+interface RoomMember {
+  id: string;
+  name: string | null;
+  emoji: string;
+  color: string;
+  role: "owner" | "partner";
+  completed: boolean;
+}
+
 interface RoomData {
   room: {
     id: string;
@@ -47,6 +60,7 @@ interface RoomData {
     myCompleted: boolean;
     otherCompleted: boolean;
     isOwner: boolean;
+    memberCount?: number;
   };
   seed: {
     id: string;
@@ -64,6 +78,7 @@ interface RoomData {
     grade: string | null;
     major: string | null;
   };
+  members: RoomMember[] | null;
   a2a: {
     turns: { agent: "owner" | "candidate"; text: string }[];
     commonalities: string[];
@@ -138,6 +153,33 @@ function BloomCelebration({ onDismiss }: { onDismiss: () => void }) {
         开花啦
       </p>
     </motion.div>
+  );
+}
+
+/** 成员头像行（群体房间顶部展示） */
+function MembersRow({ members, myId }: { members: RoomMember[]; myId?: string }) {
+  return (
+    <div className="mt-2.5 flex items-center gap-3 overflow-x-auto pb-0.5">
+      {members.map((m) => (
+        <div key={m.id} className="flex shrink-0 flex-col items-center gap-0.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full text-lg"
+            style={{
+              background: m.color,
+              boxShadow: m.id === myId ? "0 0 0 2px var(--color-primary)" : undefined,
+            }}
+          >
+            {m.emoji}
+          </div>
+          <span
+            className="max-w-[36px] truncate text-[9px]"
+            style={{ color: "var(--color-ink-3)" }}
+          >
+            {m.id === myId ? "我" : (m.name ?? "?")}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -335,15 +377,20 @@ export default function RoomPage({
     );
   }
 
-  const { room, seed, other, a2a, messages, pact, myMemoryDone, memoryId } = data;
+  const { room, seed, other, a2a, messages, pact, myMemoryDone, memoryId, members } = data;
+
+  const isGroup = members && members.length > 2;
+  // 我的 userId：如果 isOwner，找 role=owner 的成员；否则找不在 other 中的 partner
+  const myUserId = room.isOwner
+    ? members?.find((m) => m.role === "owner")?.id
+    : members?.find((m) => m.role === "partner" && m.id !== other.id)?.id;
 
   const humanCount = messages.filter((m) => m.kind === "text").length;
   const firstAiIdx = messages.findIndex((m) => m.kind === "ai");
 
+  // pact 确认状态
   const myPactConfirmed = pact
-    ? room.isOwner
-      ? pact.ownerConfirmed
-      : pact.partnerConfirmed
+    ? (pact.myConfirmed ?? (room.isOwner ? pact.ownerConfirmed : pact.partnerConfirmed))
     : false;
   const otherPactConfirmed = pact
     ? room.isOwner
@@ -353,6 +400,18 @@ export default function RoomPage({
 
   const memoryDone = myMemoryDone || memorySubmitted;
   const showMemoryForm = room.stage === "bloom" && !memoryDone;
+
+  // 完成人数（群体）
+  const completedCount = members ? members.filter((m) => m.completed).length : null;
+  const memberCount = members?.length ?? room.memberCount ?? 2;
+
+  // 为消息找对方信息（群体时根据 senderId 从 members 中查）
+  function getMsgSender(senderId: string | null) {
+    if (!senderId || !members) return other;
+    const found = members.find((m) => m.id === senderId);
+    if (!found) return other;
+    return { id: found.id, name: found.name, emoji: found.emoji, color: found.color, grade: null, major: null };
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -423,6 +482,11 @@ export default function RoomPage({
             <StageProgress currentStage={room.stage} />
           </div>
         </div>
+
+        {/* 群体成员头像行 */}
+        {isGroup && members && (
+          <MembersRow members={members} myId={myUserId} />
+        )}
       </div>
 
       {/* ── Scrollable middle ── */}
@@ -439,7 +503,7 @@ export default function RoomPage({
                   className="text-sm font-semibold"
                   style={{ color: "var(--color-olive)" }}
                 >
-                  {other.emoji} {other.name ?? "对方"} 的信息
+                  {isGroup ? "✨ 队伍信息" : `${other.emoji} ${other.name ?? "对方"} 的信息`}
                 </span>
                 <span className="text-xs" style={{ color: "var(--color-ink-3)" }}>
                   {summaryOpen ? "收起" : "展开"}
@@ -610,9 +674,15 @@ export default function RoomPage({
                     className="flex gap-3 text-xs"
                     style={{ color: "var(--color-ink-3)" }}
                   >
-                    <span>{myPactConfirmed ? "✅ 我已确认" : "⬜ 我尚未确认"}</span>
-                    <span>·</span>
-                    <span>{otherPactConfirmed ? "✅ 对方已确认" : "⬜ 等对方确认"}</span>
+                    {isGroup && pact.confirmedCount !== undefined && pact.memberCount !== undefined ? (
+                      <span>已确认 {pact.confirmedCount}/{pact.memberCount}</span>
+                    ) : (
+                      <>
+                        <span>{myPactConfirmed ? "✅ 我已确认" : "⬜ 我尚未确认"}</span>
+                        <span>·</span>
+                        <span>{otherPactConfirmed ? "✅ 对方已确认" : "⬜ 等对方确认"}</span>
+                      </>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     {!myPactConfirmed && (
@@ -727,21 +797,22 @@ export default function RoomPage({
               );
             }
 
-            // Other person's message — show avatar + name
+            // Other person's message
+            const sender = getMsgSender(msg.senderId);
             return (
               <div key={msg.id} className="flex items-start gap-2">
                 <div className="flex shrink-0 flex-col items-center gap-0.5">
                   <div
                     className="flex h-8 w-8 items-center justify-center rounded-full text-base"
-                    style={{ background: other.color }}
+                    style={{ background: sender.color }}
                   >
-                    {other.emoji}
+                    {sender.emoji}
                   </div>
                   <span
                     className="max-w-[32px] truncate text-[9px]"
                     style={{ color: "var(--color-ink-4)" }}
                   >
-                    {other.name ?? "对方"}
+                    {sender.name ?? "对方"}
                   </span>
                 </div>
                 <div
@@ -893,7 +964,9 @@ export default function RoomPage({
                 className="text-center text-sm"
                 style={{ color: "var(--color-ink-3)" }}
               >
-                {room.otherCompleted
+                {isGroup && completedCount !== null
+                  ? `已完成 ${completedCount}/${memberCount}`
+                  : room.otherCompleted
                   ? "双方都已确认完成！🌸"
                   : "已记录，等待对方也确认…"}
               </p>

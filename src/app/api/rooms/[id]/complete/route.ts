@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
 
-/** POST /api/rooms/:id/complete — 我确认行动已完成；双确认 → 开花 */
+/** POST /api/rooms/:id/complete — 我确认行动已完成；全体确认 → 开花 */
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,18 +17,59 @@ export async function POST(
   if (!room) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   const isOwner = room.ownerId === me.id;
-  const ownerCompleted = room.ownerCompleted || isOwner;
-  const partnerCompleted = room.partnerCompleted || !isOwner;
-  const both = ownerCompleted && partnerCompleted;
 
-  await db
-    .update(schema.rooms)
-    .set({
-      ownerCompleted,
-      partnerCompleted,
-      stage: both ? "bloom" : room.stage,
-    })
-    .where(eq(schema.rooms.id, id));
+  // 检查 roomMembers（新房间）
+  const members = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, id));
+
+  let both: boolean;
+
+  if (members.length > 0) {
+    // 新房间：更新我的 roomMember.completed
+    await db
+      .update(schema.roomMembers)
+      .set({ completed: true })
+      .where(
+        and(
+          eq(schema.roomMembers.roomId, id),
+          eq(schema.roomMembers.userId, me.id)
+        )
+      );
+
+    // 重新查询检查全体是否完成
+    const refreshed = await db
+      .select()
+      .from(schema.roomMembers)
+      .where(eq(schema.roomMembers.roomId, id));
+    both = refreshed.every((m) => m.completed);
+
+    // 同时更新 ownerCompleted / partnerCompleted 兼容字段
+    const ownerCompleted = room.ownerCompleted || isOwner;
+    const partnerCompleted = room.partnerCompleted || (room.partnerId === me.id);
+    await db
+      .update(schema.rooms)
+      .set({
+        ownerCompleted: both ? true : ownerCompleted,
+        partnerCompleted: both ? true : partnerCompleted,
+        stage: both ? "bloom" : room.stage,
+      })
+      .where(eq(schema.rooms.id, id));
+  } else {
+    // 旧房间：原有逻辑不变
+    const ownerCompleted = room.ownerCompleted || isOwner;
+    const partnerCompleted = room.partnerCompleted || !isOwner;
+    both = ownerCompleted && partnerCompleted;
+    await db
+      .update(schema.rooms)
+      .set({
+        ownerCompleted,
+        partnerCompleted,
+        stage: both ? "bloom" : room.stage,
+      })
+      .where(eq(schema.rooms.id, id));
+  }
 
   if (both) {
     await db.insert(schema.messages).values({

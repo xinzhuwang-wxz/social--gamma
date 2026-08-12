@@ -9,8 +9,9 @@ import { generateMemoryIllustration } from "@/lib/ai/illustrate";
 
 /**
  * POST /api/rooms/:id/memory — { willRejoin: boolean, text?: string }
- * 双方都提交且都愿意再组队 → 生成共同回忆（进入双方森林）。
+ * 全体都提交且都愿意再组队 → 生成共同回忆（进入双方森林）。
  * 任一方不愿意：不生成，且不告知是谁拒绝。
+ * 1对1 时 all.length >= 2 即为双方，群体时以 roomMembers.length 为准。
  */
 export async function POST(
   req: NextRequest,
@@ -48,15 +49,21 @@ export async function POST(
     createdAt: new Date(),
   });
 
-  // 双方都已提交？
+  // 全体成员数量：优先读 roomMembers，旧房间默认 2
+  const members = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, id));
+  const totalRequired = members.length > 0 ? members.length : 2;
+
   const all = await db
     .select()
     .from(schema.memoryEntries)
     .where(eq(schema.memoryEntries.roomId, id));
-  const bothSubmitted = all.length >= 2;
-  const bothRejoin = bothSubmitted && all.every((e) => e.willRejoin);
+  const allSubmitted = all.length >= totalRequired;
+  const allRejoin = allSubmitted && all.every((e) => e.willRejoin);
 
-  if (bothRejoin) {
+  if (allRejoin) {
     const [seed] = await db.select().from(schema.seeds).where(eq(schema.seeds.id, room.seedId));
     const msgs = await db
       .select({ m: schema.messages, u: schema.users })
@@ -98,5 +105,5 @@ export async function POST(
   }
 
   emitRoom(id);
-  return NextResponse.json({ ok: true, memoryCreated: bothRejoin });
+  return NextResponse.json({ ok: true, memoryCreated: allRejoin });
 }

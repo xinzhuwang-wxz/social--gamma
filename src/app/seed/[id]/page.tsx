@@ -85,6 +85,14 @@ function reasonIcon(type: string): string {
   return REASON_ICONS[type] ?? "·";
 }
 
+/** 从 groupSize 字符串中解析上限人数。"3-4人" → 4, "3人" → 3, "2人" → 2 */
+function parseGroupSizeMax(groupSize: string): number {
+  const match = groupSize.match(/(\d+)/g);
+  if (!match) return 2;
+  const nums = match.map(Number);
+  return Math.max(...nums);
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function InfoRow({ icon, text }: { icon: string; text: string }) {
@@ -101,15 +109,20 @@ function IntentCard({
   onChoose,
   choosing,
   anyChoosing,
+  groupMode,
+  selected,
+  onToggleSelect,
 }: {
   intent: Intent;
   onChoose: (id: string) => void;
   choosing: boolean;
   anyChoosing: boolean;
+  groupMode: boolean;
+  selected: boolean;
+  onToggleSelect: (id: string) => void;
 }) {
   const { candidate, reasons, note, status, matchId } = intent;
 
-  // First reason's type → match type pill label
   const matchTypeLabel =
     reasons.length > 0
       ? MATCH_TYPE_LABELS[reasons[0].type] ?? reasons[0].type
@@ -121,6 +134,30 @@ function IntentCard({
       <div className="mb-3 flex items-start justify-between gap-2">
         {/* Left: avatar + name + grade */}
         <div className="flex items-center gap-2.5">
+          {/* 群体模式显示圆形勾选 */}
+          {groupMode && status === "interested" && (
+            <button
+              onClick={() => onToggleSelect(matchId)}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors"
+              style={{
+                borderColor: selected ? "var(--color-primary)" : "var(--color-card-border)",
+                background: selected ? "var(--color-primary)" : "transparent",
+              }}
+              aria-label={selected ? "取消选择" : "选择"}
+            >
+              {selected && (
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path
+                    d="M2 6l3 3 5-5"
+                    stroke="white"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
+          )}
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl"
             style={{ background: candidate.color }}
@@ -153,7 +190,7 @@ function IntentCard({
         <p className="mb-3 text-sm leading-relaxed text-ink-2">{candidate.bio}</p>
       )}
 
-      {/* Match reasons: icon + single-line text */}
+      {/* Match reasons */}
       {reasons.length > 0 && (
         <div className="mb-3 space-y-1.5">
           {reasons.map((r, i) => (
@@ -165,7 +202,7 @@ function IntentCard({
         </div>
       )}
 
-      {/* Optional note from candidate */}
+      {/* Optional note */}
       {note && (
         <div className="mb-3 rounded-[var(--radius-sm)] bg-sky px-3 py-2">
           <p className="mb-0.5 text-[11px] text-ink-3">留言</p>
@@ -176,6 +213,7 @@ function IntentCard({
       {/* Action area */}
       {status === "interested" && !choosing && (
         <>
+          {/* 始终保留单选按钮 */}
           <button
             onClick={() => onChoose(matchId)}
             disabled={anyChoosing}
@@ -232,14 +270,36 @@ export default function SeedDetailPage() {
   });
 
   const [choosingId, setChoosingId] = useState<string | null>(null);
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+  const [groupChoosing, setGroupChoosing] = useState(false);
 
   const seed = data?.seed;
   const intents: Intent[] = data?.intents ?? [];
   const roomId = data?.roomId ?? null;
   const isOwner = data?.isOwner ?? false;
 
+  // 群体模式：groupSize 上限 > 2 且 interested >= 2
+  const groupSizeMax = seed ? parseGroupSizeMax(seed.groupSize) : 2;
+  const interestedIntents = intents.filter((i) => i.status === "interested");
+  const groupMode = groupSizeMax > 2 && interestedIntents.length >= 2;
+
+  function toggleSelect(matchId: string) {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) {
+        next.delete(matchId);
+      } else {
+        // 最多选 groupSizeMax - 1 位（不含发起人自己）
+        if (next.size < groupSizeMax - 1) {
+          next.add(matchId);
+        }
+      }
+      return next;
+    });
+  }
+
   async function choose(matchId: string) {
-    if (choosingId) return;
+    if (choosingId || groupChoosing) return;
     setChoosingId(matchId);
     try {
       const res = await fetch(`/api/seeds/${id}/choose`, {
@@ -252,6 +312,23 @@ export default function SeedDetailPage() {
       router.push(`/room/${result.roomId}`);
     } catch {
       setChoosingId(null);
+    }
+  }
+
+  async function chooseGroup() {
+    if (choosingId || groupChoosing || selectedMatchIds.size < 2) return;
+    setGroupChoosing(true);
+    try {
+      const res = await fetch(`/api/seeds/${id}/choose`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchIds: Array.from(selectedMatchIds) }),
+      });
+      if (!res.ok) throw new Error("failed");
+      const result = (await res.json()) as ChooseResult;
+      router.push(`/room/${result.roomId}`);
+    } catch {
+      setGroupChoosing(false);
     }
   }
 
@@ -270,6 +347,8 @@ export default function SeedDetailPage() {
       </main>
     );
   }
+
+  const anyChoosing = !!choosingId || groupChoosing;
 
   return (
     <main className="min-h-dvh">
@@ -291,7 +370,7 @@ export default function SeedDetailPage() {
         </span>
       </header>
 
-      <div className="px-5 pb-10 pt-4">
+      <div className="px-5 pb-24 pt-4">
         {/* Room entry banner */}
         {roomId && (
           <Link
@@ -371,7 +450,6 @@ export default function SeedDetailPage() {
         {/* Intent list (owner only) */}
         {isOwner && intents.length > 0 && (
           <div>
-            {/* Header: "小绿已经帮你找到 N 位可能合适的同行者" */}
             <p className="font-kai mb-3 text-base text-ink-2">
               小绿已经帮你找到{" "}
               <span className="font-semibold text-olive">{intents.length}</span>{" "}
@@ -387,6 +465,16 @@ export default function SeedDetailPage() {
               </p>
             </div>
 
+            {/* 群体模式提示 */}
+            {groupMode && (
+              <div
+                className="mb-3 rounded-[var(--radius-sm)] px-3 py-2 text-xs text-ink-2"
+                style={{ background: "var(--color-mint)" }}
+              >
+                💡 这次活动支持 {groupSizeMax} 人一起出发！可以勾选多位同伴组队，也可以单独选择一位。
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               {intents.map((intent) => (
                 <IntentCard
@@ -394,7 +482,10 @@ export default function SeedDetailPage() {
                   intent={intent}
                   onChoose={choose}
                   choosing={choosingId === intent.matchId}
-                  anyChoosing={!!choosingId}
+                  anyChoosing={anyChoosing}
+                  groupMode={groupMode}
+                  selected={selectedMatchIds.has(intent.matchId)}
+                  onToggleSelect={toggleSelect}
                 />
               ))}
             </div>
@@ -407,6 +498,37 @@ export default function SeedDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 群体组队悬浮按钮 */}
+      {groupMode && selectedMatchIds.size >= 2 && !anyChoosing && (
+        <div
+          className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2"
+          style={{ width: "calc(100% - 40px)", maxWidth: 420 }}
+        >
+          <button
+            onClick={chooseGroup}
+            className="btn-primary w-full py-3.5 text-base font-semibold shadow-lg"
+          >
+            和选中的 {selectedMatchIds.size} 位一起出发 🌱
+          </button>
+        </div>
+      )}
+
+      {/* 群体组队中状态 */}
+      {groupChoosing && (
+        <div className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2"
+          style={{ width: "calc(100% - 40px)", maxWidth: 420 }}>
+          <div className="flex h-14 items-center justify-center rounded-[var(--radius-lg)] bg-mint shadow-lg">
+            <motion.span
+              className="text-sm text-olive"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              正在为你们布置行动房间…
+            </motion.span>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

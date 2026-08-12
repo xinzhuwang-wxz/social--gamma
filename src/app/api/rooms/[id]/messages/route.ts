@@ -29,14 +29,25 @@ export async function POST(
     createdAt: new Date(),
   });
 
-  // 阶段流转：sprout → leafing（双方都开口后，真实交流开始）
+  // 阶段流转：sprout → leafing（全体成员都开口后，真实交流开始）
   if (room.stage === "sprout") {
     const msgs = await db
       .select({ senderId: schema.messages.senderId })
       .from(schema.messages)
       .where(eq(schema.messages.roomId, id));
     const humans = new Set(msgs.map((m) => m.senderId).filter(Boolean));
-    if (humans.has(room.ownerId) && humans.has(room.partnerId)) {
+
+    // 新房间：从 roomMembers 取全体成员 ID
+    const members = await db
+      .select()
+      .from(schema.roomMembers)
+      .where(eq(schema.roomMembers.roomId, id));
+
+    const memberIds = members.length > 0
+      ? members.map((m) => m.userId)
+      : [room.ownerId, room.partnerId]; // 旧房间兼容
+
+    if (memberIds.every((mid) => humans.has(mid))) {
       await db.update(schema.rooms).set({ stage: "leafing" }).where(eq(schema.rooms.id, id));
     }
   }

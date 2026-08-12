@@ -149,3 +149,21 @@ export const memories = sqliteTable("memories", {
   imageFile: text("image_file"), // seedream 生成的插画文件名（可空）
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
+
+/** 群体行动成员（含发起人，1对1 和群体均写入，方便统一访问控制） */
+export const roomMembers = sqliteTable("room_members", {
+  id: text("id").primaryKey(),
+  roomId: text("room_id").notNull().references(() => rooms.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  role: text("role", { enum: ["owner", "partner"] }).notNull(),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+/** 约定确认记录（按 pactId + userId 唯一，群体时统计全体确认数） */
+export const pactConfirmations = sqliteTable("pact_confirmations", {
+  id: text("id").primaryKey(),
+  pactId: text("pact_id").notNull().references(() => pacts.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { draftPact } from "@/lib/ai/room";
@@ -10,7 +10,7 @@ import { emitRoom } from "@/lib/room-events";
 /**
  * POST /api/rooms/:id/pact
  * { action: "draft" }   → AI 整理已谈内容生成约定草稿（新版本，确认状态清零）
- * { action: "confirm" } → 我确认当前草稿；双确认 → status=confirmed，植物花苞
+ * { action: "confirm" } → 我确认当前草稿；全体确认 → status=confirmed，植物花苞
  */
 export async function POST(
   req: NextRequest,
@@ -84,9 +84,43 @@ export async function POST(
     if (!latest || latest.status === "confirmed") {
       return NextResponse.json({ error: "no draft" }, { status: 400 });
     }
+
+    // 幂等：避免重复写入
+    const existing = await db
+      .select()
+      .from(schema.pactConfirmations)
+      .where(
+        and(
+          eq(schema.pactConfirmations.pactId, latest.id),
+          eq(schema.pactConfirmations.userId, me.id)
+        )
+      );
+    if (existing.length === 0) {
+      await db.insert(schema.pactConfirmations).values({
+        id: `pc_${uid()}`,
+        pactId: latest.id,
+        userId: me.id,
+        createdAt: new Date(),
+      });
+    }
+
+    // 统计确认数 vs 总成员数
+    const confirmations = await db
+      .select()
+      .from(schema.pactConfirmations)
+      .where(eq(schema.pactConfirmations.pactId, latest.id));
+
+    const members = await db
+      .select()
+      .from(schema.roomMembers)
+      .where(eq(schema.roomMembers.roomId, id));
+    const totalRequired = members.length > 0 ? members.length : 2;
+    const confirmed = confirmations.length >= totalRequired;
+
+    // 同时更新 ownerConfirmed / partnerConfirmed（1对1 旧字段兼容）
     const ownerConfirmed = latest.ownerConfirmed || isOwner;
     const partnerConfirmed = latest.partnerConfirmed || !isOwner;
-    const confirmed = ownerConfirmed && partnerConfirmed;
+
     await db
       .update(schema.pacts)
       .set({
@@ -95,6 +129,7 @@ export async function POST(
         status: confirmed ? "confirmed" : "draft",
       })
       .where(eq(schema.pacts.id, latest.id));
+
     if (confirmed) {
       await db.update(schema.rooms).set({ stage: "bud" }).where(eq(schema.rooms.id, id));
       await db.insert(schema.messages).values({

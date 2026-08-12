@@ -48,15 +48,97 @@ export async function GET(
 
   const [memory] = await db.select().from(schema.memories).where(eq(schema.memories.roomId, id));
 
+  // roomMembers（新房间才有）
+  const roomMemberRows = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, id));
+
+  // 获取所有成员用户信息（群体房间）
+  let membersWithInfo: Array<{
+    id: string;
+    name: string | null;
+    emoji: string;
+    color: string;
+    role: "owner" | "partner";
+    completed: boolean;
+  }> = [];
+
+  if (roomMemberRows.length > 0) {
+    const userIds = roomMemberRows.map((m) => m.userId);
+    // 逐个查询保持兼容（inArray 需额外 import）
+    const allUsers = await Promise.all(
+      userIds.map((uid) =>
+        db.select().from(schema.users).where(eq(schema.users.id, uid)).then((r) => r[0])
+      )
+    );
+    membersWithInfo = roomMemberRows.map((m) => {
+      const u = allUsers.find((u) => u?.id === m.userId);
+      return {
+        id: m.userId,
+        name: u?.name ?? null,
+        emoji: u?.emoji ?? "🌱",
+        color: u?.color ?? "#DCE3AE",
+        role: m.role,
+        completed: m.completed,
+      };
+    });
+  }
+
+  // myCompleted / otherCompleted：优先使用 roomMembers
+  let myCompleted: boolean;
+  let otherCompleted: boolean;
+
+  if (roomMemberRows.length > 0) {
+    const myMember = roomMemberRows.find((m) => m.userId === me.id);
+    myCompleted = myMember?.completed ?? false;
+    const others = roomMemberRows.filter((m) => m.userId !== me.id);
+    otherCompleted = others.length > 0 && others.every((m) => m.completed);
+  } else {
+    // 旧房间兼容
+    myCompleted = isOwner ? room.ownerCompleted : room.partnerCompleted;
+    otherCompleted = isOwner ? room.partnerCompleted : room.ownerCompleted;
+  }
+
+  // pact 增加 myConfirmed / confirmedCount / memberCount
+  let enrichedPact: typeof pact & {
+    myConfirmed?: boolean;
+    confirmedCount?: number;
+    memberCount?: number;
+  } | null = null;
+
+  if (pact) {
+    const confirmations = await db
+      .select()
+      .from(schema.pactConfirmations)
+      .where(eq(schema.pactConfirmations.pactId, pact.id));
+
+    const memberCount = roomMemberRows.length > 0 ? roomMemberRows.length : 2;
+    const myConfirmedViaTable = confirmations.some((c) => c.userId === me.id);
+    // 旧房间 fallback
+    const myConfirmedCompat = isOwner ? pact.ownerConfirmed : pact.partnerConfirmed;
+    const myConfirmed = myConfirmedViaTable || myConfirmedCompat;
+
+    enrichedPact = {
+      ...pact,
+      myConfirmed,
+      confirmedCount: confirmations.length > 0 ? confirmations.length : (
+        (pact.ownerConfirmed ? 1 : 0) + (pact.partnerConfirmed ? 1 : 0)
+      ),
+      memberCount,
+    };
+  }
+
   return NextResponse.json({
     room: {
       id: room.id,
       stage: room.stage,
       icebreak: room.icebreak,
       summary: isOwner ? room.summaryCard?.forOwner : room.summaryCard?.forPartner,
-      myCompleted: isOwner ? room.ownerCompleted : room.partnerCompleted,
-      otherCompleted: isOwner ? room.partnerCompleted : room.ownerCompleted,
+      myCompleted,
+      otherCompleted,
       isOwner,
+      memberCount: roomMemberRows.length > 0 ? roomMemberRows.length : 2,
     },
     seed: {
       id: seed.id,
@@ -74,6 +156,7 @@ export async function GET(
       grade: other.grade,
       major: other.major,
     },
+    members: membersWithInfo.length > 0 ? membersWithInfo : null,
     a2a: chosen?.a2a ?? null,
     messages: msgs.map((m) => ({
       id: m.id,
@@ -83,7 +166,7 @@ export async function GET(
       mine: m.senderId === me.id,
       createdAt: m.createdAt,
     })),
-    pact: pact ?? null,
+    pact: enrichedPact,
     myMemoryDone,
     memoryId: memory?.id ?? null,
   });

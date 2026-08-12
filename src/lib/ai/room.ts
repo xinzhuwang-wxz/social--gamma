@@ -40,6 +40,37 @@ ${JSON.stringify(a2a, null, 2)}`,
   return object;
 }
 
+/** 群体成局开场：多同行者版摘要卡 + 一次破冰（forOwner 介绍所有同行者，forPartner 介绍发起人与其他成员） */
+export async function roomKickoffGroup(
+  seed: SeedCard,
+  owner: CandidateProfile,
+  partners: CandidateProfile[],
+  a2aList: (A2A | null)[]
+) {
+  const { object } = await generateObject({
+    model: strongModel,
+    schema: kickoffSchema,
+    providerOptions: NO_THINK,
+    system: `多位用户刚为一次共同行动成局（${partners.length + 1} 人），你是属于这次事件的事件 AI。生成：
+1. forOwner（给发起人看）：介绍所有同行者的特点、与事件的共同点、还需讨论的事项。
+2. forPartner（给所有同行者看）：介绍发起人及其他成员，与事件的共同点，还需大家一起讨论的事项。
+3. 一次破冰消息（唯一一次主动发言）：基于所有成员的共同点，自然地点名每位成员参与，一句话；配 3 个供全体一键使用的快捷回复。
+不编造给定信息之外的内容。`,
+    prompt: `## 行动种子
+${JSON.stringify(seed, null, 2)}
+
+## 发起人
+${JSON.stringify(owner, null, 2)}
+
+## 同行者列表（共 ${partners.length} 位）
+${partners.map((p, i) => `### 同行者 ${i + 1}（${p.name}）\n${JSON.stringify(p, null, 2)}`).join("\n\n")}
+
+## Agent 预热对话（按同行者顺序）
+${a2aList.map((a, i) => `### 与 ${partners[i]?.name ?? `同行者${i + 1}`} 的 A2A\n${JSON.stringify(a, null, 2)}`).join("\n\n")}`,
+  });
+  return object;
+}
+
 export type RoomMessage = { senderName: string; content: string; kind: string };
 
 /** 推进：一次只处理一个卡点 */
