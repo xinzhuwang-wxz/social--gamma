@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
+import { simOnHumanMessage } from "@/lib/sim";
 
 /** POST /api/rooms/:id/messages — { content } 发送真人消息 */
 export async function POST(
@@ -53,5 +54,6 @@ export async function POST(
   }
 
   emitRoom(id);
+  if (!me.isSim) simOnHumanMessage(req.nextUrl.origin, id);
   return NextResponse.json({ ok: true });
 }

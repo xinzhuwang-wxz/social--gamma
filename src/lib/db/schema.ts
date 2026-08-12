@@ -17,6 +17,8 @@ export const users = sqliteTable("users", {
     experiences: string[];
   }>(),
   isPersona: integer("is_persona", { mode: "boolean" }).notNull().default(false),
+  /** 仿真同伴（按用户种子即时生成的模拟人格，自动参与全流程；SIM_MODE=0 关闭） */
+  isSim: integer("is_sim", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 

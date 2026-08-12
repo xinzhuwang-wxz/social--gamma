@@ -6,6 +6,7 @@ import { draftPact } from "@/lib/ai/room";
 import { seedToCard } from "@/lib/matching";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
+import { simOnPactConfirmed } from "@/lib/sim";
 
 /**
  * POST /api/rooms/:id/pact
@@ -142,6 +143,7 @@ export async function POST(
       });
     }
     emitRoom(id);
+    if (!me.isSim && !confirmed) simOnPactConfirmed(req.nextUrl.origin, id);
     return NextResponse.json({ ok: true, confirmed });
   }
 

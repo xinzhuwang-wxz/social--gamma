@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { runDirectDelivery } from "@/lib/matching";
+import { simRespondToInvites } from "@/lib/sim";
 
 /**
  * POST /api/memories/:id/reseed — { whenText, notes? }
@@ -50,8 +51,11 @@ export async function POST(
     createdAt: new Date(),
   });
 
-  // 定向投递（真实 LLM 生成新一轮 A2A）
-  runDirectDelivery(newId).catch((e) => console.error("direct delivery failed", e));
+  // 定向投递（真实 LLM 生成新一轮 A2A）→ 仿真搭子自动回应
+  const origin = req.nextUrl.origin;
+  runDirectDelivery(newId)
+    .then(() => simRespondToInvites(origin, newId))
+    .catch((e) => console.error("direct delivery failed", e));
 
   return NextResponse.json({ ok: true, seedId: newId });
 }

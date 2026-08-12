@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { roomKickoff, roomKickoffGroup } from "@/lib/ai/room";
 import { seedToCard, toProfile } from "@/lib/matching";
+import { simOnRoomCreated } from "@/lib/sim";
 
 /** POST /api/seeds/:id/choose
  * 单选：{ matchId }        → 1 对 1，兼容旧路径
@@ -147,5 +148,6 @@ export async function POST(
     createdAt: new Date(),
   });
 
+  simOnRoomCreated(req.nextUrl.origin, roomId);
   return NextResponse.json({ ok: true, roomId });
 }

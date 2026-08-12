@@ -5,6 +5,7 @@ import { currentUser, uid } from "@/lib/session";
 import { summarizeMemory } from "@/lib/ai/room";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
+import { simOnHumanMemory } from "@/lib/sim";
 import { generateMemoryIllustration } from "@/lib/ai/illustrate";
 
 /**
@@ -105,5 +106,6 @@ export async function POST(
   }
 
   emitRoom(id);
+  if (!me.isSim && !allRejoin) simOnHumanMemory(req.nextUrl.origin, id);
   return NextResponse.json({ ok: true, memoryCreated: allRejoin });
 }

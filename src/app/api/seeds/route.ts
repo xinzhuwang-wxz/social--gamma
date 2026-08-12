@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { seedCardSchema } from "@/lib/ai/schemas";
 import { runMatching } from "@/lib/matching";
+import { fabricatePersonas, partnersNeeded, simEnabled, simRespondToInvites } from "@/lib/sim";
 
 /** GET /api/seeds — 我发布的种子 */
 export async function GET() {
@@ -42,8 +43,17 @@ export async function POST(req: NextRequest) {
     createdAt: new Date(),
   });
 
-  // 异步匹配管线（信使鸟去送信），不阻塞响应
-  runMatching(id).catch((e) => console.error("matching failed", e));
+  // 异步：仿真同伴按需生成（正好凑齐人数）→ 真实匹配管线 → 仿真意向回应
+  const origin = req.nextUrl.origin;
+  (async () => {
+    if (simEnabled()) {
+      await fabricatePersonas(card, partnersNeeded(card.groupSize)).catch((e) =>
+        console.error("fabricate failed", e)
+      );
+    }
+    await runMatching(id);
+    await simRespondToInvites(origin, id);
+  })().catch((e) => console.error("matching failed", e));
 
   return NextResponse.json({ ok: true, seedId: id });
 }
