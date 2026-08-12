@@ -7,7 +7,7 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 
-const BASE = process.env.BASE_URL ?? "http://localhost:3002";
+const BASE = process.env.BASE_URL ?? "http://localhost:3003";
 const DIR = "shots/journey";
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -159,7 +159,7 @@ await step("decline-other", async () => {
     const r = await fetch(`/api/seeds/${id}`);
     return r.json();
   }, seedId);
-  otherCandidates = data.intents
+  otherCandidates = (data.intents ?? [])
     .filter((i) => i.status === "delivered")
     .map((i) => i.candidate.name);
   if (otherCandidates.length === 0) {

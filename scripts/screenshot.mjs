@@ -5,7 +5,7 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 
-const BASE = process.env.BASE_URL ?? "http://localhost:3002";
+const BASE = process.env.BASE_URL ?? "http://localhost:3003";
 const userId = process.argv[2] ?? "p_xiaolan";
 const paths = (process.argv[3] ?? "/garden,/mailbox,/actions,/forest,/me").split(",");
 

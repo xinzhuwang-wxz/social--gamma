@@ -87,9 +87,9 @@ const ALL_PLANT_STAGES: PlantStage[] = [
 ];
 
 const STAGE_TEXT: Record<Stage, string> = {
-  sprout: "破冰中 · 相互认识",
-  leafing: "讨论进行中",
-  growing: "按叶生长中 · 正在确定时间地点",
+  sprout: "发芽 · 破冰相识中",
+  leafing: "长叶 · 讨论进行中",
+  growing: "生长 · 敲定时间地点",
   bud: "花苞 · 约定已确认",
   bloom: "开花 · 行动已完成",
 };
