@@ -3,6 +3,10 @@
 import { use, useState, useRef, useEffect, useCallback } from "react";
 import useSWR from "swr";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
+import { Plant, CourierBird, BloomAnimation } from "@/components/world";
+import type { PlantStage } from "@/components/world";
+import { useRoomStream } from "@/lib/use-room-stream";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -73,15 +77,69 @@ interface RoomData {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STAGE_PILL: Record<Stage, string> = {
-  sprout: "🌱 发芽中·破冰开始",
-  leafing: "🌿 长叶中·讨论进行中",
-  growing: "🪴 生长中·正在确定时间地点",
-  bud: "🌷 花苞·约定已确认",
-  bloom: "🌸 开花·行动已完成",
+const ALL_PLANT_STAGES: PlantStage[] = [
+  "seed",
+  "sprout",
+  "leafing",
+  "growing",
+  "bud",
+  "bloom",
+];
+
+const STAGE_TEXT: Record<Stage, string> = {
+  sprout: "破冰中 · 相互认识",
+  leafing: "讨论进行中",
+  growing: "按叶生长中 · 正在确定时间地点",
+  bud: "花苞 · 约定已确认",
+  bloom: "开花 · 行动已完成",
 };
 
 const fetcher = (u: string) => fetch(u).then((r) => r.json());
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function StageProgress({ currentStage }: { currentStage: Stage }) {
+  const currentIdx = ALL_PLANT_STAGES.indexOf(currentStage as PlantStage);
+  return (
+    <div className="mt-1.5 flex items-end gap-0.5">
+      {ALL_PLANT_STAGES.map((stage, idx) => (
+        <div
+          key={stage}
+          style={{ opacity: idx <= currentIdx ? 1 : 0.28, transition: "opacity 0.4s" }}
+        >
+          <Plant stage={stage} family={0} size={22} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BloomCelebration({ onDismiss }: { onDismiss: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 1600);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      style={{ background: "rgba(247, 240, 222, 0.94)" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      aria-live="polite"
+    >
+      <BloomAnimation family={0} size={120} />
+      <p
+        className="font-kai mt-4 text-3xl"
+        style={{ color: "var(--color-olive)" }}
+      >
+        开花啦
+      </p>
+    </motion.div>
+  );
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -92,14 +150,21 @@ export default function RoomPage({
 }) {
   const { id } = use(params);
 
+  // SSE 实时推送为主，8s 轮询兜底
   const { data, mutate } = useSWR<RoomData>(`/api/rooms/${id}`, fetcher, {
-    refreshInterval: 2500,
+    refreshInterval: 8000,
   });
+  useRoomStream(id, mutate);
 
   // UI state
   const [summaryOpen, setSummaryOpen] = useState(true);
   const [a2aOpen, setA2aOpen] = useState(false);
   const summaryAutoCollapsed = useRef(false);
+
+  // Bloom celebration state
+  const celebratedRef = useRef(false);
+  const prevStageRef = useRef<Stage | undefined>(undefined);
+  const [showBloomCelebration, setShowBloomCelebration] = useState(false);
 
   // Input state
   const [input, setInput] = useState("");
@@ -134,6 +199,27 @@ export default function RoomPage({
       setSummaryOpen(false);
     }
   }, [data?.pact]);
+
+  // Bloom celebration: only trigger once when transitioning from non-bloom to bloom
+  useEffect(() => {
+    if (!data) return;
+    const currentStage = data.room.stage;
+    const prevStage = prevStageRef.current;
+
+    if (
+      currentStage === "bloom" &&
+      prevStage !== undefined &&
+      prevStage !== "bloom" &&
+      !celebratedRef.current
+    ) {
+      celebratedRef.current = true;
+      setShowBloomCelebration(true);
+    }
+
+    prevStageRef.current = currentStage;
+  }, [data]);
+
+  const dismissBloom = useCallback(() => setShowBloomCelebration(false), []);
 
   // Textarea auto-resize
   const adjustTextarea = () => {
@@ -249,8 +335,7 @@ export default function RoomPage({
     );
   }
 
-  const { room, seed, other, a2a, messages, pact, myMemoryDone, memoryId } =
-    data;
+  const { room, seed, other, a2a, messages, pact, myMemoryDone, memoryId } = data;
 
   const humanCount = messages.filter((m) => m.kind === "text").length;
   const firstAiIdx = messages.findIndex((m) => m.kind === "ai");
@@ -273,47 +358,75 @@ export default function RoomPage({
 
   return (
     <div className="flex h-dvh flex-col" style={{ background: "var(--color-paper)" }}>
-      {/* ── Top bar ── */}
+      {/* ── Bloom celebration overlay ── */}
+      <AnimatePresence>
+        {showBloomCelebration && (
+          <BloomCelebration onDismiss={dismissBloom} />
+        )}
+      </AnimatePresence>
+
+      {/* ── Plant Status Card (top) ── */}
       <div
-        className="flex-none flex items-center gap-3 px-4 py-3 border-b"
-        style={{ background: "var(--color-sky)", borderColor: "var(--color-card-border)" }}
+        className="flex-none border-b px-4 py-3"
+        style={{
+          background: "var(--color-sky)",
+          borderColor: "var(--color-card-border)",
+        }}
       >
-        <Link
-          href="/actions"
-          className="flex items-center justify-center rounded-full w-8 h-8"
-          style={{ color: "var(--color-ink-2)" }}
-          aria-label="返回"
+        <div
+          className="card flex items-center gap-3 px-3 py-2.5"
+          style={{ background: "var(--color-card)" }}
         >
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
+          {/* Back button */}
+          <Link
+            href="/actions"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            style={{ color: "var(--color-ink-2)" }}
+            aria-label="返回"
           >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </Link>
-        <span
-          className="flex-1 font-semibold truncate text-sm"
-          style={{ color: "var(--color-ink)" }}
-        >
-          {seed.title}
-        </span>
-        <span
-          className="flex-none rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap"
-          style={{ background: "var(--color-mint)", color: "var(--color-olive)" }}
-        >
-          {STAGE_PILL[room.stage]}
-        </span>
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Link>
+
+          {/* Plant illustration */}
+          <div
+            className="flex shrink-0 items-end justify-center rounded-full"
+            style={{
+              width: 56,
+              height: 56,
+              background: "linear-gradient(135deg, #DCE3AE 55%, #CCD56F40 100%)",
+              paddingBottom: 2,
+            }}
+          >
+            <Plant stage={room.stage as PlantStage} family={0} size={46} />
+          </div>
+
+          {/* Info */}
+          <div className="min-w-0 flex-1">
+            <p
+              className="truncate text-sm font-semibold"
+              style={{ color: "var(--color-ink)" }}
+            >
+              {seed.title}
+            </p>
+            <p className="text-xs" style={{ color: "var(--color-ink-2)" }}>
+              {STAGE_TEXT[room.stage]}
+            </p>
+            <StageProgress currentStage={room.stage} />
+          </div>
+        </div>
       </div>
 
       {/* ── Scrollable middle ── */}
-      <div
-        ref={scrollAreaRef}
-        className="flex-1 overflow-y-auto no-scrollbar"
-      >
+      <div ref={scrollAreaRef} className="no-scrollbar flex-1 overflow-y-auto">
         {/* Summary card */}
         {room.summary && (
           <div className="px-4 pt-3">
@@ -333,7 +446,10 @@ export default function RoomPage({
                 </span>
               </div>
               {summaryOpen && (
-                <div className="mt-2 space-y-2 text-sm" style={{ color: "var(--color-ink-2)" }}>
+                <div
+                  className="mt-2 space-y-2 text-sm"
+                  style={{ color: "var(--color-ink-2)" }}
+                >
                   {room.summary.highlights.length > 0 && (
                     <div>
                       <p className="text-xs" style={{ color: "var(--color-ink-3)" }}>
@@ -403,10 +519,13 @@ export default function RoomPage({
                             ? "var(--color-mint)"
                             : "var(--color-sky)",
                         color: "var(--color-ink-2)",
-                        border: `1px solid var(--color-card-border)`,
+                        border: "1px solid var(--color-card-border)",
                       }}
                     >
-                      <span className="font-medium" style={{ color: "var(--color-olive)" }}>
+                      <span
+                        className="font-medium"
+                        style={{ color: "var(--color-olive)" }}
+                      >
                         {turn.agent === "owner" ? "发起方信使鸟" : "候选方信使鸟"}
                       </span>
                       <p className="mt-0.5">{turn.text}</p>
@@ -429,9 +548,12 @@ export default function RoomPage({
                 boxShadow: "var(--shadow-card)",
               }}
             >
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <span className="text-base">🌷</span>
-                <span className="font-semibold text-sm" style={{ color: "var(--color-olive)" }}>
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--color-olive)" }}
+                >
                   行动约定
                 </span>
                 {pact.status === "confirmed" && (
@@ -443,7 +565,10 @@ export default function RoomPage({
                   </span>
                 )}
               </div>
-              <div className="space-y-1.5 text-sm" style={{ color: "var(--color-ink-2)" }}>
+              <div
+                className="space-y-1.5 text-sm"
+                style={{ color: "var(--color-ink-2)" }}
+              >
                 <div>
                   <p className="text-xs" style={{ color: "var(--color-ink-3)" }}>
                     做什么
@@ -481,7 +606,10 @@ export default function RoomPage({
               </div>
               {pact.status === "draft" && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex gap-3 text-xs" style={{ color: "var(--color-ink-3)" }}>
+                  <div
+                    className="flex gap-3 text-xs"
+                    style={{ color: "var(--color-ink-3)" }}
+                  >
                     <span>{myPactConfirmed ? "✅ 我已确认" : "⬜ 我尚未确认"}</span>
                     <span>·</span>
                     <span>{otherPactConfirmed ? "✅ 对方已确认" : "⬜ 等对方确认"}</span>
@@ -511,7 +639,7 @@ export default function RoomPage({
         )}
 
         {/* Message list */}
-        <div className="px-4 py-3 space-y-2">
+        <div className="space-y-2 px-4 py-3">
           {messages.map((msg, idx) => {
             const showQuickReplies =
               idx === firstAiIdx &&
@@ -522,7 +650,7 @@ export default function RoomPage({
               return (
                 <div
                   key={msg.id}
-                  className="text-center py-1 text-xs"
+                  className="py-1 text-center text-xs"
                   style={{ color: "var(--color-ink-3)" }}
                 >
                   {msg.content}
@@ -532,50 +660,62 @@ export default function RoomPage({
 
             if (msg.kind === "ai") {
               return (
-                <div key={msg.id} className="flex flex-col items-start gap-1 max-w-[80%]">
-                  <span className="text-[10px] ml-1" style={{ color: "var(--color-ink-3)" }}>
-                    事件AI
-                  </span>
-                  <div
-                    className="rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap"
-                    style={{
-                      background: "var(--color-mint)",
-                      color: "var(--color-ink)",
-                    }}
-                  >
-                    {msg.content}
-                  </div>
-                  {showQuickReplies && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {room.icebreak!.quickReplies.map((qr, i) => (
-                        <button
-                          key={i}
-                          onClick={() => sendMessage(qr)}
-                          className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-                          style={{
-                            border: "1px solid var(--color-primary)",
-                            color: "var(--color-primary)",
-                            background: "var(--color-sky)",
-                          }}
-                        >
-                          {qr}
-                        </button>
-                      ))}
+                <div key={msg.id} className="flex items-start gap-2">
+                  {/* CourierBird avatar */}
+                  <div className="flex shrink-0 flex-col items-center gap-0.5">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full"
+                      style={{ background: "var(--color-mint)" }}
+                    >
+                      <CourierBird state="idle" size={24} />
                     </div>
-                  )}
+                    <span
+                      className="text-[9px]"
+                      style={{ color: "var(--color-ink-4)" }}
+                    >
+                      事件AI
+                    </span>
+                  </div>
+
+                  <div className="flex max-w-[78%] flex-col gap-1">
+                    <div
+                      className="rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap"
+                      style={{
+                        background: "var(--color-mint)",
+                        color: "var(--color-ink)",
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                    {showQuickReplies && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {room.icebreak!.quickReplies.map((qr, i) => (
+                          <button
+                            key={i}
+                            onClick={() => sendMessage(qr)}
+                            className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                            style={{
+                              border: "1.5px solid var(--color-primary)",
+                              color: "var(--color-primary)",
+                              background: "transparent",
+                            }}
+                          >
+                            {qr}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             }
 
             // kind === "text"
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${msg.mine ? "justify-end" : "justify-start"}`}
-              >
-                {msg.mine ? (
+            if (msg.mine) {
+              return (
+                <div key={msg.id} className="flex justify-end">
                   <div
-                    className="max-w-[80%] rounded-2xl rounded-tr-sm px-3 py-2 text-sm whitespace-pre-wrap"
+                    className="max-w-[78%] rounded-2xl rounded-tr-sm px-3 py-2 text-sm whitespace-pre-wrap"
                     style={{
                       background: "var(--color-primary)",
                       color: "var(--color-primary-foreground)",
@@ -583,14 +723,33 @@ export default function RoomPage({
                   >
                     {msg.content}
                   </div>
-                ) : (
+                </div>
+              );
+            }
+
+            // Other person's message — show avatar + name
+            return (
+              <div key={msg.id} className="flex items-start gap-2">
+                <div className="flex shrink-0 flex-col items-center gap-0.5">
                   <div
-                    className="card max-w-[80%] rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap"
-                    style={{ color: "var(--color-ink)" }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-base"
+                    style={{ background: other.color }}
                   >
-                    {msg.content}
+                    {other.emoji}
                   </div>
-                )}
+                  <span
+                    className="max-w-[32px] truncate text-[9px]"
+                    style={{ color: "var(--color-ink-4)" }}
+                  >
+                    {other.name ?? "对方"}
+                  </span>
+                </div>
+                <div
+                  className="card max-w-[78%] rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap"
+                  style={{ color: "var(--color-ink)" }}
+                >
+                  {msg.content}
+                </div>
               </div>
             );
           })}
@@ -602,19 +761,22 @@ export default function RoomPage({
           <div className="px-4 pb-3">
             <div className="card px-4 py-4">
               <p
-                className="font-kai text-base mb-3"
+                className="font-kai mb-3 text-base"
                 style={{ color: "var(--color-olive)" }}
               >
                 🌸 这次行动真实发生了！
               </p>
               <div className="mb-3">
-                <p className="text-sm font-medium mb-2" style={{ color: "var(--color-ink)" }}>
+                <p
+                  className="mb-2 text-sm font-medium"
+                  style={{ color: "var(--color-ink)" }}
+                >
                   愿意再和 TA 组队吗？
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setWillRejoin(true)}
-                    className="flex-1 py-2 rounded-[var(--radius-md)] text-sm font-semibold transition-colors"
+                    className="flex-1 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors"
                     style={
                       willRejoin === true
                         ? {
@@ -633,7 +795,7 @@ export default function RoomPage({
                   </button>
                   <button
                     onClick={() => setWillRejoin(false)}
-                    className="flex-1 py-2 rounded-[var(--radius-md)] text-sm font-semibold transition-colors"
+                    className="flex-1 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors"
                     style={
                       willRejoin === false
                         ? {
@@ -653,7 +815,7 @@ export default function RoomPage({
                 </div>
               </div>
               <div className="mb-3">
-                <p className="text-xs mb-1" style={{ color: "var(--color-ink-3)" }}>
+                <p className="mb-1 text-xs" style={{ color: "var(--color-ink-3)" }}>
                   留一段文字记录（可选）
                 </p>
                 <textarea
@@ -661,7 +823,7 @@ export default function RoomPage({
                   onChange={(e) => setMemText(e.target.value)}
                   placeholder="这次行动怎么样？"
                   rows={3}
-                  className="w-full rounded-[var(--radius-sm)] px-3 py-2 text-sm resize-none focus:outline-none"
+                  className="w-full resize-none rounded-[var(--radius-sm)] px-3 py-2 text-sm focus:outline-none"
                   style={{
                     border: "1px solid var(--color-card-border)",
                     background: "var(--color-paper)",
@@ -682,9 +844,7 @@ export default function RoomPage({
 
         {room.stage === "bloom" && memoryDone && (
           <div className="px-4 pb-3">
-            <div
-              className="card px-4 py-3 text-center"
-            >
+            <div className="card px-4 py-3 text-center">
               <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
                 ✅ 已记录，感谢你留下这段回忆
               </p>
@@ -714,7 +874,7 @@ export default function RoomPage({
       >
         {/* Complete button for bud stage */}
         {room.stage === "bud" && (
-          <div className="px-4 pt-3 pb-1">
+          <div className="px-4 pb-1 pt-3">
             {!room.myCompleted ? (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm" style={{ color: "var(--color-ink-2)" }}>
@@ -723,14 +883,14 @@ export default function RoomPage({
                 <button
                   onClick={handleComplete}
                   disabled={completing}
-                  className="btn-primary px-5 py-2 text-sm flex-none"
+                  className="btn-primary flex-none px-5 py-2 text-sm"
                 >
                   {completing ? "确认中…" : "我已完成 ✓"}
                 </button>
               </div>
             ) : (
               <p
-                className="text-sm text-center"
+                className="text-center text-sm"
                 style={{ color: "var(--color-ink-3)" }}
               >
                 {room.otherCompleted
@@ -742,7 +902,7 @@ export default function RoomPage({
         )}
 
         {/* Input area */}
-        <div className="px-3 py-3 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-3 py-3">
           <div className="flex items-end gap-2">
             <textarea
               ref={textareaRef}
@@ -778,18 +938,30 @@ export default function RoomPage({
               {sending ? "…" : "发送"}
             </button>
           </div>
+
+          {/* Action pills — border pill style */}
           <div className="flex gap-2">
             <button
               onClick={handleNudge}
               disabled={nudging}
-              className="btn-secondary flex-1 py-2 text-sm"
+              className="flex-1 rounded-full py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              style={{
+                border: "1.5px solid var(--color-primary)",
+                color: "var(--color-primary)",
+                background: "transparent",
+              }}
             >
               {nudging ? "事件AI思考中…" : "✨ 推进"}
             </button>
             <button
               onClick={handleDraftPact}
               disabled={draftingPact}
-              className="btn-secondary flex-1 py-2 text-sm"
+              className="flex-1 rounded-full py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              style={{
+                border: "1.5px solid var(--color-primary)",
+                color: "var(--color-primary)",
+                background: "transparent",
+              }}
             >
               {draftingPact ? "整理中…" : "📋 整理约定"}
             </button>

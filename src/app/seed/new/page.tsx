@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft } from "lucide-react";
-import { CourierBird } from "@/components/world";
+import { CourierBird, SeedIllustration } from "@/components/world";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -27,6 +27,173 @@ type ClarifyResult = {
 type PublishResult = { ok: boolean; seedId: string };
 
 const OPENING = "想做点什么呢？告诉我你的想法吧～";
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+/**
+ * Animates `text` character-by-character.
+ * Mount with a new `key` prop to restart the animation for each new reply.
+ */
+function TypewriterBubble({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) clearInterval(id);
+    }, 26);
+    return () => clearInterval(id);
+  }, [text]);
+
+  return <BirdBubble text={displayed} />;
+}
+
+function BirdBubble({ text }: { text: string }) {
+  return (
+    <div className="mb-4 flex items-start gap-2">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
+        <CourierBird state="idle" size={30} />
+      </span>
+      <div className="font-kai max-w-[75%] rounded-2xl rounded-tl-sm bg-mint px-4 py-2.5 text-sm leading-relaxed text-olive">
+        {text || (
+          <span className="inline-block h-4 w-1 animate-pulse rounded-sm bg-olive opacity-60" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserBubble({ text }: { text: string }) {
+  return (
+    <div className="mb-4 flex justify-end">
+      <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground">
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function BirdThinking() {
+  return (
+    <div className="mb-4 flex items-start gap-2">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
+        <CourierBird state="thinking" size={30} />
+      </span>
+      <div className="rounded-2xl rounded-tl-sm bg-mint px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          {([0, 1, 2] as const).map((i) => (
+            <motion.span
+              key={i}
+              className="block h-1.5 w-1.5 rounded-full bg-olive"
+              animate={{ y: [0, -4, 0] }}
+              transition={{
+                duration: 0.7,
+                repeat: Infinity,
+                delay: i * 0.15,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ icon, text }: { icon: string; text: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm">{icon}</span>
+      <span className="text-sm text-ink-2">{text}</span>
+    </div>
+  );
+}
+
+function SeedPreviewCard({ card }: { card: SeedCard }) {
+  return (
+    <div className="card overflow-hidden">
+      {/* Illustration header */}
+      <div
+        className="flex flex-col items-center justify-end pb-3 pt-5"
+        style={{
+          background: "linear-gradient(180deg, #DCE3AE 0%, #F7F0DE 100%)",
+          minHeight: 130,
+        }}
+      >
+        <div
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: 88,
+            height: 88,
+            background: "radial-gradient(circle at 40% 38%, #EEF4C8 0%, #DCE3AE 100%)",
+            boxShadow: "0 4px 16px rgba(137,151,75,0.18)",
+          }}
+        >
+          <SeedIllustration size={56} />
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div className="p-5">
+        {/* Title */}
+        <h2 className="font-kai mb-3 text-center text-xl leading-snug text-olive">
+          {card.title}
+        </h2>
+
+        {/* What */}
+        <p className="mb-4 text-sm leading-relaxed text-ink">{card.what}</p>
+
+        {/* Meta row */}
+        <div className="mb-4 flex flex-col gap-1.5">
+          <InfoRow icon="📅" text={card.whenText} />
+          <InfoRow icon="📍" text={card.whereText} />
+          <InfoRow icon="👥" text={card.groupSize} />
+        </div>
+
+        {/* Requirements */}
+        {card.requirements.must.length > 0 && (
+          <div className="mb-3 rounded-[var(--radius-sm)] bg-sky px-3 py-2.5">
+            <p className="mb-1.5 text-xs font-medium text-ink-3">必要条件</p>
+            {card.requirements.must.map((r, i) => (
+              <p key={i} className="text-xs text-ink-2">
+                · {r}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {card.requirements.flexible.length > 0 && (
+          <div className="mb-4 rounded-[var(--radius-sm)] bg-sky px-3 py-2.5">
+            <p className="mb-1.5 text-xs font-medium text-ink-3">可以商量</p>
+            {card.requirements.flexible.map((r, i) => (
+              <p key={i} className="text-xs text-ink-2">
+                · {r}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {/* Tags */}
+        {card.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {card.tags.map((t, i) => (
+              <span
+                key={i}
+                className="rounded-full bg-mint px-2.5 py-0.5 text-xs text-olive"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function NewSeedPage() {
   const router = useRouter();
@@ -221,142 +388,5 @@ export default function NewSeedPage() {
         </div>
       </div>
     </main>
-  );
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-/**
- * Animates `text` character-by-character.
- * Mount with a new `key` prop to restart the animation for each new reply.
- */
-function TypewriterBubble({ text }: { text: string }) {
-  const [displayed, setDisplayed] = useState("");
-
-  useEffect(() => {
-    let i = 0;
-    const id = setInterval(() => {
-      i++;
-      setDisplayed(text.slice(0, i));
-      if (i >= text.length) clearInterval(id);
-    }, 26);
-    return () => clearInterval(id);
-  }, [text]);
-
-  return <BirdBubble text={displayed} />;
-}
-
-function BirdBubble({ text }: { text: string }) {
-  return (
-    <div className="mb-4 flex items-start gap-2">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
-        <CourierBird state="idle" size={30} />
-      </span>
-      <div className="font-kai max-w-[75%] rounded-2xl rounded-tl-sm bg-mint px-4 py-2.5 text-sm leading-relaxed text-olive">
-        {text || (
-          <span className="inline-block h-4 w-1 animate-pulse rounded-sm bg-olive opacity-60" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function UserBubble({ text }: { text: string }) {
-  return (
-    <div className="mb-4 flex justify-end">
-      <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground">
-        {text}
-      </div>
-    </div>
-  );
-}
-
-function BirdThinking() {
-  return (
-    <div className="mb-4 flex items-start gap-2">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-mint">
-        <CourierBird state="thinking" size={30} />
-      </span>
-      <div className="rounded-2xl rounded-tl-sm bg-mint px-4 py-3">
-        <div className="flex items-center gap-1.5">
-          {([0, 1, 2] as const).map((i) => (
-            <motion.span
-              key={i}
-              className="block h-1.5 w-1.5 rounded-full bg-olive"
-              animate={{ y: [0, -4, 0] }}
-              transition={{
-                duration: 0.7,
-                repeat: Infinity,
-                delay: i * 0.15,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SeedPreviewCard({ card }: { card: SeedCard }) {
-  return (
-    <div className="card p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-2xl">🌱</span>
-        <h2 className="text-lg font-semibold text-olive">{card.title}</h2>
-      </div>
-
-      <p className="mb-3 text-sm leading-relaxed text-ink">{card.what}</p>
-
-      <div className="mb-3 flex flex-col gap-1.5">
-        <InfoRow icon="📅" text={card.whenText} />
-        <InfoRow icon="📍" text={card.whereText} />
-        <InfoRow icon="👥" text={card.groupSize} />
-      </div>
-
-      {card.requirements.must.length > 0 && (
-        <div className="mb-2">
-          <p className="mb-1 text-xs text-ink-3">必要条件</p>
-          {card.requirements.must.map((r, i) => (
-            <p key={i} className="text-xs text-ink-2">
-              · {r}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {card.requirements.flexible.length > 0 && (
-        <div className="mb-3">
-          <p className="mb-1 text-xs text-ink-3">可以商量</p>
-          {card.requirements.flexible.map((r, i) => (
-            <p key={i} className="text-xs text-ink-2">
-              · {r}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {card.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {card.tags.map((t, i) => (
-            <span
-              key={i}
-              className="rounded-full bg-mint px-2.5 py-0.5 text-xs text-olive"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function InfoRow({ icon, text }: { icon: string; text: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm">{icon}</span>
-      <span className="text-sm text-ink-2">{text}</span>
-    </div>
   );
 }
