@@ -67,13 +67,6 @@ const STATUS_LABELS: Record<string, string> = {
   closed: "已关闭",
 };
 
-const MATCH_TYPE_LABELS: Record<string, string> = {
-  time: "时间匹配",
-  place: "地点匹配",
-  interest: "兴趣匹配",
-  experience: "经验匹配",
-};
-
 const REASON_ICONS: Record<string, string> = {
   time: "📅",
   place: "📍",
@@ -97,16 +90,75 @@ function parseGroupSizeMax(groupSize: string): number {
 
 function InfoRow({ icon, text }: { icon: string; text: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm">{icon}</span>
-      <span className="text-sm text-ink-2">{text}</span>
+    <div className="flex items-start gap-2">
+      <span className="mt-px text-sm leading-none">{icon}</span>
+      <span className="text-sm leading-snug" style={{ color: "var(--color-ink)" }}>
+        {text}
+      </span>
     </div>
   );
 }
 
+/** 确认邀请弹层（Spec 4.6） */
+function ConfirmModal({
+  candidateName,
+  onConfirm,
+  onCancel,
+  confirming,
+}: {
+  candidateName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  confirming: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ background: "rgba(25, 49, 38, 0.45)" }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full rounded-t-[var(--radius-sheet)] px-6 pb-10 pt-6 shadow-xl"
+        style={{ background: "var(--color-card)", maxWidth: 480 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p
+          className="mb-2 text-center text-[11px] font-medium tracking-wide"
+          style={{ color: "var(--color-ink-3)" }}
+        >
+          选择同行者
+        </p>
+        <p
+          className="mb-6 text-center text-[17px] font-bold leading-snug"
+          style={{ color: "var(--color-olive)" }}
+        >
+          确认邀请 {candidateName} 成为这次行动的搭子吗？
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="h-12 flex-1 rounded-[var(--radius-sm)] text-sm font-semibold"
+            style={{ color: "var(--color-ink-2)" }}
+          >
+            取消
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={confirming}
+            className="btn-primary h-12 flex-1 text-sm disabled:opacity-50"
+          >
+            {confirming ? "正在邀请…" : "确认邀请"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 候选人卡（Spec 4.6 状态二） */
 function IntentCard({
   intent,
-  onChoose,
+  onRequestChoose,
   choosing,
   anyChoosing,
   groupMode,
@@ -114,7 +166,7 @@ function IntentCard({
   onToggleSelect,
 }: {
   intent: Intent;
-  onChoose: (id: string) => void;
+  onRequestChoose: (matchId: string, name: string) => void;
   choosing: boolean;
   anyChoosing: boolean;
   groupMode: boolean;
@@ -123,24 +175,20 @@ function IntentCard({
 }) {
   const { candidate, reasons, note, status, matchId } = intent;
 
-  const matchTypeLabel =
-    reasons.length > 0
-      ? MATCH_TYPE_LABELS[reasons[0].type] ?? reasons[0].type
-      : null;
-
   return (
     <div className="card p-4">
-      {/* Candidate header row */}
+      {/* 头像 / 昵称 / 校园认证 */}
       <div className="mb-3 flex items-start justify-between gap-2">
-        {/* Left: avatar + name + grade */}
         <div className="flex items-center gap-2.5">
-          {/* 群体模式显示圆形勾选 */}
+          {/* 群体模式勾选圆 */}
           {groupMode && status === "interested" && (
             <button
               onClick={() => onToggleSelect(matchId)}
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors"
               style={{
-                borderColor: selected ? "var(--color-primary)" : "var(--color-card-border)",
+                borderColor: selected
+                  ? "var(--color-primary)"
+                  : "var(--color-card-border)",
                 background: selected ? "var(--color-primary)" : "transparent",
               }}
               aria-label={selected ? "取消选择" : "选择"}
@@ -158,79 +206,115 @@ function IntentCard({
               )}
             </button>
           )}
+
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl"
             style={{ background: candidate.color }}
           >
             {candidate.emoji}
           </span>
+
           <div className="min-w-0">
-            <p className="font-semibold leading-tight text-ink">{candidate.name}</p>
-            <p className="text-xs text-ink-3">
-              {candidate.grade}
-              {candidate.grade && candidate.major ? " · " : ""}
-              {candidate.major}
+            <p className="font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
+              {candidate.name}
             </p>
+            {(candidate.grade || candidate.major) && (
+              <p className="text-xs" style={{ color: "var(--color-ink-3)" }}>
+                {[candidate.grade, candidate.major].filter(Boolean).join(" · ")}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Right: match type pill */}
-        {matchTypeLabel && (
-          <span
-            className="shrink-0 self-start rounded-full px-2.5 py-1 text-[11px] font-medium"
-            style={{ background: "var(--color-mint)", color: "var(--color-olive)" }}
-          >
-            {matchTypeLabel}
-          </span>
-        )}
+        {/* 校园认证小标 */}
+        <span
+          className="shrink-0 self-start rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={{ background: "var(--color-mint)", color: "var(--color-olive)" }}
+        >
+          校园认证
+        </span>
       </div>
 
-      {/* Bio */}
-      {candidate.bio && (
-        <p className="mb-3 text-sm leading-relaxed text-ink-2">{candidate.bio}</p>
-      )}
-
-      {/* Match reasons */}
-      {reasons.length > 0 && (
-        <div className="mb-3 space-y-1.5">
-          {reasons.map((r, i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <span className="text-sm leading-none">{reasonIcon(r.type)}</span>
-              <span className="text-xs text-ink-2 leading-snug">{r.text}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Optional note */}
+      {/* 候选人留言（一句话） */}
       {note && (
-        <div className="mb-3 rounded-[var(--radius-sm)] bg-sky px-3 py-2">
-          <p className="mb-0.5 text-[11px] text-ink-3">留言</p>
-          <p className="text-sm text-ink-2">{note}</p>
+        <div
+          className="mb-3 rounded-[var(--radius-sm)] px-3 py-2.5"
+          style={{ background: "var(--color-sky)" }}
+        >
+          <p
+            className="mb-0.5 text-[10px] font-medium"
+            style={{ color: "var(--color-ink-3)" }}
+          >
+            留言
+          </p>
+          <p className="text-sm leading-snug" style={{ color: "var(--color-ink-2)" }}>
+            {note}
+          </p>
         </div>
       )}
 
-      {/* Action area */}
+      {/* 相关经验/bio */}
+      {candidate.bio && (
+        <p
+          className="mb-3 text-sm leading-relaxed"
+          style={{ color: "var(--color-ink-2)" }}
+        >
+          {candidate.bio}
+        </p>
+      )}
+
+      {/* AI 匹配理由（可读句子，不显示分数） */}
+      {reasons.length > 0 && (
+        <div
+          className="mb-3 rounded-[var(--radius-sm)] px-3 py-2.5"
+          style={{ background: "var(--color-agent)" }}
+        >
+          <p
+            className="mb-1.5 text-[10px] font-semibold"
+            style={{ color: "var(--color-ink-3)" }}
+          >
+            小叶的匹配理由
+          </p>
+          <div className="flex flex-col gap-1">
+            {reasons.map((r, i) => (
+              <p key={i} className="text-xs leading-snug" style={{ color: "var(--color-ink-2)" }}>
+                {reasonIcon(r.type)} {r.text}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 操作区 */}
       {status === "interested" && !choosing && (
-        <>
-          {/* 始终保留单选按钮 */}
+        <div className="flex gap-2">
+          {/* 查看资料（占位，样式到位） */}
           <button
-            onClick={() => onChoose(matchId)}
+            className="btn-secondary h-10 flex-1 text-sm"
+            disabled
+            style={{ opacity: 0.6 }}
+          >
+            查看资料
+          </button>
+          {/* 选择同行 → 弹确认层（硬保护串） */}
+          <button
+            onClick={() => onRequestChoose(matchId, candidate.name)}
             disabled={anyChoosing}
-            className="btn-primary h-10 w-full text-sm disabled:opacity-50"
+            className="btn-primary h-10 flex-[2] text-sm disabled:opacity-50"
           >
             选择 TA 一起出发 🌱
           </button>
-          <p className="mt-2 text-center text-xs text-ink-4 underline-offset-2">
-            继续等待更多匹配
-          </p>
-        </>
+        </div>
       )}
 
       {choosing && (
-        <div className="flex h-10 items-center justify-center rounded-[var(--radius-lg)] bg-mint">
+        <div
+          className="flex h-10 items-center justify-center rounded-[var(--radius-lg)]"
+          style={{ background: "var(--color-mint)" }}
+        >
           <motion.span
-            className="text-sm text-olive"
+            className="text-sm"
+            style={{ color: "var(--color-olive)" }}
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
           >
@@ -240,19 +324,27 @@ function IntentCard({
       )}
 
       {status === "delivered" && !choosing && (
-        <p className="text-center text-xs text-ink-4">等待回应中</p>
+        <p className="text-center text-xs" style={{ color: "var(--color-ink-4)" }}>
+          等待回应中
+        </p>
       )}
-
       {status === "declined" && (
-        <p className="text-center text-xs text-ink-4">暂不感兴趣</p>
+        <p className="text-center text-xs" style={{ color: "var(--color-ink-4)" }}>
+          暂不感兴趣
+        </p>
       )}
-
       {status === "chosen" && (
-        <p className="text-center text-xs font-semibold text-primary">已选择 ✓</p>
+        <p
+          className="text-center text-xs font-semibold"
+          style={{ color: "var(--color-primary)" }}
+        >
+          已选择 ✓
+        </p>
       )}
-
       {status === "closed" && (
-        <p className="text-center text-xs text-ink-4">已关闭</p>
+        <p className="text-center text-xs" style={{ color: "var(--color-ink-4)" }}>
+          已关闭
+        </p>
       )}
     </div>
   );
@@ -269,9 +361,19 @@ export default function SeedDetailPage() {
     refreshInterval: 3000,
   });
 
+  // 单选确认弹层状态
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    matchId: string;
+    candidateName: string;
+  } | null>(null);
+
   const [choosingId, setChoosingId] = useState<string | null>(null);
-  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(
+    new Set()
+  );
   const [groupChoosing, setGroupChoosing] = useState(false);
+  // 群体模式也需要确认弹层
+  const [pendingGroupConfirm, setPendingGroupConfirm] = useState(false);
 
   const seed = data?.seed;
   const intents: Intent[] = data?.intents ?? [];
@@ -289,7 +391,6 @@ export default function SeedDetailPage() {
       if (next.has(matchId)) {
         next.delete(matchId);
       } else {
-        // 最多选 groupSizeMax - 1 位（不含发起人自己）
         if (next.size < groupSizeMax - 1) {
           next.add(matchId);
         }
@@ -298,9 +399,18 @@ export default function SeedDetailPage() {
     });
   }
 
-  async function choose(matchId: string) {
+  /** 打开单选确认弹层 */
+  function requestChoose(matchId: string, candidateName: string) {
     if (choosingId || groupChoosing) return;
+    setPendingConfirm({ matchId, candidateName });
+  }
+
+  /** 单选：用户在弹层点"确认邀请" */
+  async function confirmChoose() {
+    if (!pendingConfirm) return;
+    const { matchId } = pendingConfirm;
     setChoosingId(matchId);
+    setPendingConfirm(null);
     try {
       const res = await fetch(`/api/seeds/${id}/choose`, {
         method: "POST",
@@ -315,9 +425,11 @@ export default function SeedDetailPage() {
     }
   }
 
+  /** 群体选择（保留增强功能） */
   async function chooseGroup() {
     if (choosingId || groupChoosing || selectedMatchIds.size < 2) return;
     setGroupChoosing(true);
+    setPendingGroupConfirm(false);
     try {
       const res = await fetch(`/api/seeds/${id}/choose`, {
         method: "POST",
@@ -335,7 +447,9 @@ export default function SeedDetailPage() {
   if (!data) {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center px-5">
-        <p className="text-sm text-ink-3">加载中…</p>
+        <p className="text-sm" style={{ color: "var(--color-ink-3)" }}>
+          加载中…
+        </p>
       </main>
     );
   }
@@ -343,7 +457,9 @@ export default function SeedDetailPage() {
   if (!seed) {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center px-5">
-        <p className="text-sm text-ink-3">种子不见了</p>
+        <p className="text-sm" style={{ color: "var(--color-ink-3)" }}>
+          种子不见了
+        </p>
       </main>
     );
   }
@@ -354,44 +470,75 @@ export default function SeedDetailPage() {
     <main className="min-h-dvh">
       {/* Header */}
       <header
-        className="sticky top-0 z-10 flex items-center gap-3 border-b bg-paper px-4 py-3"
-        style={{ borderColor: "var(--color-card-border)" }}
+        className="sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3"
+        style={{
+          background: "var(--color-paper)",
+          borderColor: "var(--color-card-border)",
+        }}
       >
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-mint"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors"
+          style={{ color: "var(--color-ink-2)" }}
           aria-label="返回"
         >
           <ChevronLeft size={22} />
         </button>
-        <span className="flex-1 truncate font-semibold text-ink">{seed.title}</span>
-        <span className="shrink-0 rounded-full bg-mint px-2.5 py-0.5 text-xs text-olive">
+        <span
+          className="flex-1 truncate font-semibold"
+          style={{ color: "var(--color-ink)" }}
+        >
+          {seed.title}
+        </span>
+        <span
+          className="shrink-0 rounded-full px-2.5 py-0.5 text-xs"
+          style={{
+            background: "var(--color-mint)",
+            color: "var(--color-olive)",
+          }}
+        >
           {STATUS_LABELS[seed.status] ?? seed.status}
         </span>
       </header>
 
-      <div className="px-5 pb-24 pt-4">
-        {/* Room entry banner */}
+      <div className="px-5 pb-28 pt-4">
+        {/* 已成局：进入房间 banner */}
         {roomId && (
           <Link
             href={`/room/${roomId}`}
-            className="mb-4 flex items-center justify-between rounded-[var(--radius-md)] bg-mint px-4 py-3"
+            className="mb-4 flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3"
+            style={{ background: "var(--color-mint)" }}
           >
-            <span className="text-sm font-semibold text-olive">已成局 🎉 进入行动房间</span>
-            <ArrowRight size={18} className="text-olive" />
+            <span
+              className="text-sm font-semibold"
+              style={{ color: "var(--color-olive)" }}
+            >
+              已成局 🎉 进入行动房间
+            </span>
+            <ArrowRight size={18} style={{ color: "var(--color-olive)" }} />
           </Link>
         )}
 
-        {/* Seed card */}
+        {/* 种子信息卡 */}
         <div className="card mb-4 p-5">
           <div className="mb-3 flex items-center gap-2">
             <span className="text-2xl">🌱</span>
-            <h1 className="text-lg font-semibold text-olive">{seed.title}</h1>
+            <h1
+              className="text-lg font-bold"
+              style={{ color: "var(--color-olive)" }}
+            >
+              {seed.title}
+            </h1>
           </div>
 
-          <p className="mb-3 text-sm leading-relaxed text-ink">{seed.what}</p>
+          <p
+            className="mb-4 text-sm leading-relaxed"
+            style={{ color: "var(--color-ink)" }}
+          >
+            {seed.what}
+          </p>
 
-          <div className="mb-3 flex flex-col gap-1.5">
+          <div className="mb-3 flex flex-col gap-2">
             <InfoRow icon="📅" text={seed.whenText} />
             <InfoRow icon="📍" text={seed.whereText} />
             <InfoRow icon="👥" text={seed.groupSize} />
@@ -399,9 +546,18 @@ export default function SeedDetailPage() {
 
           {seed.requirements.must.length > 0 && (
             <div className="mb-2">
-              <p className="mb-1 text-xs text-ink-3">必要条件</p>
+              <p
+                className="mb-1 text-xs font-medium"
+                style={{ color: "var(--color-ink-3)" }}
+              >
+                必要条件
+              </p>
               {seed.requirements.must.map((r, i) => (
-                <p key={i} className="text-xs text-ink-2">
+                <p
+                  key={i}
+                  className="text-xs"
+                  style={{ color: "var(--color-ink-2)" }}
+                >
                   · {r}
                 </p>
               ))}
@@ -410,9 +566,18 @@ export default function SeedDetailPage() {
 
           {seed.requirements.flexible.length > 0 && (
             <div className="mb-3">
-              <p className="mb-1 text-xs text-ink-3">可以商量</p>
+              <p
+                className="mb-1 text-xs font-medium"
+                style={{ color: "var(--color-ink-3)" }}
+              >
+                可以商量
+              </p>
               {seed.requirements.flexible.map((r, i) => (
-                <p key={i} className="text-xs text-ink-2">
+                <p
+                  key={i}
+                  className="text-xs"
+                  style={{ color: "var(--color-ink-2)" }}
+                >
                   · {r}
                 </p>
               ))}
@@ -424,7 +589,11 @@ export default function SeedDetailPage() {
               {seed.tags.map((t, i) => (
                 <span
                   key={i}
-                  className="rounded-full bg-mint px-2.5 py-0.5 text-xs text-olive"
+                  className="rounded-full px-2.5 py-0.5 text-xs"
+                  style={{
+                    background: "var(--color-mint)",
+                    color: "var(--color-olive)",
+                  }}
                 >
                   {t}
                 </span>
@@ -433,45 +602,107 @@ export default function SeedDetailPage() {
           )}
         </div>
 
-        {/* Matching: FlyDelivery animation */}
+        {/* 状态一：匹配中 */}
         {seed.status === "matching" && (
-          <div className="mb-4 rounded-[var(--radius-md)] bg-sky px-4 py-3">
+          <div
+            className="mb-4 rounded-[var(--radius-md)] px-4 py-4 text-center"
+            style={{ background: "var(--color-sky)" }}
+          >
             <FlyDelivery size={56} duration={900} />
-            <p className="mt-1 text-center text-sm text-ink-2">信使鸟正在送信…</p>
+            <p
+              className="mt-2 text-sm font-medium"
+              style={{ color: "var(--color-ink-2)" }}
+            >
+              小叶正在帮你寻找合适的同行者…
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "var(--color-ink-3)" }}>
+              信使鸟正在送信
+            </p>
           </div>
         )}
 
+        {/* 状态一：已投递等待回应，尚无意向 */}
         {seed.status === "delivered" && intents.length === 0 && (
-          <div className="mb-4 rounded-[var(--radius-md)] bg-sky px-4 py-3">
-            <p className="text-sm text-ink-2">🐦 种子已投递，等待同伴回应</p>
+          <div
+            className="mb-4 rounded-[var(--radius-md)] px-4 py-4"
+            style={{ background: "var(--color-sky)" }}
+          >
+            <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
+              🐦 种子已投递，等待同伴回应
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "var(--color-ink-3)" }}>
+              已收到 {interestedIntents.length} 份意向
+            </p>
           </div>
         )}
 
-        {/* Intent list (owner only) */}
+        {/* 状态一：等待阶段的操作 */}
+        {isOwner &&
+          intents.length === 0 &&
+          seed.status !== "matching" &&
+          seed.status !== "formed" &&
+          seed.status !== "closed" && (
+            <div className="mb-4 flex gap-3">
+              <Link
+                href="/garden"
+                className="btn-secondary flex h-11 flex-1 items-center justify-center text-sm"
+              >
+                返回花园
+              </Link>
+            </div>
+          )}
+
+        {/* 状态二：候选人列表（发起人视角） */}
         {isOwner && intents.length > 0 && (
           <div>
-            <p className="font-kai mb-3 text-base text-ink-2">
-              小绿已经帮你找到{" "}
-              <span className="font-semibold text-olive">{intents.length}</span>{" "}
-              位可能合适的同行者
-            </p>
+            {/* 小叶提示（Spec 4.6 顶部文案） */}
+            <div
+              className="mb-4 rounded-[var(--radius-md)] px-4 py-3"
+              style={{ background: "var(--color-agent)" }}
+            >
+              <p
+                className="font-kai text-sm leading-relaxed"
+                style={{ color: "var(--color-ink-2)" }}
+              >
+                小叶已经帮你找到{" "}
+                <span
+                  className="font-bold"
+                  style={{ color: "var(--color-olive)" }}
+                >
+                  {interestedIntents.length}
+                </span>{" "}
+                位有意向的同行者，由你来做最终选择。
+              </p>
+            </div>
 
-            <div className="mb-2 flex items-start justify-between gap-2">
-              <h2 className="text-base font-semibold text-ink">有意向的同伴</h2>
-              <p className="text-right text-xs leading-snug text-ink-3">
+            <div className="mb-3 flex items-start justify-between gap-2">
+              <h2
+                className="text-base font-semibold"
+                style={{ color: "var(--color-ink)" }}
+              >
+                有意向的同伴
+              </h2>
+              <p
+                className="text-right text-xs leading-snug"
+                style={{ color: "var(--color-ink-3)" }}
+              >
                 由你亲自选择同行者
                 <br />
-                小绿只做参谋
+                小叶只做参谋
               </p>
             </div>
 
             {/* 群体模式提示 */}
             {groupMode && (
               <div
-                className="mb-3 rounded-[var(--radius-sm)] px-3 py-2 text-xs text-ink-2"
-                style={{ background: "var(--color-mint)" }}
+                className="mb-3 rounded-[var(--radius-sm)] px-3 py-2 text-xs"
+                style={{
+                  background: "var(--color-mint)",
+                  color: "var(--color-ink-2)",
+                }}
               >
-                💡 这次活动支持 {groupSizeMax} 人一起出发！可以勾选多位同伴组队，也可以单独选择一位。
+                💡 这次活动支持 {groupSizeMax}{" "}
+                人一起出发！可以勾选多位同伴组队，也可以单独选择一位。
               </div>
             )}
 
@@ -480,7 +711,7 @@ export default function SeedDetailPage() {
                 <IntentCard
                   key={intent.matchId}
                   intent={intent}
-                  onChoose={choose}
+                  onRequestChoose={requestChoose}
                   choosing={choosingId === intent.matchId}
                   anyChoosing={anyChoosing}
                   groupMode={groupMode}
@@ -492,11 +723,16 @@ export default function SeedDetailPage() {
           </div>
         )}
 
-        {isOwner && intents.length === 0 && seed.status !== "matching" && (
-          <div className="mt-10 text-center text-sm text-ink-3">
-            还没有同伴表达意向
-          </div>
-        )}
+        {isOwner &&
+          intents.length === 0 &&
+          seed.status !== "matching" && (
+            <div
+              className="mt-8 text-center text-sm"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              还没有同伴表达意向
+            </div>
+          )}
       </div>
 
       {/* 群体组队悬浮按钮 */}
@@ -506,7 +742,7 @@ export default function SeedDetailPage() {
           style={{ width: "calc(100% - 40px)", maxWidth: 420 }}
         >
           <button
-            onClick={chooseGroup}
+            onClick={() => setPendingGroupConfirm(true)}
             className="btn-primary w-full py-3.5 text-base font-semibold shadow-lg"
           >
             和选中的 {selectedMatchIds.size} 位一起出发 🌱
@@ -514,13 +750,19 @@ export default function SeedDetailPage() {
         </div>
       )}
 
-      {/* 群体组队中状态 */}
+      {/* 群体组队中 */}
       {groupChoosing && (
-        <div className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2"
-          style={{ width: "calc(100% - 40px)", maxWidth: 420 }}>
-          <div className="flex h-14 items-center justify-center rounded-[var(--radius-lg)] bg-mint shadow-lg">
+        <div
+          className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2"
+          style={{ width: "calc(100% - 40px)", maxWidth: 420 }}
+        >
+          <div
+            className="flex h-14 items-center justify-center rounded-[var(--radius-lg)] shadow-lg"
+            style={{ background: "var(--color-mint)" }}
+          >
             <motion.span
-              className="text-sm text-olive"
+              className="text-sm"
+              style={{ color: "var(--color-olive)" }}
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -528,6 +770,26 @@ export default function SeedDetailPage() {
             </motion.span>
           </div>
         </div>
+      )}
+
+      {/* 单选确认弹层 */}
+      {pendingConfirm && (
+        <ConfirmModal
+          candidateName={pendingConfirm.candidateName}
+          onConfirm={confirmChoose}
+          onCancel={() => setPendingConfirm(null)}
+          confirming={!!choosingId}
+        />
+      )}
+
+      {/* 群体确认弹层 */}
+      {pendingGroupConfirm && (
+        <ConfirmModal
+          candidateName={`${selectedMatchIds.size} 位同伴`}
+          onConfirm={chooseGroup}
+          onCancel={() => setPendingGroupConfirm(false)}
+          confirming={groupChoosing}
+        />
       )}
     </main>
   );

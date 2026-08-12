@@ -58,7 +58,7 @@ await step("welcome-create", async () => {
 const birdBubbles = () => owner.page.locator(".font-kai.max-w-\\[75\\%\\]");
 
 async function saySeed(text, expectMin) {
-  await owner.page.getByPlaceholder("告诉小绿你想做什么…").fill(text);
+  await owner.page.getByPlaceholder("告诉小叶你想做什么…").fill(text);
   await owner.page.getByText("发送", { exact: true }).click();
   await owner.page.waitForFunction(
     (min) => document.querySelectorAll(".font-kai.max-w-\\[75\\%\\]").length >= min,
@@ -211,7 +211,7 @@ await step("closed-notice", async () => {
 });
 
 await step("room-icebreak", async () => {
-  await owner.page.getByText("事件AI", { exact: false }).first().waitFor({ timeout: 15000 });
+  await owner.page.getByText("小苗", { exact: false }).first().waitFor({ timeout: 15000 });
   await shot(owner.page, "10-icebreak");
 });
 
@@ -231,10 +231,10 @@ await step("stage-leafing", async () => {
 });
 
 await step("nudge", async () => {
-  const aiBefore = await owner.page.getByText("事件AI", { exact: false }).count();
+  const aiBefore = await owner.page.getByText("小苗", { exact: false }).count();
   await owner.page.getByText("推进", { exact: false }).click();
   await owner.page.waitForFunction(
-    (n) => document.body.innerText.split("事件AI").length - 1 > n,
+    (n) => document.body.innerText.split("小苗").length - 1 > n,
     aiBefore,
     { timeout: 60000, polling: 1000 }
   );

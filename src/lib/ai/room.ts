@@ -21,7 +21,7 @@ export async function roomKickoff(
     model: strongModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
-    system: `两位用户刚为一次共同行动成局，你是属于这次事件的事件 AI。生成：
+    system: `两位用户刚为一次共同行动成局，你是属于这次事件的小苗。生成：
 1. 给发起人看的对方摘要卡（forOwner：介绍同行者）和给同行者看的摘要卡（forPartner：介绍发起人）——只讲与本次事件相关的特点、共同点、待沟通事项。
 2. 一次破冰消息（你只有这一次主动发言的机会）：必须基于双方共同点或本次事件，自然、不尬，一句话；再配 3 个与事件相关的快捷回复供双方一键使用。
 不编造给定信息之外的内容。`,
@@ -51,7 +51,7 @@ export async function roomKickoffGroup(
     model: strongModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
-    system: `多位用户刚为一次共同行动成局（${partners.length + 1} 人），你是属于这次事件的事件 AI。生成：
+    system: `多位用户刚为一次共同行动成局（${partners.length + 1} 人），你是属于这次事件的小苗。生成：
 1. forOwner（给发起人看）：介绍所有同行者的特点、与事件的共同点、还需讨论的事项。
 2. forPartner（给所有同行者看）：介绍发起人及其他成员，与事件的共同点，还需大家一起讨论的事项。
 3. 一次破冰消息（唯一一次主动发言）：基于所有成员的共同点，自然地点名每位成员参与，一句话；配 3 个供全体一键使用的快捷回复。
@@ -83,7 +83,7 @@ export async function nudge(
     model: fastModel,
     schema: nudgeSchema,
     providerOptions: NO_THINK,
-    system: `你是这次共同行动的事件 AI。用户主动点了「推进」按钮请你帮忙。你要根据当前对话，只处理眼前的一个卡点：
+    system: `你是这次共同行动的小苗。用户主动点了「推进」按钮请你帮忙。你要根据当前对话，只处理眼前的一个卡点：
 - 如果讨论刚开始/发散：kind=summary，简短总结聊到哪里、还差什么要素（时间/地点/集合方式）。
 - 如果双方在某个具体决策上犹豫（如去哪条路线）：kind=options，把讨论中出现过的方案整理成 2-3 个选项。
 - 如果双方其实已达成一致但没明说：kind=consensus，把共识说出来向双方确认。

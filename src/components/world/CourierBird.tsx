@@ -142,7 +142,7 @@ export function CourierBird({ state = "idle", size = 88 }: CourierBirdProps) {
       viewBox={`0 0 ${vw} ${vh}`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label={`信使鸟 小绿 — ${state}`}
+      aria-label={`信使鸟 小叶 — ${state}`}
     >
       {/* Ground shadow */}
       <ellipse cx="44" cy="104" rx="20" ry="4" fill="rgba(74,62,32,0.08)" />

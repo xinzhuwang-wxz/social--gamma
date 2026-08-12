@@ -138,13 +138,15 @@ export async function POST(
   ];
   await db.insert(schema.roomMembers).values(memberValues);
 
-  // 破冰作为事件 AI 的第一条消息
+  // 方案 A 交接模型：不自动破冰，只发一条系统交接提示；第一句真人自己说。
+  // 破冰话术保留在 room.icebreak，作为可选「开场灵感」供用户点选，不自动发送。
   await db.insert(schema.messages).values({
     id: `msg_${uid()}`,
     roomId,
     senderId: null,
-    kind: "ai",
-    content: kickoff.icebreak.message,
+    kind: "system",
+    content:
+      "两位 Agent 已完成交接。接下来由你们决定具体怎么安排；聊到卡住时，可以请小苗帮忙。",
     createdAt: new Date(),
   });
 

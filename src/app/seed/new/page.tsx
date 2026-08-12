@@ -22,8 +22,12 @@ type SeedCard = {
 type ClarifyResult = {
   ready: boolean;
   reply: string;
+  options?: string[];
   card: SeedCard | null;
 };
+
+// 第一轮常见活动（方案 A：先给快捷选项，用户也可自己打字）
+const INITIAL_OPTIONS = ["一起爬山", "打球运动", "看展/话剧", "约饭探店", "一起自习", "骑行citywalk"];
 
 type PublishResult = { ok: boolean; seedId: string };
 
@@ -203,6 +207,7 @@ export default function NewSeedPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [card, setCard] = useState<SeedCard | null>(null);
+  const [options, setOptions] = useState<string[]>(INITIAL_OPTIONS);
   // typingText: text of the latest AI reply (drives the TypewriterBubble)
   const [typingText, setTypingText] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -224,8 +229,8 @@ export default function NewSeedPage() {
       ? apiHistory.slice(0, apiHistory.length - 1)
       : apiHistory;
 
-  async function send() {
-    const text = input.trim();
+  async function send(textArg?: string) {
+    const text = (textArg ?? input).trim();
     if (!text || loading || publishing) return;
 
     const prevHistory = apiHistory.slice();
@@ -234,6 +239,7 @@ export default function NewSeedPage() {
 
     setInput("");
     setError(null);
+    setOptions([]);
     setApiHistory(nextHistory);
     setTypingText("");
     setLoading(true);
@@ -249,11 +255,13 @@ export default function NewSeedPage() {
       const assistantMsg: Msg = { role: "assistant", content: data.reply };
       setApiHistory([...nextHistory, assistantMsg]);
       setTypingText(data.reply);
-      setCard(data.ready && data.card ? data.card : null);
+      const ready = data.ready && data.card;
+      setCard(ready ? data.card : null);
+      setOptions(ready ? [] : data.options ?? []);
     } catch {
       setApiHistory(prevHistory);
       setInput(text);
-      setError("小绿遇到了点问题，请重新发送");
+      setError("小叶遇到了点问题，请重新发送");
     } finally {
       setLoading(false);
     }
@@ -354,7 +362,7 @@ export default function NewSeedPage() {
               </div>
 
               <p className="mt-2 text-center text-xs text-ink-3">
-                还想修改？继续告诉小绿，它会重新生成种子卡
+                还想修改？继续告诉小叶，它会重新生成种子卡
               </p>
             </motion.div>
           </AnimatePresence>
@@ -368,6 +376,27 @@ export default function NewSeedPage() {
         className="sticky bottom-0 border-t bg-paper px-4 py-3"
         style={{ borderColor: "var(--color-card-border)" }}
       >
+        {/* 快捷选项 chip（方案 A：一键选，也可自己打字）*/}
+        {!card && !loading && options.length > 0 && (
+          <div className="no-scrollbar mb-2.5 flex flex-wrap gap-2">
+            {options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => void send(opt)}
+                disabled={publishing}
+                className="rounded-full px-3 py-1.5 text-sm font-semibold"
+                style={{
+                  border: "1px solid var(--color-card-border)",
+                  color: "var(--color-primary)",
+                  background: "var(--color-card)",
+                }}
+              >
+                {opt}
+              </button>
+            ))}
+            <span className="self-center text-xs text-ink-4">或自己打字 →</span>
+          </div>
+        )}
         <div className="flex gap-2">
           {speechSupported && (
             <motion.button
@@ -399,7 +428,7 @@ export default function NewSeedPage() {
                 void send();
               }
             }}
-            placeholder="告诉小绿你想做什么…"
+            placeholder="告诉小叶你想做什么…"
             disabled={loading || publishing}
             className="h-11 flex-1 rounded-[var(--radius-md)] border bg-sky px-4 text-sm text-ink outline-none placeholder:text-ink-4 focus:border-primary disabled:opacity-60"
             style={{ borderColor: "var(--color-card-border)" }}

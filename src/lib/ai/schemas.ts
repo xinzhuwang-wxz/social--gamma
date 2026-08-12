@@ -15,10 +15,15 @@ export const seedCardSchema = z.object({
 });
 export type SeedCard = z.infer<typeof seedCardSchema>;
 
-/** 澄清对话的下一步：追问 or 成卡 */
+/** 澄清对话的下一步：追问 or 成卡（含单题选项 chip，方案 A 交互）*/
 export const clarifyStepSchema = z.object({
   ready: z.boolean().describe("必要信息（做什么/时间/地点/人数要求）是否已足够"),
-  reply: z.string().describe("信使鸟的下一句话：不足则只追问缺失的一项，足够则简短确认"),
+  reply: z.string().describe("小叶的下一句话：不足则只追问缺失的一项，足够则简短确认"),
+  options: z
+    .array(z.string())
+    .describe(
+      "针对本轮问题的 2-4 个常见快捷答案（供用户一键选择），每个不超过 10 字；ready 为 true 时给空数组"
+    ),
   card: seedCardSchema.nullable().describe("ready 为 true 时给出种子卡，否则为 null"),
 });
 
@@ -68,7 +73,7 @@ export const kickoffSchema = z.object({
     toDiscuss: z.array(z.string()).describe("仍需沟通的事项 1-2 条"),
   }),
   icebreak: z.object({
-    message: z.string().describe("事件 AI 的一次破冰消息：必须来自共同点或本次事件，友好自然"),
+    message: z.string().describe("小苗 的一次破冰消息：必须来自共同点或本次事件，友好自然"),
     quickReplies: z.array(z.string()).describe("3 个与本次事件相关的快捷回复"),
   }),
 });
@@ -80,7 +85,7 @@ export const nudgeSchema = z.object({
     .describe(
       "summary=总结讨论到哪里；options=为眼前一个卡点整理有限选项；consensus=提取已形成的共识；pact_suggest=信息足够建议整理行动约定"
     ),
-  text: z.string().describe("事件 AI 的话，简短温和"),
+  text: z.string().describe("小苗 的话，简短温和"),
   options: z
     .array(z.string())
     .nullable()

@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import useSWR from "swr";
-import { Home, Mail, Sprout, Trees, User, Plus } from "lucide-react";
+import { Mail, Sprout, Home, User, Plus } from "lucide-react";
 
 const fetcher = (u: string) => fetch(u).then((r) => r.json());
 
-const tabs = [
+// 方案 A 导航：[信箱][行动] [＋] [花园][我的]，花园为首页
+const leftTabs = [
+  { href: "/mailbox", label: "信箱", icon: Mail, badge: "mailbox" as const },
+  { href: "/actions", label: "行动", icon: Sprout, badge: "actions" as const },
+];
+const rightTabs = [
   { href: "/garden", label: "花园", icon: Home },
-  { href: "/mailbox", label: "信箱", icon: Mail },
-  { href: "/actions", label: "行动中", icon: Sprout },
-  { href: "/forest", label: "森林", icon: Trees },
   { href: "/me", label: "我的", icon: User },
 ];
 
@@ -19,47 +21,61 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const { data } = useSWR("/api/me", fetcher, { refreshInterval: 5000 });
-  const unread = data?.counts?.mailboxUnread ?? 0;
+  const mailboxUnread = data?.counts?.mailboxUnread ?? 0;
+
+  const Tab = ({ t }: { t: { href: string; label: string; icon: typeof Mail; badge?: "mailbox" | "actions" } }) => {
+    const active = pathname.startsWith(t.href);
+    const Icon = t.icon;
+    const badge = t.badge === "mailbox" ? mailboxUnread : 0;
+    return (
+      <Link
+        href={t.href}
+        className="relative flex flex-1 flex-col items-center gap-0.5 py-2"
+        style={{ color: active ? "var(--color-primary)" : "var(--color-ink-3)" }}
+      >
+        <Icon size={22} strokeWidth={active ? 2.4 : 1.9} />
+        <span className="text-[10px] font-bold">{t.label}</span>
+        {badge > 0 && (
+          <span className="absolute right-3 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-alert px-1 text-[10px] font-bold text-white">
+            {badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex min-h-dvh flex-col">
       <div className="flex-1 pb-24">{children}</div>
 
-      {/* 中央发布按钮 */}
-      <button
-        aria-label="种下一颗种子"
-        onClick={() => router.push("/seed/new")}
-        className="btn-primary fixed bottom-16 left-1/2 z-30 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full shadow-lg"
-        style={{ maxWidth: "480px" }}
-      >
-        <Plus size={28} strokeWidth={2.2} />
-      </button>
-
-      {/* 底部导航 */}
+      {/* 底部导航（＋发布居中凸起）*/}
       <nav
-        className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-[480px] -translate-x-1/2 items-center justify-around border-t bg-card pb-[env(safe-area-inset-bottom)]"
-        style={{ borderColor: "var(--color-card-border)" }}
+        className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-[480px] -translate-x-1/2 items-end justify-around bg-card pb-[env(safe-area-inset-bottom)] pt-1"
+        style={{ boxShadow: "0 -2px 20px rgba(48,76,57,0.06)", height: 74 }}
       >
-        {tabs.map((t) => {
-          const active = pathname.startsWith(t.href);
-          const Icon = t.icon;
-          return (
-            <Link
-              key={t.href}
-              href={t.href}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-2"
-              style={{ color: active ? "var(--color-primary)" : "var(--color-ink-3)" }}
-            >
-              <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
-              <span className="text-[11px]">{t.label}</span>
-              {t.href === "/mailbox" && unread > 0 && (
-                <span className="absolute -top-0.5 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-alert px-1 text-[10px] font-bold text-white">
-                  {unread}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        {leftTabs.map((t) => (
+          <Tab key={t.href} t={t} />
+        ))}
+
+        {/* 中央发布 */}
+        <div className="flex flex-1 justify-center">
+          <button
+            aria-label="种下一件想做的事"
+            onClick={() => router.push("/seed/new")}
+            className="flex h-[58px] w-[58px] -translate-y-4 items-center justify-center rounded-full text-white"
+            style={{
+              background: "var(--color-primary)",
+              border: "5px solid #fff",
+              boxShadow: "0 10px 24px rgba(63,120,81,0.28)",
+            }}
+          >
+            <Plus size={28} strokeWidth={2.4} />
+          </button>
+        </div>
+
+        {rightTabs.map((t) => (
+          <Tab key={t.href} t={t} />
+        ))}
       </nav>
     </div>
   );

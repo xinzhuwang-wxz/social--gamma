@@ -91,7 +91,7 @@ export const rooms = sqliteTable("rooms", {
   })
     .notNull()
     .default("sprout"),
-  /** JSON: { message: string, quickReplies: string[] } 事件 AI 破冰（仅一次） */
+  /** JSON: { message: string, quickReplies: string[] } 小苗 破冰（仅一次） */
   icebreak: text("icebreak", { mode: "json" }).$type<{
     message: string;
     quickReplies: string[];
@@ -106,7 +106,7 @@ export const rooms = sqliteTable("rooms", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
-/** 房间消息。senderId 为 null 表示事件 AI / 系统 */
+/** 房间消息。senderId 为 null 表示小苗 / 系统 */
 export const messages = sqliteTable("messages", {
   id: text("id").primaryKey(),
   roomId: text("room_id").notNull().references(() => rooms.id),

@@ -88,7 +88,7 @@ function BirdSection() {
 
   return (
     <section className="mb-10">
-      <SectionTitle>信使鸟「小绿」— CourierBird</SectionTitle>
+      <SectionTitle>信使鸟「小叶」— CourierBird</SectionTitle>
       {/* State switcher */}
       <div className="flex gap-2 flex-wrap mb-4">
         {BIRD_STATES.map((s) => (

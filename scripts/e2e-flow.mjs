@@ -60,7 +60,7 @@ async function main() {
     history.push({ role: "user", content: text });
     const step = await owner.post("/api/clarify", { history });
     history.push({ role: "assistant", content: step.reply });
-    console.log(`  🐦 小绿: ${step.reply}`);
+    console.log(`  🐦 小叶: ${step.reply}`);
     return step;
   };
   let step = await say("这周六想找个人一起去爬山，学校附近就行");

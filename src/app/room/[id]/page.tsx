@@ -386,7 +386,6 @@ export default function RoomPage({
     : members?.find((m) => m.role === "partner" && m.id !== other.id)?.id;
 
   const humanCount = messages.filter((m) => m.kind === "text").length;
-  const firstAiIdx = messages.findIndex((m) => m.kind === "ai");
 
   // pact 确认状态
   const myPactConfirmed = pact
@@ -710,12 +709,7 @@ export default function RoomPage({
 
         {/* Message list */}
         <div className="space-y-2 px-4 py-3">
-          {messages.map((msg, idx) => {
-            const showQuickReplies =
-              idx === firstAiIdx &&
-              humanCount === 0 &&
-              (room.icebreak?.quickReplies?.length ?? 0) > 0;
-
+          {messages.map((msg) => {
             if (msg.kind === "system") {
               return (
                 <div
@@ -743,38 +737,17 @@ export default function RoomPage({
                       className="text-[9px]"
                       style={{ color: "var(--color-ink-4)" }}
                     >
-                      事件AI
+                      小苗
                     </span>
                   </div>
 
                   <div className="flex max-w-[78%] flex-col gap-1">
                     <div
-                      className="rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap"
-                      style={{
-                        background: "var(--color-mint)",
-                        color: "var(--color-ink)",
-                      }}
+                      className="rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap agent-surface"
+                      style={{ color: "var(--color-ink)" }}
                     >
                       {msg.content}
                     </div>
-                    {showQuickReplies && (
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {room.icebreak!.quickReplies.map((qr, i) => (
-                          <button
-                            key={i}
-                            onClick={() => sendMessage(qr)}
-                            className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-                            style={{
-                              border: "1.5px solid var(--color-primary)",
-                              color: "var(--color-primary)",
-                              background: "transparent",
-                            }}
-                          >
-                            {qr}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -976,6 +949,35 @@ export default function RoomPage({
 
         {/* Input area */}
         <div className="flex flex-col gap-2 px-3 py-3">
+          {/* 开场灵感：真人还没开口时可选（点选只填入输入框，不自动发送）*/}
+          {humanCount === 0 &&
+            (room.icebreak?.quickReplies?.length ?? 0) > 0 &&
+            room.stage === "sprout" && (
+              <div className="flex flex-col gap-1.5 pb-1">
+                <span className="text-[11px]" style={{ color: "var(--color-ink-3)" }}>
+                  需要开个头？点一句填进输入框，改改再发～
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {room.icebreak!.quickReplies.map((qr, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setInput(qr);
+                        textareaRef.current?.focus();
+                      }}
+                      className="rounded-full px-3 py-1 text-xs font-medium"
+                      style={{
+                        border: "1.5px solid var(--color-primary)",
+                        color: "var(--color-primary)",
+                        background: "transparent",
+                      }}
+                    >
+                      {qr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           <div className="flex items-end gap-2">
             <textarea
               ref={textareaRef}
@@ -1024,7 +1026,7 @@ export default function RoomPage({
                 background: "transparent",
               }}
             >
-              {nudging ? "事件AI思考中…" : "✨ 推进"}
+              {nudging ? "小苗思考中…" : "✨ 推进"}
             </button>
             <button
               onClick={handleDraftPact}

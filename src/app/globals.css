@@ -3,56 +3,64 @@
 @import "@fontsource-variable/noto-sans-sc";
 
 @theme {
-  /* ===== 发芽视觉规范 tokens ===== */
+  /* ===== 视觉基线：队友方案 A「沉浸花园」token（融合契约）===== */
   /* 背景 */
-  --color-paper: #F7F0DE;        /* 页面暖白 */
-  --color-sky: #FBF4E3;          /* 天空/高亮暖白 */
-  --color-grass: #CCD56F;        /* 花园草地主色 */
+  --color-paper: #F4F6EF;        /* 应用背景 */
+  --color-sky: #FFFEFA;          /* surface 高亮暖白 */
+  --color-chat: #EEF3E9;         /* 聊天区背景 */
+
+  /* 花园世界美术 token（保留：水彩等距花园/植物 SVG 用）*/
+  --color-grass: #CCD56F;
   --color-grass-dark: #C3CF68;
   --color-grass-light: #D8DE83;
-  --color-meadow: #B8C88A;       /* 远景浅绿 */
+  --color-meadow: #B8C88A;
+  --color-ground: #BED09F;       /* 花园地面 */
 
   /* 品牌 */
-  --color-olive: #4D572E;        /* 深橄榄绿：Logo/一级标题/重要图标 */
-  --color-primary: #89974B;      /* 主操作绿 */
-  --color-primary-hover: #7C8B40;
-  --color-primary-pressed: #6C7937;
-  --color-primary-foreground: #FFF9EA;
-  --color-mint: #DCE3AE;         /* 浅绿状态：标签/选中/AI 信息块 */
+  --color-olive: #193126;        /* 一级标题/深绿 */
+  --color-primary: #3F7851;      /* 主操作深绿 */
+  --color-primary-hover: #35664A;
+  --color-primary-pressed: #2C5940;
+  --color-primary-foreground: #FFFFFF;
+  --color-mint: #E8F0E1;         /* 浅绿：标签/次级按钮/选中背景 */
+  --color-accent: #83A86F;       /* 植物进度/边框强调 */
+  --color-agent: #FFF4D9;        /* Agent/AI 内容暖黄背景 */
 
-  /* 辅助 */
+  /* 辅助（世界装饰）*/
   --color-wood: #B98C50;
   --color-wood-dark: #865F32;
   --color-wood-light: #D7B67A;
-  --color-soil: #A9753D;         /* 土色/种子色，小面积 */
-  --color-alert: #D8613E;        /* 提醒橙红：badge/未读 */
+  --color-soil: #A9753D;
+  --color-alert: #D8613E;        /* 未读数量徽标 */
   --color-water: #75BAD3;
+  --color-danger: #9C534D;       /* 风险/关系终止操作 */
+  --color-danger-soft: #F8E8E5;
 
   /* 文本 */
-  --color-ink: #333524;          /* 一级 */
-  --color-ink-2: #66664E;        /* 二级 */
-  --color-ink-3: #99937A;        /* 三级 */
-  --color-ink-4: #B7AF96;        /* 弱提示 */
+  --color-ink: #193126;          /* 主文本 */
+  --color-ink-2: #718078;        /* 辅助文本 */
+  --color-ink-3: #9AA39C;        /* 三级 */
+  --color-ink-4: #B4BCB4;        /* 弱提示 */
 
   /* 卡片 */
-  --color-card: #FFF9EB;
-  --color-card-border: rgba(86, 84, 59, 0.12);
-  --color-btn-secondary: #F4ECD7;
-  --color-btn-secondary-border: #CAC0A3;
+  --color-card: #FFFEFA;
+  --color-card-border: rgba(47, 80, 61, 0.13);
+  --color-btn-secondary: #E8F0E1;
+  --color-btn-secondary-border: transparent;
 
-  /* 圆角 */
-  --radius-sm: 10px;
+  /* 圆角（方案 A：主卡 24 / 小卡输入 15 / 按钮 15）*/
+  --radius-sm: 14px;
   --radius-md: 16px;
-  --radius-lg: 22px;
-  --radius-sheet: 28px;
+  --radius-lg: 20px;
+  --radius-sheet: 24px;
 
   /* 字体 */
-  --font-sans: "Noto Sans SC Variable", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-sans: "Noto Sans SC Variable", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-kai: "LXGW WenKai Screen", "Noto Sans SC Variable", serif;
 
-  /* 阴影 */
-  --shadow-card: 0 6px 20px rgba(74, 62, 32, 0.06);
-  --shadow-sheet: 0 -8px 30px rgba(74, 62, 32, 0.10);
+  /* 阴影（方案 A）*/
+  --shadow-card: 0 8px 24px rgba(48, 76, 57, 0.08);
+  --shadow-sheet: 0 -8px 30px rgba(48, 76, 57, 0.10);
 }
 
 html, body {
@@ -69,22 +77,23 @@ html, body {
   max-width: 480px;
   background: var(--color-paper);
   position: relative;
-  box-shadow: 0 0 40px rgba(74, 62, 32, 0.08);
+  box-shadow: 0 0 40px rgba(48, 76, 57, 0.08);
 }
 
-/* 通用组件基类 */
+/* 通用组件基类（方案 A：主卡 24px 圆角、无边框、柔和阴影）*/
 .card {
   background: var(--color-card);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-md);
+  border-radius: 24px;
   box-shadow: var(--shadow-card);
 }
 
 .btn-primary {
   background: var(--color-primary);
   color: var(--color-primary-foreground);
-  border-radius: var(--radius-lg);
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  min-height: 46px;
+  box-shadow: 0 8px 18px var(--color-shadow, rgba(63, 120, 81, 0.24));
   transition: background 180ms ease;
 }
 .btn-primary:active { background: var(--color-primary-pressed); }
@@ -92,10 +101,15 @@ html, body {
 
 .btn-secondary {
   background: var(--color-btn-secondary);
-  color: var(--color-olive);
-  border: 1px solid var(--color-btn-secondary-border);
-  border-radius: var(--radius-lg);
-  font-weight: 600;
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  min-height: 46px;
+}
+
+/* AI/Agent 内容气泡（暖黄，与真人明确区分）*/
+.agent-surface {
+  background: var(--color-agent);
 }
 
 .font-kai { font-family: var(--font-kai); }
