@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@import "lxgw-wenkai-screen-webfont/style.css";
+@import "@fontsource-variable/noto-sans-sc";
+
+@theme {
+  /* ===== 发芽视觉规范 tokens ===== */
+  /* 背景 */
+  --color-paper: #F7F0DE;        /* 页面暖白 */
+  --color-sky: #FBF4E3;          /* 天空/高亮暖白 */
+  --color-grass: #CCD56F;        /* 花园草地主色 */
+  --color-grass-dark: #C3CF68;
+  --color-grass-light: #D8DE83;
+  --color-meadow: #B8C88A;       /* 远景浅绿 */
+
+  /* 品牌 */
+  --color-olive: #4D572E;        /* 深橄榄绿：Logo/一级标题/重要图标 */
+  --color-primary: #89974B;      /* 主操作绿 */
+  --color-primary-hover: #7C8B40;
+  --color-primary-pressed: #6C7937;
+  --color-primary-foreground: #FFF9EA;
+  --color-mint: #DCE3AE;         /* 浅绿状态：标签/选中/AI 信息块 */
+
+  /* 辅助 */
+  --color-wood: #B98C50;
+  --color-wood-dark: #865F32;
+  --color-wood-light: #D7B67A;
+  --color-soil: #A9753D;         /* 土色/种子色，小面积 */
+  --color-alert: #D8613E;        /* 提醒橙红：badge/未读 */
+  --color-water: #75BAD3;
+
+  /* 文本 */
+  --color-ink: #333524;          /* 一级 */
+  --color-ink-2: #66664E;        /* 二级 */
+  --color-ink-3: #99937A;        /* 三级 */
+  --color-ink-4: #B7AF96;        /* 弱提示 */
+
+  /* 卡片 */
+  --color-card: #FFF9EB;
+  --color-card-border: rgba(86, 84, 59, 0.12);
+  --color-btn-secondary: #F4ECD7;
+  --color-btn-secondary-border: #CAC0A3;
+
+  /* 圆角 */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-sheet: 28px;
+
+  /* 字体 */
+  --font-sans: "Noto Sans SC Variable", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-kai: "LXGW WenKai Screen", "Noto Sans SC Variable", serif;
+
+  /* 阴影 */
+  --shadow-card: 0 6px 20px rgba(74, 62, 32, 0.06);
+  --shadow-sheet: 0 -8px 30px rgba(74, 62, 32, 0.10);
+}
+
+html, body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 手机 H5 优先：桌面上居中手机宽度容器 */
+.phone-shell {
+  margin: 0 auto;
+  min-height: 100dvh;
+  max-width: 480px;
+  background: var(--color-paper);
+  position: relative;
+  box-shadow: 0 0 40px rgba(74, 62, 32, 0.08);
+}
+
+/* 通用组件基类 */
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  transition: background 180ms ease;
+}
+.btn-primary:active { background: var(--color-primary-pressed); }
+.btn-primary:disabled { opacity: 0.5; }
+
+.btn-secondary {
+  background: var(--color-btn-secondary);
+  color: var(--color-olive);
+  border: 1px solid var(--color-btn-secondary-border);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+}
+
+.font-kai { font-family: var(--font-kai); }
+
+/* 滚动条隐藏（H5 感） */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
