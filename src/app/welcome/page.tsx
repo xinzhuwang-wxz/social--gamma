@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CourierBird } from "@/components/world";
 
 const EMOJI_CHOICES = ["🌱", "🏔️", "🎨", "📷", "🏸", "🎭", "🍰", "🚲", "🎧", "📚", "⚽", "🌿"];
 
@@ -35,42 +34,23 @@ export default function Welcome() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col justify-center px-7 py-10">
-      {/* 品牌 */}
-      <div className="mb-8 text-center">
-        <div className="mb-2 flex justify-center">
-          <CourierBird state="idle" size={72} />
-        </div>
-        <div className="font-kai text-5xl font-extrabold" style={{ color: "var(--color-olive)" }}>
-          发芽
-        </div>
-        <p className="mt-3 font-kai text-sm leading-relaxed" style={{ color: "var(--color-ink-2)" }}>
-          种下一个行动愿望，
-          <br />
-          让它长成一段真实的共同经历
-        </p>
+    <main className="screen welcome-screen">
+      <div className="welcome-hero">
+        <img className="welcome-pet" src="/world/pet-agent.png" alt="信使小绿" />
+        <h1 className="welcome-title">发芽</h1>
+        <p className="welcome-sub">在校园，遇见一起成长的你</p>
       </div>
 
-      {/* 创建身份 */}
-      <div className="card p-6">
-        <p className="mb-1 text-base font-bold" style={{ color: "var(--color-ink)" }}>
-          先给自己起个名字
-        </p>
-        <p className="mb-4 text-xs" style={{ color: "var(--color-ink-3)" }}>
-          进来发一颗种子，小叶就会帮你找到正好合适的同伴。
-        </p>
+      <section className="card welcome-card">
+        <p className="welcome-card-title">先给自己起个名字</p>
+        <p className="welcome-card-hint">进来种一颗种子，小绿就会帮你找到正好合适的同伴。</p>
 
-        {/* emoji 选择 */}
-        <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto pb-1">
+        <div className="welcome-emoji-row">
           {EMOJI_CHOICES.map((e) => (
             <button
               key={e}
               onClick={() => setEmoji(e)}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl transition-transform active:scale-95"
-              style={{
-                background: emoji === e ? "var(--color-primary)" : "var(--color-mint)",
-                boxShadow: emoji === e ? "0 0 0 2px var(--color-primary)" : undefined,
-              }}
+              className={`welcome-emoji ${emoji === e ? "selected" : ""}`}
               aria-label={`头像 ${e}`}
             >
               {e}
@@ -83,32 +63,21 @@ export default function Welcome() {
           onChange={(e) => setName(e.target.value.slice(0, 24))}
           onKeyDown={(e) => e.key === "Enter" && enter()}
           placeholder="你的昵称"
-          className="mb-3 h-12 w-full rounded-[var(--radius-sm)] px-4 text-sm outline-none"
-          style={{ border: "1px solid var(--color-card-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}
+          className="welcome-input"
         />
         <input
           value={bio}
           onChange={(e) => setBio(e.target.value.slice(0, 40))}
           onKeyDown={(e) => e.key === "Enter" && enter()}
           placeholder="一句话介绍（可选，比如：想找人一起晨跑）"
-          className="mb-4 h-12 w-full rounded-[var(--radius-sm)] px-4 text-sm outline-none"
-          style={{ border: "1px solid var(--color-card-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}
+          className="welcome-input"
         />
 
-        <button
-          onClick={enter}
-          disabled={!name.trim() || busy}
-          className="btn-primary flex h-12 w-full items-center justify-center text-[15px]"
-        >
+        <button onClick={enter} disabled={!name.trim() || busy} className="primary full welcome-enter">
           {busy ? "进入中…" : "进入我的花园 🌱"}
         </button>
-
-        {error && (
-          <p className="mt-2 text-center text-xs" style={{ color: "var(--color-danger)" }}>
-            进入失败，请再试一次
-          </p>
-        )}
-      </div>
+        {error && <p className="welcome-error">进入失败，请再试一次</p>}
+      </section>
     </main>
   );
 }
