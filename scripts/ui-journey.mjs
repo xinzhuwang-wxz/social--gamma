@@ -244,7 +244,7 @@ await step("stage-leafing", async () => {
 
 await step("nudge", async () => {
   const aiBefore = await owner.page.getByText("小苗", { exact: false }).count();
-  await owner.page.getByText("请小苗帮忙", { exact: false }).click();
+  await owner.page.getByRole("button", { name: /请小苗帮忙/ }).click();
   await owner.page.waitForFunction(
     (n) => document.body.innerText.split("小苗").length - 1 > n,
     aiBefore,
