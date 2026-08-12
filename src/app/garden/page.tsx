@@ -1,9 +1,9 @@
-import { currentUser } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { GardenView } from "@/components/garden/garden-view";
+import { currentUser } from "@/lib/session";
+import { WorldGarden } from "@/components/world-home/world-garden";
 
 export default async function GardenPage() {
   const user = await currentUser();
   if (!user) redirect("/welcome");
-  return <GardenView />;
+  return <WorldGarden />;
 }

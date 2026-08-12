@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css";
 @import "@fontsource-variable/noto-sans-sc";
+@import "./world.css";
 
 @theme {
   /* ===== 视觉基线：队友方案 A「沉浸花园」token（融合契约）===== */

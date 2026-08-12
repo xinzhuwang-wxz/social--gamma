@@ -30,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <div className="phone-shell">{children}</div>
+        <div className="app-shell">
+          <div className="phone">{children}</div>
+        </div>
       </body>
     </html>
   );
