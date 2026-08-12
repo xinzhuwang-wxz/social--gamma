@@ -1,4 +1,5 @@
 import { generateObject } from "ai";
+import { z } from "zod";
 import { fastModel, NO_THINK } from "./provider";
 import { clarifyStepSchema, seedCardSchema } from "./schemas";
 
@@ -24,6 +25,37 @@ export const CLARIFY_SYSTEM = `你是「小叶」，用户的信使鸟——帮�
 - 生成种子卡时，requirements 只写真正有意义的条件；如果确实没有特别要求，must 和 flexible 都给空数组，不要写「无特殊要求」这类占位。`;
 
 export type ClarifyMessage = { role: "user" | "assistant"; content: string };
+
+const activityDetailQuestionSchema = z.object({
+  reply: z.string().describe("只问一个与当前活动强相关的规划问题，≤40 字"),
+  options: z.array(z.string()).min(2).max(4).describe("2-4 个简短、互斥的快捷答案"),
+});
+
+export type ActivityDetailContext = {
+  idea: string;
+  time: string;
+  place: string;
+  companion: string;
+  habit: string;
+};
+
+/** 标准信息收齐后，只补问一项真正影响该活动体验的专项信息。 */
+export async function activityDetailQuestion(context: ActivityDetailContext) {
+  const { object } = await generateObject({
+    model: fastModel,
+    schema: activityDetailQuestionSchema,
+    providerOptions: NO_THINK,
+    system: `你是「小绿」，用户的信使鸟。标准发布信息已经收齐，现在只补问一个与活动本身强相关、且会影响规划或匹配的问题。
+规则：
+- 不再询问活动、时间、地点、同行者要求或相处习惯。
+- 只问一项。优先问目标、强度、经验、时长、装备、票务等当前活动真正需要确认的信息。
+- 问题必须适用于本次活动，不问联系方式、身份隐私或泛泛的性格标签。
+- 给 2-4 个简短、互斥且覆盖常见情况的选项。
+- 语气自然温暖，像朋友，不像表单。`,
+    prompt: `活动：${context.idea}\n时间：${context.time}\n地点：${context.place}\n同行者期待：${context.companion}\n相处习惯：${context.habit}\n请生成最后一条活动专项确认问题。`,
+  });
+  return object;
+}
 
 /**
  * 澄清对话推进一步：根据历史判断是否信息已足够。

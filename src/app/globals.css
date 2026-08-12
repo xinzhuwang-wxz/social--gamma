@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css";
-@import "@fontsource-variable/noto-sans-sc";
 @import "./world.css";
 
 @theme {
@@ -56,8 +55,9 @@
   --radius-sheet: 24px;
 
   /* 字体 */
-  --font-sans: "Noto Sans SC Variable", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  --font-kai: "LXGW WenKai Screen", "Noto Sans SC Variable", serif;
+  --font-serif: Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-sans: var(--font-serif);
+  --font-kai: var(--font-serif);
 
   /* 阴影（方案 A）*/
   --shadow-card: 0 8px 24px rgba(48, 76, 57, 0.08);
@@ -67,7 +67,7 @@
 html, body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -114,6 +114,8 @@ html, body {
 }
 
 .font-kai { font-family: var(--font-kai); }
+
+button, input, textarea, select { font-family: inherit; }
 
 /* 滚动条隐藏（H5 感） */
 .no-scrollbar::-webkit-scrollbar { display: none; }

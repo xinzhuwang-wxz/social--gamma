@@ -1,5 +1,5 @@
 :root {
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   color: #393825;
   background: #e8e4d7;
   font-synthesis: none;
@@ -24,7 +24,7 @@
   --agent-soft: #fff4d9;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; font-family: inherit; }
 body { margin: 0; min-height: 100vh; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
@@ -382,3 +382,4 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .welcome-input:focus { border-color: var(--olive); }
 .welcome-enter { margin-top: 4px; }
 .welcome-error { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--red); }
+.world-dock button, .world-dock a, .world-dock small { font-family: inherit; }
