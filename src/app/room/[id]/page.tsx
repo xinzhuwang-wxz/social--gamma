@@ -99,6 +99,7 @@ export default function RoomPage({
   // UI state
   const [summaryOpen, setSummaryOpen] = useState(true);
   const [a2aOpen, setA2aOpen] = useState(false);
+  const summaryAutoCollapsed = useRef(false);
 
   // Input state
   const [input, setInput] = useState("");
@@ -125,6 +126,14 @@ export default function RoomPage({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [data?.messages.length]);
+
+  // 有约定卡后自动收起对方摘要卡（只收一次，用户仍可手动展开）
+  useEffect(() => {
+    if (data?.pact && !summaryAutoCollapsed.current) {
+      summaryAutoCollapsed.current = true;
+      setSummaryOpen(false);
+    }
+  }, [data?.pact]);
 
   // Textarea auto-resize
   const adjustTextarea = () => {

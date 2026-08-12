@@ -122,7 +122,7 @@ export default function NewSeedPage() {
       </header>
 
       {/* Chat area */}
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-4 pt-5">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-10 pt-5">
         {/* Fixed opening message (UI text, not from AI) */}
         <BirdBubble text={OPENING} />
 
