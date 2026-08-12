@@ -451,7 +451,7 @@ export default function RoomPage({
           {/* Back button */}
           <Link
             href="/actions"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
             style={{ color: "var(--color-ink-2)" }}
             aria-label="返回"
           >
@@ -588,7 +588,7 @@ export default function RoomPage({
                   {a2a.turns.map((turn, i) => (
                     <div
                       key={i}
-                      className="rounded-xl p-2.5 text-xs"
+                      className="rounded-xl p-2.5 text-[13px]"
                       style={{
                         background:
                           turn.agent === "owner"
@@ -684,15 +684,15 @@ export default function RoomPage({
                 <div className="mt-3 space-y-2">
                   <div
                     className="flex gap-3 text-xs"
-                    style={{ color: "var(--color-ink-3)" }}
+                    style={{ color: "var(--color-ink-2)" }}
                   >
                     {isGroup && pact.confirmedCount !== undefined && pact.memberCount !== undefined ? (
                       <span>已确认 {pact.confirmedCount}/{pact.memberCount}</span>
                     ) : (
                       <>
-                        <span>{myPactConfirmed ? "✅ 我已确认" : "⬜ 我尚未确认"}</span>
+                        <span>{myPactConfirmed ? "✅ 我已确认" : "⏳ 我尚未确认"}</span>
                         <span>·</span>
-                        <span>{otherPactConfirmed ? "✅ 对方已确认" : "⬜ 等对方确认"}</span>
+                        <span>{otherPactConfirmed ? "✅ 对方已确认" : "⏳ 等对方确认"}</span>
                       </>
                     )}
                   </div>
@@ -1045,7 +1045,7 @@ export default function RoomPage({
                 background: "transparent",
               }}
             >
-              {nudging ? "小苗思考中…" : "✨ 推进"}
+              {nudging ? "小苗思考中…" : "✨ 请小苗帮忙"}
             </button>
             <button
               onClick={handleDraftPact}

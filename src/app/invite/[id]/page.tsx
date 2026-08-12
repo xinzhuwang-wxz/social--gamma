@@ -90,7 +90,7 @@ function A2ATurnBubble({ turn }: { turn: A2ATurn }) {
   return (
     <div className={`flex ${isOwner ? "justify-start" : "justify-end"}`}>
       <div
-        className="max-w-[80%] rounded-xl px-3 py-2 text-xs"
+        className="max-w-[80%] rounded-xl px-3 py-2 text-[13px]"
         style={{
           borderRadius: isOwner
             ? "4px 14px 14px 14px"
@@ -161,6 +161,24 @@ export default function InvitePage() {
     );
   }
 
+  // API 返回错误对象时（种子已关闭/不存在等），优雅降级
+  if (!data.seed || !data.match || !data.owner) {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 px-8 text-center">
+        <span className="text-4xl">🌿</span>
+        <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
+          这颗种子暂时看不到了
+        </p>
+        <button
+          onClick={() => router.back()}
+          className="btn-secondary px-6 py-2.5 text-sm"
+        >
+          返回
+        </button>
+      </main>
+    );
+  }
+
   const { match, seed, owner } = data;
   const isPending = match.status === "delivered";
 
@@ -176,7 +194,7 @@ export default function InvitePage() {
       >
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors"
           style={{ color: "var(--color-ink-2)" }}
           aria-label="返回"
         >

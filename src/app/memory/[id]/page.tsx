@@ -101,7 +101,7 @@ export default function MemoryPage({
       {/* Back link */}
       <Link
         href="/actions"
-        className="inline-flex items-center gap-1.5 text-sm mb-6"
+        className="inline-flex min-h-[44px] items-center gap-1.5 text-sm mb-6"
         style={{ color: "var(--color-ink-3)" }}
       >
         <svg
@@ -228,7 +228,7 @@ export default function MemoryPage({
       {!reseedOpen && !reseedDone && (
         <button
           onClick={() => setReseedOpen(true)}
-          className="btn-secondary w-full py-3 text-base"
+          className="btn-primary w-full py-3 text-base"
         >
           🌱 让它结出一颗新种子
         </button>

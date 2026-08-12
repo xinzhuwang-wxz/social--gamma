@@ -616,29 +616,29 @@ export default function SeedDetailPage() {
               小叶正在帮你寻找合适的同行者…
             </p>
             <p className="mt-1 text-xs" style={{ color: "var(--color-ink-3)" }}>
-              信使鸟正在送信
+              信使鸟正在送信 · 通常一两分钟内就会有回应
             </p>
           </div>
         )}
 
-        {/* 状态一：已投递等待回应，尚无意向 */}
-        {seed.status === "delivered" && intents.length === 0 && (
+        {/* 状态一：已投递，尚无同伴表达意向 */}
+        {seed.status === "delivered" && interestedIntents.length === 0 && (
           <div
             className="mb-4 rounded-[var(--radius-md)] px-4 py-4"
             style={{ background: "var(--color-sky)" }}
           >
             <p className="text-sm" style={{ color: "var(--color-ink-2)" }}>
-              🐦 种子已投递，等待同伴回应
+              🐦 种子已送到合适的同伴那里，等他们回应
             </p>
             <p className="mt-1 text-xs" style={{ color: "var(--color-ink-3)" }}>
-              已收到 {interestedIntents.length} 份意向
+              通常一两分钟内就会有人回应，你可以留在这页等，也可以先去别处逛逛。
             </p>
           </div>
         )}
 
         {/* 状态一：等待阶段的操作 */}
         {isOwner &&
-          intents.length === 0 &&
+          interestedIntents.length === 0 &&
           seed.status !== "matching" &&
           seed.status !== "formed" &&
           seed.status !== "closed" && (
@@ -652,8 +652,8 @@ export default function SeedDetailPage() {
             </div>
           )}
 
-        {/* 状态二：候选人列表（发起人视角） */}
-        {isOwner && intents.length > 0 && (
+        {/* 状态二：候选人列表（发起人视角，只展示已表达意向者） */}
+        {isOwner && interestedIntents.length > 0 && (
           <div>
             {/* 小叶提示（Spec 4.6 顶部文案） */}
             <div
@@ -707,7 +707,7 @@ export default function SeedDetailPage() {
             )}
 
             <div className="flex flex-col gap-3">
-              {intents.map((intent) => (
+              {interestedIntents.map((intent) => (
                 <IntentCard
                   key={intent.matchId}
                   intent={intent}

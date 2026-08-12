@@ -86,7 +86,7 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className="relative flex shrink-0 items-center gap-1.5 pb-3 text-sm font-semibold transition-colors"
+      className="relative flex shrink-0 min-h-[40px] items-center gap-1.5 py-3 text-sm font-semibold transition-colors"
       style={{
         color: active ? "var(--color-primary)" : "var(--color-ink-3)",
         borderBottom: active
@@ -185,15 +185,15 @@ function ReceivedCard({ item }: { item: MailboxItem }) {
           >
             <SeedIllustration size={40} />
           </div>
-          <span
-            className="rounded-full px-3 py-1 text-[11px] font-semibold"
+          <div
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full px-3 text-[11px] font-semibold"
             style={{
               background: "var(--color-primary)",
               color: "var(--color-primary-foreground)",
             }}
           >
             查看种子
-          </span>
+          </div>
         </div>
       </div>
     </Link>

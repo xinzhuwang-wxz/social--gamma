@@ -293,7 +293,7 @@ export default function NewSeedPage() {
       >
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-mint"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-mint"
           aria-label="返回"
         >
           <ChevronLeft size={22} />
@@ -384,11 +384,10 @@ export default function NewSeedPage() {
                 key={i}
                 onClick={() => void send(opt)}
                 disabled={publishing}
-                className="rounded-full px-3 py-1.5 text-sm font-semibold"
+                className="rounded-full px-3 py-2.5 text-sm font-semibold"
                 style={{
-                  border: "1px solid var(--color-card-border)",
                   color: "var(--color-primary)",
-                  background: "var(--color-card)",
+                  background: "var(--color-mint)",
                 }}
               >
                 {opt}
