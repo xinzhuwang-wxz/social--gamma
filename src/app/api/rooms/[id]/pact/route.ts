@@ -5,6 +5,7 @@ import { currentUser, uid } from "@/lib/session";
 import { draftPact } from "@/lib/ai/room";
 import { seedToCard } from "@/lib/matching";
 import { roomForUser } from "@/lib/room-access";
+import { emitRoom } from "@/lib/room-events";
 
 /**
  * POST /api/rooms/:id/pact
@@ -71,6 +72,7 @@ export async function POST(
       if (room.stage === "leafing" || room.stage === "sprout") {
         await db.update(schema.rooms).set({ stage: "growing" }).where(eq(schema.rooms.id, id));
       }
+      emitRoom(id);
       return NextResponse.json({ ok: true });
     } catch (e) {
       console.error("pact draft error", e);
@@ -104,6 +106,7 @@ export async function POST(
         createdAt: new Date(),
       });
     }
+    emitRoom(id);
     return NextResponse.json({ ok: true, confirmed });
   }
 

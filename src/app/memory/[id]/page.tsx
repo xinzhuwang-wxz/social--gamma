@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -118,12 +119,15 @@ export default function MemoryPage({
 
       {/* Illustration or flower emoji */}
       {memory.imageUrl ? (
-        <div className="mb-4 overflow-hidden rounded-lg" style={{ animation: "fadeIn 0.6s ease" }}>
-          <img
+        <div
+          className="mb-4 overflow-hidden rounded-lg relative"
+          style={{ animation: "fadeIn 0.6s ease", height: "280px" }}
+        >
+          <Image
             src={memory.imageUrl}
             alt={memory.title}
-            className="w-full object-cover rounded-lg"
-            style={{ maxHeight: "320px", objectFit: "cover" }}
+            fill
+            className="object-cover rounded-lg"
           />
         </div>
       ) : (

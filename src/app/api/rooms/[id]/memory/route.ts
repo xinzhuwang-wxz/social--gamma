@@ -4,6 +4,7 @@ import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
 import { summarizeMemory } from "@/lib/ai/room";
 import { roomForUser } from "@/lib/room-access";
+import { emitRoom } from "@/lib/room-events";
 import { generateMemoryIllustration } from "@/lib/ai/illustrate";
 
 /**
@@ -96,5 +97,6 @@ export async function POST(
       .catch((err) => console.error("[illustrate] failed:", err));
   }
 
+  emitRoom(id);
   return NextResponse.json({ ok: true, memoryCreated: bothRejoin });
 }

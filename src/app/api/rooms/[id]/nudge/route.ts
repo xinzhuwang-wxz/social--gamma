@@ -5,6 +5,7 @@ import { currentUser, uid } from "@/lib/session";
 import { nudge } from "@/lib/ai/room";
 import { seedToCard } from "@/lib/matching";
 import { roomForUser } from "@/lib/room-access";
+import { emitRoom } from "@/lib/room-events";
 
 /** POST /api/rooms/:id/nudge — 用户主动请求事件 AI 推进（一次一个卡点） */
 export async function POST(
@@ -57,6 +58,7 @@ export async function POST(
       createdAt: new Date(),
     });
 
+    emitRoom(id);
     return NextResponse.json({ ok: true, kind: result.kind });
   } catch (e) {
     console.error("nudge error", e);

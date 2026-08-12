@@ -2,6 +2,7 @@
 
 import useSWR from "swr";
 import Link from "next/link";
+import Image from "next/image";
 import { Plant } from "@/components/world";
 
 const fetcher = (u: string) => fetch(u).then((r) => r.json());
@@ -44,9 +45,11 @@ export default function ForestPage() {
             <Link key={m.id} href={`/memory/${m.id}`} className="card flex items-center gap-4 p-4">
               <div className="shrink-0 rounded-md bg-grass/30 overflow-hidden" style={{ width: 72, height: 72 }}>
                 {m.imageUrl ? (
-                  <img
+                  <Image
                     src={m.imageUrl}
                     alt={m.title}
+                    width={72}
+                    height={72}
                     className="w-full h-full object-cover rounded-md"
                   />
                 ) : (
