@@ -1,114 +1,114 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CourierBird } from "@/components/world";
 
-type Persona = {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string;
-  grade: string | null;
-  major: string | null;
-  bio: string | null;
-};
+const EMOJI_CHOICES = ["🌱", "🏔️", "🎨", "📷", "🏸", "🎭", "🍰", "🚲", "🎧", "📚", "⚽", "🌿"];
 
 export default function Welcome() {
   const router = useRouter();
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [emoji, setEmoji] = useState("🌱");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/auth")
-      .then((r) => r.json())
-      .then((d) => setPersonas(d.personas ?? []));
-  }, []);
-
-  async function enter(body: object) {
+  async function enter() {
+    const trimmed = name.trim();
+    if (!trimmed || busy) return;
     setBusy(true);
-    const r = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (r.ok) router.push("/garden");
-    else setBusy(false);
+    setError(false);
+    try {
+      const r = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, bio: bio.trim(), emoji }),
+      });
+      if (!r.ok) throw new Error();
+      router.push("/garden");
+      router.refresh();
+    } catch {
+      setBusy(false);
+      setError(true);
+    }
   }
 
   return (
-    <main className="flex min-h-dvh flex-col px-6 py-10">
+    <main className="flex min-h-dvh flex-col justify-center px-7 py-10">
+      {/* 品牌 */}
       <div className="mb-8 text-center">
-        <div className="font-kai text-5xl font-bold text-olive">发芽</div>
-        <p className="mt-3 font-kai text-ink-2">
+        <div className="mb-2 flex justify-center">
+          <CourierBird state="idle" size={72} />
+        </div>
+        <div className="font-kai text-5xl font-extrabold" style={{ color: "var(--color-olive)" }}>
+          发芽
+        </div>
+        <p className="mt-3 font-kai text-sm leading-relaxed" style={{ color: "var(--color-ink-2)" }}>
           种下一个行动愿望，
           <br />
           让它长成一段真实的共同经历
         </p>
       </div>
 
-      {!creating ? (
-        <>
-          <p className="mb-3 text-sm text-ink-3">选择一个身份进入花园</p>
-          <div className="grid grid-cols-2 gap-3">
-            {personas.map((p) => (
-              <button
-                key={p.id}
-                disabled={busy}
-                onClick={() => enter({ userId: p.id })}
-                className="card flex flex-col items-start gap-1 p-4 text-left active:scale-[0.98] transition-transform"
-              >
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-xl"
-                  style={{ background: p.color }}
-                >
-                  {p.emoji}
-                </span>
-                <span className="mt-1 font-semibold text-ink">{p.name}</span>
-                <span className="text-xs text-ink-3">
-                  {p.grade} · {p.major}
-                </span>
-                <span className="line-clamp-2 text-xs text-ink-2">{p.bio}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            className="btn-secondary mt-6 h-12 w-full"
-            onClick={() => setCreating(true)}
-          >
-            创建我自己的身份
-          </button>
-        </>
-      ) : (
-        <div className="card flex flex-col gap-3 p-5">
-          <label className="text-sm text-ink-2">怎么称呼你？</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="昵称"
-            className="h-12 rounded-md border border-card-border bg-paper px-4 outline-none focus:border-primary"
-          />
-          <label className="text-sm text-ink-2">一句话介绍（可选）</label>
-          <input
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="比如：想找人一起晨跑"
-            className="h-12 rounded-md border border-card-border bg-paper px-4 outline-none focus:border-primary"
-          />
-          <button
-            disabled={!name.trim() || busy}
-            className="btn-primary mt-2 h-12"
-            onClick={() => enter({ name, bio })}
-          >
-            进入我的花园
-          </button>
-          <button className="text-sm text-ink-3" onClick={() => setCreating(false)}>
-            返回
-          </button>
+      {/* 创建身份 */}
+      <div className="card p-6">
+        <p className="mb-1 text-base font-bold" style={{ color: "var(--color-ink)" }}>
+          先给自己起个名字
+        </p>
+        <p className="mb-4 text-xs" style={{ color: "var(--color-ink-3)" }}>
+          进来发一颗种子，小叶就会帮你找到正好合适的同伴。
+        </p>
+
+        {/* emoji 选择 */}
+        <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto pb-1">
+          {EMOJI_CHOICES.map((e) => (
+            <button
+              key={e}
+              onClick={() => setEmoji(e)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl transition-transform active:scale-95"
+              style={{
+                background: emoji === e ? "var(--color-primary)" : "var(--color-mint)",
+                boxShadow: emoji === e ? "0 0 0 2px var(--color-primary)" : undefined,
+              }}
+              aria-label={`头像 ${e}`}
+            >
+              {e}
+            </button>
+          ))}
         </div>
-      )}
+
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value.slice(0, 24))}
+          onKeyDown={(e) => e.key === "Enter" && enter()}
+          placeholder="你的昵称"
+          className="mb-3 h-12 w-full rounded-[var(--radius-sm)] px-4 text-sm outline-none"
+          style={{ border: "1px solid var(--color-card-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}
+        />
+        <input
+          value={bio}
+          onChange={(e) => setBio(e.target.value.slice(0, 40))}
+          onKeyDown={(e) => e.key === "Enter" && enter()}
+          placeholder="一句话介绍（可选，比如：想找人一起晨跑）"
+          className="mb-4 h-12 w-full rounded-[var(--radius-sm)] px-4 text-sm outline-none"
+          style={{ border: "1px solid var(--color-card-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}
+        />
+
+        <button
+          onClick={enter}
+          disabled={!name.trim() || busy}
+          className="btn-primary flex h-12 w-full items-center justify-center text-[15px]"
+        >
+          {busy ? "进入中…" : "进入我的花园 🌱"}
+        </button>
+
+        {error && (
+          <p className="mt-2 text-center text-xs" style={{ color: "var(--color-danger)" }}>
+            进入失败，请再试一次
+          </p>
+        )}
+      </div>
     </main>
   );
 }

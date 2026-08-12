@@ -34,7 +34,9 @@ export async function createSession(userId: string) {
   store.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // 仅在 HTTPS 部署时开启（COOKIE_SECURE=1）。默认关：局域网 HTTP 演示
+    // （http://<LAN-IP>）下带 Secure 会被浏览器丢弃，导致会话建立失败。
+    secure: process.env.COOKIE_SECURE === "1",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
