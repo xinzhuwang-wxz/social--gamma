@@ -56,7 +56,10 @@ export async function POST(
           when: draft.when,
           where: draft.where,
           meet: draft.meet,
-          notes: [...draft.notes, ...draft.missing.map((m) => `待商量：${m}`)],
+          notes: [
+            ...draft.notes,
+            ...draft.missing.map((m) => `待商量：${m.replace(/待(商量|确认|定)$/, "").trim()}`),
+          ],
         },
         status: "draft",
         ownerConfirmed: false,
