@@ -28,7 +28,9 @@ const candidatesSchema = z.object({
         reason: z.string().describe("为什么适合，一句可信的话，≤40 字"),
       })
     )
-    .describe("正好合拍、彼此不同的 3 位候选人"),
+    .min(3)
+    .max(4)
+    .describe("正好合拍、彼此不同的 3 位候选人（必须给满 3 位）"),
 });
 
 /** 按发布草稿即时捏出 3 位正好合拍的仿真候选人 */
@@ -41,16 +43,23 @@ export async function fabricateCandidates(draft: {
   habit?: string;
   activityDetail?: string;
 }): Promise<DemoCandidate[]> {
-  const { object } = await generateObject({
-    model: fastModel,
-    schema: candidatesSchema,
-    providerOptions: NO_THINK,
-    system: `为一个校园搭子行动即时生成 3 位真实可信、彼此不同的候选同行者。
+  const system = `为一个校园搭子行动即时生成 3 位真实可信、彼此不同的候选同行者。
 要求：每位都真心想参加、时间兼容；契合角度各不相同（经验型/热情新手型/顺路同好型）；
-细节具体可信，可带一个无伤大雅的小限制。不要用「小蓝/小雨/阿杰」这些名字。`,
-    prompt: `行动：${draft.idea ?? "一起做点事"}\n时间：${draft.time ?? "待定"}\n地点：${draft.place ?? "校园周边"}\n人数：${draft.people ?? "2-4 人"}\n同行者期待：${draft.companion ?? "可以商量"}\n相处习惯：${draft.habit ?? "未特别说明"}\n活动专项信息：${draft.activityDetail ?? "未特别说明"}\n生成 3 位候选人。`,
-  });
-  return object.candidates.slice(0, 3);
+细节具体可信，可带一个无伤大雅的小限制。不要用「小蓝/小雨/阿杰」这些名字。无论行动多普通或多冷门，都必须给满 3 位。`;
+  const prompt = `行动：${draft.idea || "一起做点事"}\n时间：${draft.time || "待定"}\n地点：${draft.place || "校园周边"}\n人数：${draft.people || "2-4 人"}\n同行者期待：${draft.companion || "可以商量"}\n相处习惯：${draft.habit || "未特别说明"}\n活动专项信息：${draft.activityDetail || "未特别说明"}\n生成 3 位候选人。`;
+  // 偶发 LLM 返回空/报错会让用户匹配到 0 人（演示杀手）：最多重试 2 次，直到拿到 ≥3 位。
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { object } = await generateObject({ model: fastModel, schema: candidatesSchema, providerOptions: NO_THINK, system, prompt });
+      const list = object.candidates.slice(0, 3);
+      if (list.length >= 3) return list;
+      lastErr = new Error(`只生成了 ${list.length} 位候选`);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("候选人生成失败");
 }
 
 const replySchema = z.object({
@@ -68,7 +77,9 @@ export async function simChatReply(
     schema: replySchema,
     providerOptions: NO_THINK,
     system: `你是大学生${partnerName}，已答应和对方一起完成「${idea}」，正在群聊里敲定安排。
-像真人一样接着聊：口语化、简短自然、把安排往前推（回应问题、给具体建议如时间点/集合地/路线）；对方确认就轻快答应。绝不说自己是 AI。`,
+像真人一样接着聊：口语化、简短自然。**以对方（发起人）的选择为准**——对方一旦给了具体时间/地点，就顺着定下来、明确答应，绝不坚持自己先前的提议、不来回改动、不纠结反问细节。
+目标是几轮内敲定：还没定就给一个具体可选项往前推；已经对齐就明确收口（如“那就定了”“到时候见”），可顺带补一句自己能带什么、几点到。
+如果对方的话前后不一致或改了主意，一律以对方**最后**说的时间/地点为准，直接确认，不要追问“不是说过X吗”。绝不说自己是 AI。`,
     prompt: `最近对话：\n${history
       .slice(-8)
       .map((m) => `${m.author === "me" ? "对方" : partnerName}: ${m.text}`)

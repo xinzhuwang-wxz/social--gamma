@@ -44,6 +44,7 @@ const initialUi = () => {
   openingObject: "",
   decorated: false,
   petMood: "idle",
+  joinedSeeds: [],
   });
 };
 
@@ -86,11 +87,13 @@ function escapeHtml(value = "") {
 
 // 数据层：当前行动标题与同伴名，优先用真实发布的数据，否则回退演示文案
 function actionTitle() { return (server.draft && server.draft.idea) || "周六一起爬磨山"; }
-function partnerName() { return server.selectedCandidate || "小蓝"; }
+// partnerName 仅用于展示，直接返回已转义值，避免各调用点漏转义（名字来自 LLM/用户不可控输入）
+function partnerName() { return escapeHtml(server.selectedCandidate || "小蓝"); }
 function candidateList() { return (server.candidates && server.candidates.length) ? server.candidates : candidates; }
 function candidateAt(index) { return candidateList()[Number(index)] || candidateList()[0]; }
 
 async function api(path, body) {
+  if (ui.loading) return null; // 防连点：进行中的请求未回来前，忽略重复提交
   ui.loading = true;
   render();
   try {
@@ -202,8 +205,15 @@ function pet(small = false) {
 }
 
 function icon(name) {
-  if (name === "bell") return `<svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>`;
-  const icons = { garden: "⌂", mailbox: "✉", actions: "♧", forest: "♨", profile: "♙", bell: "♧", back: "‹", clock: "◷", pin: "⌖", people: "♙" };
+  // 关键卡片上的图标用内联 SVG，避免生僻 Unicode 在 iOS/Android 被渲染成彩色 emoji
+  const svgPaths = {
+    bell: `<path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>`,
+    clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>`,
+    pin: `<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/>`,
+    people: `<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16.5 6.6a3 3 0 0 1 0 5.6M20.5 20a5.5 5.5 0 0 0-3.6-5.2"/>`,
+  };
+  if (svgPaths[name]) return `<svg class="${name === "bell" ? "bell-icon" : "ui-svg"}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgPaths[name]}</svg>`;
+  const icons = { garden: "⌂", mailbox: "✉", actions: "◲", forest: "❀", profile: "◍", back: "‹" };
   return `<span class="ui-icon" aria-hidden="true">${icons[name] || "·"}</span>`;
 }
 
@@ -283,7 +293,7 @@ function topbar(title, subtitle = "", back = false) {
   return `<header class="topbar">
     ${back ? `<button class="round-button" data-action="back" aria-label="返回">${icon("back")}</button>` : `<div><p class="eyebrow">${subtitle}</p><h1>${title}</h1></div>`}
     ${back ? `<div class="topbar-title"><p class="eyebrow">${subtitle}</p><h1>${title}</h1></div>` : ""}
-    <button class="round-button bell" data-action="notify" aria-label="通知">${icon("bell")}<b>3</b></button>
+    <button class="round-button bell" data-action="notify" aria-label="通知">${icon("bell")}${ui.unreadMail ? `<b>${ui.unreadMail}</b>` : ""}</button>
   </header>`;
 }
 
@@ -312,7 +322,7 @@ function WorldGardenPage() {
       <button class="world-hotspot mailbox-object" data-anchor="mailbox" style="${world.anchorStyle("garden", "mailbox")}" data-action="open-mailbox-overlay" aria-label="打开种子信箱">${ui.unreadMail ? `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>` : ""}</button>
       ${ui.mailboxOverlay ? MailboxOverlay(ui.welcomeLetter) : ""}
     </div>
-    <div class="world-dock"><button data-world="garden"><img src="assets/nav-garden-v2.png" alt=""><small>花园</small></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>聊天</small></button><button class="dock-seed" data-action="publish" aria-label="发布需求"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button data-world="home"><img src="assets/nav-profile-v2.png" alt=""><small>我的</small></button></div>
+    <div class="world-dock"><button data-world="garden"><img src="assets/nav-garden-v2.png" alt=""><small>花园</small></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>聊天</small></button><button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button data-world="profile"><img src="assets/nav-profile-v2.png" alt=""><small>我的</small></button></div>
   </main>`;
 }
 
@@ -386,7 +396,7 @@ function SeedDetailPage(id) {
     <section class="paper-letter"><header><span class="letter-avatar large"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><div><small>来自花园外</small><strong>${seed.peer} · 校园已认证</strong></div><span class="paper-stamp">小绿<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.peer}<br><time>${seed.time}</time></footer></section>
     <div class="letter-facts"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span>${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div>
     <section class="match-box"><div>${pet(true)}</div><p><strong>为什么带给你</strong>${seed.reason}</p></section>
-    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button><button class="primary" data-action="join-seed">愿意加入</button></div>
+    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button>${ui.joinedSeeds.includes(seed.id) ? `<div class="joined-state">✓ 已表达参与意向 · 等待${escapeHtml(seed.peer)}确认</div>` : `<button class="primary" data-action="join-seed">愿意加入</button>`}</div>
   </main>`;
 }
 
@@ -395,7 +405,7 @@ function PublishPage() {
   const companion = escapeHtml(ui.draft.companion || "还未确认");
   const habit = escapeHtml(ui.draft.habit || "还未确认");
   const activityDetail = escapeHtml(ui.draft.activityDetail || "还未确认");
-  const progress = ["做什么", "时间", "地点", "同行者", "相处习惯", "确认", "发布"];
+  const progress = ["做什么", "时间", "地点", "同行者", "相处习惯", "活动确认", "确认发布"];
   const dateOptions = upcomingDates();
   const steps = [
     `<div class="agent-bubble"><strong>最近想和别人一起做什么？</strong><br><span class="muted tiny">选一个最接近的，也可以自己填写</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="idea:轻松爬山">🥾 轻松爬山</button><button data-publish-choice="idea:一起自习">📚 一起自习</button><button data-publish-choice="idea:扫街摄影">📷 扫街摄影</button><button data-publish-choice="idea:看展或演出">🎵 看展／演出</button></div><form id="publish-form" class="custom-companion uniform-entry"><label for="publish-input">自定义想做的事</label><div class="inline-entry"><input id="publish-input" maxlength="40" placeholder="例如：一起练习羽毛球"><button>确定</button></div></form>`,
@@ -413,7 +423,7 @@ function PublishPage() {
   const clarifyControls = ui.publishStep < 6
     ? `<div class="clarify-actions"><button data-action="publish-prev">${ui.publishStep === 0 ? "退出" : "上一步"}</button><button data-action="publish-skip">暂时跳过</button></div>`
     : "";
-  return `<main class="screen github-aligned-page publish-page">${topbar("种下一件想做的事", "和小绿聊聊", true)}<div class="agent-chat"><div class="profile-chip"><div class="agent-orb">${pet(true)}</div><div><strong>小绿 · 你的个人 Agent</strong><small>标准信息之后，我会针对活动再确认一项</small></div><span class="step-count">${Math.min(ui.publishStep + 1, 7)}/7</span></div><div class="publish-progress">${progress.map((label, index) => `<div class="${index < ui.publishStep ? "done" : index === ui.publishStep ? "active" : ""}"><i></i><span>${label}</span></div>`).join("")}</div>${steps[Math.min(ui.publishStep, 6)]}${clarifyControls}</div></main>`;
+  return `<main class="screen github-aligned-page publish-page">${topbar("种下一件想做的事", "和小绿聊聊", true)}<div class="agent-chat"><div class="profile-chip"><div class="agent-orb">${pet(true)}</div><div><strong>小绿 · 你的花匠（个人 Agent）</strong><small>标准信息之后，我会针对活动再确认一项</small></div><span class="step-count">${Math.min(ui.publishStep + 1, 7)}/7</span></div><div class="publish-progress">${progress.map((label, index) => `<div class="${index < ui.publishStep ? "done" : index === ui.publishStep ? "active" : ""}"><i></i><span>${label}</span></div>`).join("")}</div>${steps[Math.min(ui.publishStep, 6)]}${clarifyControls}</div></main>`;
 }
 
 function MatchingPage() {
@@ -442,12 +452,15 @@ function CandidateSpacePage(index) {
 
 function CandidateA2APage(index) {
   const person = candidateAt(index);
-  return `<main class="screen candidate-a2a-page">${topbar("A2A 沟通记录", `小绿 × ${escapeHtml(person.name)}的 Agent`, true)}<div class="a2a-disclosure"><span>🔒</span><p><strong>仅展示本次匹配相关内容</strong><br>不交换联系方式，也不使用未授权的个人信息。</p></div><div class="a2a-record-log"><div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 小周的 Agent</b><p>小周想找同行者一起“${escapeHtml(ui.draft.idea || actionTitle())}”，时间是${escapeHtml(ui.draft.time)}，地点在${escapeHtml(ui.draft.place)}。</p></div></div><div class="a2a-chat-row peer"><div><b>${escapeHtml(person.name)}的 Agent</b><p>${escapeHtml(person.name)}对这项活动有兴趣。我可以核对与这次同行有关的过往经验。</p></div><span>🦊</span></div>${person.facts.map((fact, factIndex) => `<div class="a2a-chat-row ${factIndex % 2 ? "mine" : "peer"}">${factIndex % 2 ? `<span>🐦</span>` : ""}<div><b>${factIndex % 2 ? "小绿" : `${escapeHtml(person.name)}的 Agent`}</b><p>${escapeHtml(fact)}</p></div>${factIndex % 2 ? "" : `<span>🦊</span>`}</div>`).join("")}<div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 匹配结论</b><p>${escapeHtml(person.reason)} 最终是否选择，仍由小周本人决定。</p></div></div></div></main>`;
+  return `<main class="screen candidate-a2a-page">${topbar("A2A 沟通记录", `小绿 × ${escapeHtml(person.name)}的 Agent`, true)}<div class="a2a-disclosure"><span>🔒</span><p><strong>仅展示本次匹配相关内容</strong><br>不交换联系方式，也不使用未授权的个人信息。</p></div><div class="a2a-record-log"><div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 小周的 Agent</b><p>小周想找同行者一起“${escapeHtml(server.draft?.idea || ui.draft.idea || actionTitle())}”，时间是${escapeHtml(server.draft?.time || ui.draft.time || "你发布时选择的时间")}，地点在${escapeHtml(server.draft?.place || ui.draft.place || "你发布时选择的地点")}。</p></div></div><div class="a2a-chat-row peer"><div><b>${escapeHtml(person.name)}的 Agent</b><p>${escapeHtml(person.name)}对这项活动有兴趣。我可以核对与这次同行有关的过往经验。</p></div><span>🦊</span></div>${person.facts.map((fact, factIndex) => `<div class="a2a-chat-row ${factIndex % 2 ? "mine" : "peer"}">${factIndex % 2 ? `<span>🐦</span>` : ""}<div><b>${factIndex % 2 ? "小绿" : `${escapeHtml(person.name)}的 Agent`}</b><p>${escapeHtml(fact)}</p></div>${factIndex % 2 ? "" : `<span>🦊</span>`}</div>`).join("")}<div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 匹配结论</b><p>${escapeHtml(person.reason)} 最终是否选择，仍由小周本人决定。</p></div></div></div></main>`;
 }
 
 function ActionsPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
-  return `<main class="screen github-aligned-page">${topbar("聊天列表", "同行与协作", true)}<div class="tabs chat-tabs"><button class="active">进行中的聊天</button><button>已结束</button></div><div class="conversation-list"><article class="action-list-item" data-route="chat"><div class="chat-avatar"><img src="assets/flower-7.png" alt=""></div><div class="chat-summary"><div><h3>${escapeHtml(actionTitle())}</h3><time>刚刚</time></div><p>${server.messages.length ? `${server.messages[server.messages.length - 1].author === "me" ? "我" : partnerName()}：${escapeHtml(server.messages[server.messages.length - 1].text)}` : `${partnerName()}：期待和你一起～`}</p><span>${server.selectedCandidate ? `${meta[0]} · 4 位群聊成员` : "演示会话 · 4 位群聊成员"}</span></div><div class="unread">1</div></article><article class="action-list-item"><div class="chat-avatar warm"><img src="assets/flower-8.png" alt=""></div><div class="chat-summary"><div><h3>一起看夏日音乐节</h3><time>昨天</time></div><p>小绿：已整理好双方方便的时间</p><span>正在安排 · 4 位成员</span></div></article></div></main>`;
+  const body = server.selectedCandidate
+    ? `<div class="conversation-list"><article class="action-list-item" data-route="chat"><div class="chat-avatar"><img src="assets/flower-7.png" alt=""></div><div class="chat-summary"><div><h3>${escapeHtml(actionTitle())}</h3><time>刚刚</time></div><p>${server.messages.length ? `${server.messages[server.messages.length - 1].author === "me" ? "我" : partnerName()}：${escapeHtml(server.messages[server.messages.length - 1].text)}` : `${partnerName()}：期待和你一起～`}</p><span>${meta[0]} · 4 位群聊成员</span></div><div class="unread">1</div></article></div>`
+    : `<section class="card sent-seed">${plant("SEED", "md", "green")}<span class="mini-label">还没有进行中的行动</span><h2>先种下一件想做的事</h2><p>成局之后，你和同行者的群聊会出现在这里。</p><button class="primary" data-action="publish">种一颗种子</button></section>`;
+  return `<main class="screen github-aligned-page">${topbar("聊天列表", "同行与协作", true)}<div class="tabs chat-tabs"><button class="active">进行中的聊天</button><button>已结束</button></div>${body}</main>`;
 }
 
 function ChatPage() {
@@ -463,15 +476,15 @@ function ChatPage() {
       <div class="chat-divider active"><span>双方已确认组队 · 四方行动群聊开始</span></div>
       ${server.messages.length ? "" : `<div class="message them">嗨！很期待和你一起，咱们把时间地点定一下吧～</div>`}${messages}
       ${!ui.proposalsOpen && !allConfirmed ? `<button class="secondary full chat-help" data-action="help-progress">请小绿整理时间与地点</button>` : ""}
-      ${ui.proposalsOpen ? `<section class="proposal card"><div class="proposal-head">${pet(true)}<div><span class="mini-label">AI 提案 · 需要人确认</span><h3>我只整理了你们刚才说过的</h3></div></div><div class="proposal-item ${server.slots.time ? "confirmed" : ""}"><span>${icon("clock")}</span><div><small>时间</small><strong>本周六 15:00</strong></div><button data-slot="time">${server.slots.time ? "已确认 ✓" : "确认时间"}</button></div><div class="proposal-item ${server.slots.place ? "confirmed" : ""}"><span>${icon("pin")}</span><div><small>集合地点</small><strong>学校北门</strong></div><button data-slot="place">${server.slots.place ? "已确认 ✓" : "确认地点"}</button></div><p class="proposal-note">小绿只生成提案；你的点击才会写入行动约定。</p></section>` : ""}
-      ${allConfirmed ? `<section class="agreement card"><span class="mini-label">行动确认卡 · 双方已接受</span><h2>${escapeHtml(actionTitle())}</h2><p>${icon("clock")} 8 月 15 日 15:00</p><p>${icon("pin")} 学校北门集合</p><p>${icon("people")} 小周、${partnerName()} · 轻松路线</p><button class="primary full" data-action="open-completion">行动后回来打卡</button></section>` : ""}
+      ${ui.proposalsOpen ? `<section class="proposal card"><div class="proposal-head">${pet(true)}<div><span class="mini-label">AI 提案 · 需要人确认</span><h3>我只整理了你们刚才说过的</h3></div></div><div class="proposal-item ${server.slots.time ? "confirmed" : ""}"><span>${icon("clock")}</span><div><small>时间</small><strong>${escapeHtml(server.draft?.time || "你发布时选择的时间")}</strong></div><button data-slot="time">${server.slots.time ? "已确认 ✓" : "确认时间"}</button></div><div class="proposal-item ${server.slots.place ? "confirmed" : ""}"><span>${icon("pin")}</span><div><small>集合地点</small><strong>${escapeHtml(server.draft?.place || "你发布时选择的地点")}</strong></div><button data-slot="place">${server.slots.place ? "已确认 ✓" : "确认地点"}</button></div><p class="proposal-note">小绿只生成提案；你的点击才会写入行动约定。</p></section>` : ""}
+      ${allConfirmed ? `<section class="agreement card"><span class="mini-label">行动确认卡 · 双方已接受</span><h2>${escapeHtml(actionTitle())}</h2><p>${icon("clock")} ${escapeHtml(server.draft?.time || "时间待定")}</p><p>${icon("pin")} ${escapeHtml(server.draft?.place || "地点待定")}</p><p>${icon("people")} 小周、${partnerName()} · 轻松路线</p><button class="primary full" data-action="open-completion">行动后回来打卡</button></section>` : ""}
     </div>
     <form class="chat-compose" id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="在四方群聊中发消息…"><button aria-label="发送">发送</button></form>
   </main>`;
 }
 
 function CompletePage() {
-  return `<main class="screen complete-page">${topbar(server.checkedIn ? "行动开花了" : "完成行动", "把真实发生的事留住", true)}<section class="completion-scene ${server.checkedIn ? "is-bloom" : ""}">${forestBackdrop()}${plant(server.checkedIn ? "BLOOM" : "BUD", "xl", "gold")}<div class="sparkles"><i></i><i></i><i></i><i></i></div></section>${server.checkedIn ? `<span class="complete-kicker">你们把一颗种子，变成了共同经历</span><h2>${escapeHtml(actionTitle())}</h2><p class="center-copy">现在它会开进你和${partnerName()}的森林，成为下一次行动的起点。</p><textarea id="memory-text" class="memory-input" placeholder="留下一句话，记住今天…">${escapeHtml(ui.memoryText)}</textarea><button class="primary full" data-action="archive-memory">收进我的森林</button>` : `<h2>这次行动真的发生了吗？</h2><p class="center-copy">打卡只记录行动事实，不公开评分，也不会惩罚提前说明的改期。</p><button class="primary full" data-action="check-in">我们完成了</button><button class="secondary full" data-action="back">先不打卡</button>`}</main>`;
+  return `<main class="screen complete-page">${topbar(server.checkedIn ? "行动开花了" : "完成行动", "把真实发生的事留住", true)}<section class="completion-scene ${server.checkedIn ? "is-bloom" : ""}">${forestBackdrop()}${plant(server.checkedIn ? "BLOOM" : "BUD", "xl", "gold")}<div class="sparkles"><i></i><i></i><i></i><i></i></div></section>${server.checkedIn ? `<span class="complete-kicker">你们把一颗种子，变成了共同经历</span><h2>${escapeHtml(actionTitle())}</h2><div class="both-confirm"><span class="tick">✓</span>${partnerName()} 也确认了完成，并表示愿意以后再和你一起</div><p class="center-copy">共同回忆只有在你们<b>都愿意再组队</b>时才会生成。你愿意吗？</p><textarea id="memory-text" class="memory-input" placeholder="留下一句话，记住今天…">${escapeHtml(ui.memoryText)}</textarea><button class="primary full" data-action="archive-memory">愿意，收进我们的森林</button><button class="secondary full" data-action="decline-reteam">这次就好，暂不组队</button>` : `<h2>这次行动真的发生了吗？</h2><p class="center-copy">打卡只记录行动事实，不公开评分，也不会惩罚提前说明的改期。</p><button class="primary full" data-action="check-in">我们完成了</button><button class="secondary full" data-action="back">先不打卡</button>`}</main>`;
 }
 
 function MemoryPage() {
@@ -481,12 +494,12 @@ function MemoryPage() {
     { id: "study", image: "flower-5.png", label: "一起完成", title: "周末旧书店寻宝", copy: "找到了彼此小时候都读过的那一本。", peer: "鹿鸣" },
     { id: "music", image: "flower-8.png", label: "上周开花", title: "夏夜草地音乐会", copy: "散场很晚，但我们都舍不得先走。", peer: "小雨" },
   ];
-  return `<main class="screen memories-screen github-aligned-page">${topbar("全部回忆", "我的花园", ui.route === "memory")}<p class="memory-intro">每一次真实同行，都会在这里长成一段可以重访的记忆。</p><div class="memory-waterfall">${memories.map((memory, index) => `<button class="memory-tile ${index % 2 === 0 ? "tall" : ""}" data-memory="${memory.id}"><div class="memory-tile-art"><img src="assets/${memory.image}" alt=""></div><div class="memory-tile-body"><p>和${memory.peer} · 共同完成</p><h3>${memory.title}</h3><blockquote>${memory.copy}</blockquote><span class="memory-open">打开这段回忆 <i>›</i></span></div></button>`).join("")}</div></main>`;
+  return `<main class="screen memories-screen github-aligned-page">${topbar("全部回忆", "我的花园", ui.route === "memory")}<p class="memory-intro">每一次真实同行，都会在这里长成一段可以重访的记忆。</p><div class="memory-waterfall">${memories.map((memory, index) => `<button class="memory-tile ${index % 2 === 0 ? "tall" : ""}" data-memory="${memory.id}"><div class="memory-tile-art"><img src="assets/${memory.image}" alt=""></div><div class="memory-tile-body"><p>和${memory.peer} · 共同完成</p><h3>${escapeHtml(memory.title)}</h3><blockquote>${escapeHtml(memory.copy)}</blockquote><span class="memory-open">打开这段回忆 <i>›</i></span></div></button>`).join("")}</div></main>`;
 }
 
 function PlantDetailPage(id) {
   const item = gardenPlants[id] || gardenPlants.ride;
-  if (item.status === "active") return `<main class="screen plant-detail-page">${topbar(actionTitle(), "正在生长", true)}<section class="plant-detail-hero active">${sceneImage("assets/garden-scene.png", "花园里的行动植物")}<img src="assets/${server.stage === "BLOOM" ? "flower-6.png" : "tree.png"}" alt="${escapeHtml(actionTitle())}"></section><span class="plant-state">${stageMeta[server.stage]?.[0] || "生长中"}</span><h2>${escapeHtml(actionTitle())}</h2><p>${item.copy}</p><section class="plant-timeline"><span class="done">种下愿望</span><span class="done">找到同行者</span><span>确认行动细节</span><span>完成并开花</span></section><button class="primary full" data-action="open-plant-chat">回到行动对话</button></main>`;
+  if (item.status === "active") return `<main class="screen plant-detail-page">${topbar(escapeHtml(actionTitle()), "正在生长", true)}<section class="plant-detail-hero active">${sceneImage("assets/garden-scene.png", "花园里的行动植物")}<img src="assets/${server.stage === "BLOOM" ? "flower-6.png" : "tree.png"}" alt="${escapeHtml(actionTitle())}"></section><span class="plant-state">${stageMeta[server.stage]?.[0] || "生长中"}</span><h2>${escapeHtml(actionTitle())}</h2><p>${item.copy}</p><section class="plant-timeline"><span class="done">种下愿望</span><span class="done">找到同行者</span><span>确认行动细节</span><span>完成并开花</span></section><button class="primary full" data-action="open-plant-chat">回到行动对话</button></main>`;
   return MemoryDetailPage(id, item);
 }
 
@@ -496,11 +509,11 @@ function MemoryDetailPage(id, source) {
   const title = id === "current" && server.archived ? actionTitle() : item.title;
   const peer = id === "current" && server.archived ? partnerName() : item.peer;
   const copy = id === "current" && ui.memoryText ? ui.memoryText : item.copy;
-  return `<main class="screen memory-detail-page">${topbar(title, "这株花保存的共同回忆", true)}<section class="memory-cover"><img src="assets/garden-scene.png" alt="${title}的花园回忆"><img class="memory-flower" src="assets/${item.asset || "flower-7.png"}" alt="${title}开出的花"></section><section class="memory-letter"><small>${item.date || "最近"} · 和${peer}</small><h2>${title}</h2><p>${copy}</p><div class="memory-photo-grid"><figure><img src="assets/garden-background.png" alt="行动途中的花园留影"><figcaption>路上遇见的风景</figcaption></figure><figure><img src="assets/home-interior.png" alt="行动后的手账留影"><figcaption>小绿收好的手账</figcaption></figure></div></section><section class="history-chat"><h3>当时的对话</h3><div class="message them">今天真的很开心，下次还走这条路吗？</div><div class="message me">好呀，下次换个季节再来。</div></section><div class="memory-detail-actions"><button class="secondary full" data-action="open-all-memories">查看全部回忆</button><button class="primary full" data-action="again">从这里再种一颗种子</button></div></main>`;
+  return `<main class="screen memory-detail-page">${topbar(escapeHtml(title), "这株花保存的共同回忆", true)}<section class="memory-cover"><img src="assets/garden-scene.png" alt="${escapeHtml(title)}的花园回忆"><img class="memory-flower" src="assets/${item.asset || "flower-7.png"}" alt="${escapeHtml(title)}开出的花"></section><section class="memory-letter"><small>${item.date || "最近"} · 和${peer}</small><h2>${escapeHtml(title)}</h2><p>${escapeHtml(copy)}</p><div class="memory-photo-grid"><figure><img src="assets/garden-background.png" alt="行动途中的花园留影"><figcaption>路上遇见的风景</figcaption></figure><figure><img src="assets/home-interior.png" alt="行动后的手账留影"><figcaption>小绿收好的手账</figcaption></figure></div></section><section class="history-chat"><h3>当时的对话</h3><div class="message them">今天真的很开心，下次还走这条路吗？</div><div class="message me">好呀，下次换个季节再来。</div></section><div class="memory-detail-actions"><button class="secondary full" data-action="open-all-memories">查看全部回忆</button><button class="primary full" data-action="again">从这里再种一颗种子</button></div></main>`;
 }
 
 function ProfilePage() {
-  return `<main class="screen profile-page">${topbar("记忆书架", "从家里的书架打开", true)}<section class="profile-hero card"><span class="avatar profile-avatar">周</span>${pet()}<div><h2>小周与小绿</h2><p>校园已认证 · 一起做成过 8 件事</p></div><div class="profile-stats"><span><b>8</b>共同经历</span><span><b>5</b>再次同行</span><span><b>72%</b>小绿了解度</span></div></section><section class="settings card"><button>兴趣与行动偏好 <span>›</span></button><button>小绿可对外使用的信息 <span>›</span></button><button>空闲时间 <span>已更新</span></button><button>隐私与安全 <span>›</span></button></section><button class="reset-button" data-action="reset-demo">重置演示进度</button></main>`;
+  return `<main class="screen profile-page">${topbar("我的", "小周 · 个人主页", true)}<section class="profile-hero card"><span class="avatar profile-avatar">周</span>${pet()}<div><h2>小周与小绿</h2><p>校园已认证 · 一起做成过 4 件事</p></div><div class="profile-stats"><span><b>4</b>共同经历</span><span><b>3</b>再次同行</span><span><b>72%</b>偏好已记录</span></div></section><section class="settings card"><button>兴趣与行动偏好 <span>›</span></button><button>小绿可对外使用的信息 <span>›</span></button><button>空闲时间 <span>已更新</span></button><button>隐私与安全 <span>›</span></button></section><button class="reset-button" data-action="reset-demo">重置演示进度</button></main>`;
 }
 
 function page() {
@@ -517,6 +530,9 @@ function page() {
 }
 
 function render() {
+  // 重建 DOM 前，先把用户正在输入的内容存回 state，避免 toast 定时器/其它 render 把未提交文字清空
+  const memoryInput = document.querySelector("#memory-text");
+  if (memoryInput) ui.memoryText = memoryInput.value;
   document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
   requestAnimationFrame(() => {
     syncPhoneScale();
@@ -528,7 +544,7 @@ function render() {
 
 function syncPhoneScale() {
   const scale = Math.min(1, (window.innerWidth - 20) / 390, (window.innerHeight - 20) / 780);
-  document.documentElement.style.setProperty("--phone-scale", String(Math.max(.5, scale)));
+  document.documentElement.style.setProperty("--phone-scale", String(Math.max(.62, scale)));
 }
 
 function goBack() {
@@ -547,6 +563,7 @@ function goBack() {
   else if (ui.route?.startsWith("candidate:")) ui.route = "candidates";
   else if (ui.route === "chat" || ui.route === "memory") { const previous = ui.route; ui.route = null; ui.tab = previous === "chat" ? "actions" : "garden"; }
   else if (ui.route === "candidates" || ui.route === "matching") ui.route = "publish";
+  else if (ui.route === "complete") ui.route = "chat";
   else { ui.route = null; ui.tab = "garden"; }
   render();
 }
@@ -572,7 +589,6 @@ document.addEventListener("click", async event => {
     if (destination === "plot") ui.route = server.selectedCandidate ? "chat" : "publish";
     return render();
   }
-  if (target.dataset.idea) { ui.draft.idea = target.dataset.idea; ui.publishStep = 1; return render(); }
   if (target.dataset.period) {
     const period = target.dataset.period;
     ui.selectedPeriods = ui.selectedPeriods.includes(period)
@@ -602,14 +618,16 @@ document.addEventListener("click", async event => {
   if (target.dataset.slot) {
     const slot = target.dataset.slot;
     if (server.slots[slot]) return;
-    await api("/api/proposals/confirm", { slot, value: slot === "time" ? "本周六 15:00" : "学校北门" });
-    notify(slot === "time" ? "时间已由你确认，植物长高了一点" : "行动约定已完整，花苞出现了");
+    const value = slot === "time" ? (server.draft?.time || "时间待定") : (server.draft?.place || "地点待定");
+    if (!await api("/api/proposals/confirm", { slot, value })) return;
+    const done = server.slots.people && server.slots.time && server.slots.place;
+    notify(done ? "时间、地点都确认了，花苞出现了" : `${slot === "time" ? "时间" : "地点"}已确认，植物又长高了一点`);
     return;
   }
 
   const action = target.dataset.action;
   if (action === "back") return goBack();
-  if (action === "world-help") return notify("房子进入我的家，信箱查看来信；底部加号使用 GitHub 最新播种流程");
+  if (action === "world-help") return notify("点房子进我的家，点信箱看来信，点中间的加号种下一件想做的事");
   if (action === "open-home") { ui.route = "world-home"; return render(); }
   if (action === "open-mailbox-overlay") { markMailboxRead(); ui.openingObject = "mailbox"; ui.mailboxOverlay = true; ui.welcomeLetter = false; render(); setTimeout(() => { ui.openingObject = ""; render(); }, 560); return; }
   if (action === "close-mailbox-overlay") { ui.mailboxOverlay = false; return render(); }
@@ -620,7 +638,7 @@ document.addEventListener("click", async event => {
   if (action === "pet-talk") { ui.petMood = ui.petMood === "happy" ? "idle" : "happy"; return render(); }
   if (action === "pet-sleep") { ui.petMood = "sleep"; notify("小绿睡着了，等会儿还会自己醒来"); return render(); }
   if (action === "decorate") { ui.decorated = !ui.decorated; notify(ui.decorated ? "摆上了新地毯和花灯" : "已收起本次装扮"); return render(); }
-  if (action === "notify") return notify("3 个新机会已经放进信箱");
+  if (action === "notify") return notify(ui.unreadMail ? `${ui.unreadMail} 个新机会已经放进信箱` : "信箱暂时没有新消息");
   if (action === "publish") return startPublishFlow();
   if (action === "open-plant-chat") { ui.route = "chat"; return render(); }
   if (action === "open-all-memories") { ui.route = "memory"; return render(); }
@@ -691,7 +709,7 @@ document.addEventListener("click", async event => {
     return;
   }
   if (action === "decline-seed") { ui.route = null; ui.tab = "mailbox"; notify("没关系，小绿会继续帮你留意"); return render(); }
-  if (action === "join-seed") { ui.route = null; ui.tab = "mailbox"; ui.mailboxMode = "sent"; notify("参与意向已送回去，最终决定仍由对方完成"); return render(); }
+  if (action === "join-seed") { const seedId = ui.route?.split(":")[1]; const joinedSeed = seeds.find(s => s.id === seedId); if (seedId && !ui.joinedSeeds.includes(seedId)) ui.joinedSeeds.push(seedId); notify(`已把参与意向送给${joinedSeed?.peer || "对方"}，等ta确认后就能一起了。最终决定仍由对方完成`); return render(); }
   if (action === "help-progress") { ui.proposalsOpen = true; return render(); }
   if (action === "show-stage") return notify(`${stageMeta[server.stage][0]}：${stageMeta[server.stage][1]}`);
   if (action === "open-completion") { ui.route = "complete"; return render(); }
@@ -700,7 +718,14 @@ document.addEventListener("click", async event => {
     ui.memoryText = document.querySelector("#memory-text")?.value.trim() || "湖边的光比想象中更好看。";
     if (!await api("/api/gatherings/archive", { text: ui.memoryText })) return;
     ui.route = "memory";
-    notify("共同经历已进入你们的森林");
+    notify("双方都愿意再组队，共同回忆已进入你们的森林");
+    return render();
+  }
+  // 红线#4：任一方不愿再组队 → 不生成共同回忆，也不告知对方是谁、原因（植物停在开花，不入林）
+  if (action === "decline-reteam") {
+    ui.route = null;
+    ui.tab = "garden";
+    notify("尊重你的选择。这段回忆不会生成，我们也不会把原因告诉对方。");
     return render();
   }
   if (action === "again") { ui.route = "publish"; ui.publishStep = 1; ui.draft.idea = "再约一次磨山轻徒步"; return render(); }
