@@ -187,6 +187,8 @@
 .completed-garden-flower img { width: 58px; height: 70px; }
 .completed-garden-flower span { display: none; }
 .ongoing-garden-sprout { z-index: 8; }
+.ongoing-garden-sprout { width: 62px; height: 72px; border: 0; padding: 0; background: transparent; }
+.ongoing-garden-sprout .plant-image-state { width: 62px; height: 72px; margin: 0; transform: none; }
 
 .identity-message { display: flex; align-items: flex-end; gap: 7px; margin: 10px 0; }
 .identity-message.mine { flex-direction: row-reverse; }
@@ -195,6 +197,11 @@
 .speaker-avatar img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .message-entry small em, .agent-message strong em { margin-left: 4px; border-radius: 999px; padding: 2px 5px; color: #64733d; background: #eef1d8; font-size: 7px; font-style: normal; font-weight: 800; }
 .portrait-agent img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.plant-image-state { display: grid; place-items: end center; }
+.plant-image-state > img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.chat-avatar.growing-icon .plant-image-state { transform: none; }
+.growing-garden-slot .plant-image-state { margin-bottom: -9px; transform: none; }
+.letter-avatar img, .mail-preview-list button > img { object-fit: cover; object-position: center; }
 
 .event-participant-row { display: flex; gap: 7px; margin: 14px 0; overflow-x: auto; }
 .event-participant-row button { min-width: 54px; border: 0; color: #6f6a50; background: transparent; font-size: 8px; }
