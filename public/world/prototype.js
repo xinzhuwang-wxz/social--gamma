@@ -64,6 +64,23 @@ const seeds = [
   { id: "screening", title: "把教室变成一晚夏夜影院", type: "电影", time: "下周五 19:00", place: "校内活动教室", peer: "白羽", gardener: "绒月", color: "gold", asset: "flower-3.png", petAsset: "pet-idle.png", preview: "一起选片、画海报，再让灯亮后的聊天成为片尾。", letter: "致一寸欢喜：\n\n白羽想在下周五，把一间普通教室变成一晚小影院。一起选片、画海报、摆好椅子，再邀请几位同学来看；如果大家愿意，灯亮以后还可以留下来聊一会儿。\n\n绒月知道电影不是你最常谈起的兴趣，却觉得你会喜欢共同创造一个现场。你可以帮忙做海报，也可以带相机记录教室从明亮到熄灯的过程。如果这封邀请让你想起一部愿意和陌生人一起看的电影，就来给这个夏夜添一束光吧。\n\n祝银幕亮起时，也有新的故事在座位之间发生。\n\n绒月", tags: ["电影", "共同策划", "仅本校"], reason: "你学习传播学，也喜欢记录有氛围的现场，这是一封探索型邀请。" },
 ];
 
+const seedAvatars = {
+  song: "assets/avatars/tuantuan.png?v=mailbox-2",
+  photo: "assets/avatars/guanguan.png?v=mailbox-2",
+  screening: "assets/avatars/rongyue.png?v=mailbox-2",
+};
+
+function seedAvatar(seed) {
+  return seedAvatars[seed.id] || personWorld(seed.peer).avatarImage;
+}
+
+// 邀约卡片、预览与详情必须始终使用发布者的小花匠头像。
+function syncSeedAvatars() {
+  seeds.forEach(seed => {
+    personWorld(seed.peer).avatarImage = seedAvatar(seed);
+  });
+}
+
 // 同一份经历数据同时驱动花园、回忆书架和已结束聊天，避免三处数量或文案错位。
 const completedEvents = [
   { id: "ride", title: "沿着西湖骑一整圈夜风", asset: "flower-1.png", date: "2026 年 8 月 7 日", place: "杭州 · 西湖环线", scope: "杭州范围", participants: ["一寸欢喜", "饭团", "迟野"], copy: "晚风有了路线，湖水有了同行者。", plan: "周五 19:00 在龙翔桥集合，沿湖慢骑，累了随时停。", execution: "三个人完成了约 22 公里的环湖路线。", feedback: "饭团上传了湖边合照，迟野补上了骑行轨迹。", quote: "原来夜风也会记得我们经过哪里。" },
@@ -424,6 +441,7 @@ function WorldGardenPage() {
 }
 
 function MailboxOverlay(showWelcome = false) {
+  syncSeedAvatars();
   if (showWelcome) return `<div class="world-modal-backdrop welcome-backdrop"><section class="world-mailbox-panel welcome-letter" role="dialog" aria-modal="true" aria-label="团团送达的第一封邀约"><header><div><small>团团送来的信</small><h2>落日前，草坪为你留了一个位置</h2></div><button data-action="close-welcome-letter" aria-label="稍后再看">×</button></header><div class="welcome-letter-body"><img src="${profileWorlds["饭团"].avatarImage}" alt="饭团的团团送来信件"><p>一寸欢喜，饭团想在周五傍晚办一场夏末点歌会。每个人只带一首最近最喜欢的歌，不用准备节目。</p><blockquote>“我可以带相机，也已经想好要放哪首歌了。”</blockquote><button data-seed="song">拆开这封信</button></div><button class="mailbox-expand" data-action="show-mailbox-preview">看看另外 ${Math.max(0, ui.unreadMail - 1)} 封来信</button></section></div>`;
   return `<div class="world-modal-backdrop" data-action="close-mailbox-overlay"><section class="world-mailbox-panel" role="dialog" aria-modal="true" aria-label="种子信箱预览"><header><div><small>花园邮便</small><h2>种子信箱</h2></div><button data-action="close-mailbox-overlay" aria-label="关闭">×</button></header><div class="mail-preview-list">${seeds.slice(0, 2).map(seed => { const world = personWorld(seed.peer); return `<button data-seed="${seed.id}"><img src="${world.avatarImage}" alt="${seed.peer}的${world.gardener}"><span><strong>${seed.peer}</strong><small>${seed.preview}</small></span><i>›</i></button>`; }).join("")}</div><button class="mailbox-expand" data-action="expand-mailbox">打开完整信箱 <span>↗</span></button></section></div>`;
 }
@@ -479,6 +497,7 @@ function GardenPage() {
 }
 
 function MailboxPage() {
+  syncSeedAvatars();
   return `<main class="screen github-aligned-page mailbox-full-page">
     ${topbar("种子信箱", "与你匹配的找搭子需求", true)}
     <div class="tabs"><button class="${ui.mailboxMode === "received" ? "active" : ""}" data-mailbox="received">收到的种子 3</button><button class="${ui.mailboxMode === "sent" ? "active" : ""}" data-mailbox="sent">我发出的 ${server.published ? 1 : 0}</button></div>
@@ -488,6 +507,7 @@ function MailboxPage() {
 
 function SeedDetailPage(id) {
   const seed = seeds.find(item => item.id === id) || seeds[0];
+  syncSeedAvatars();
   return `<main class="screen detail-page letter-detail-page">
     ${topbar(seed.title, `${seed.gardener}送来的一封信`, true)}
     <section class="paper-letter"><header><button class="letter-avatar large" data-person-profile="${seed.peer}" aria-label="查看${seed.peer}的花园"><img src="${personWorld(seed.peer).avatarImage}" alt="${seed.peer}的${seed.gardener}送来的信"></button><div><small>${seed.peer}的${seed.gardener} · Agent 投递</small><button class="profile-name-link" data-person-profile="${seed.peer}"><strong>${seed.peer} · 校园已认证</strong></button></div><span class="paper-stamp">小羊<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.gardener}<br><time>2026 年 8 月 13 日</time></footer></section>
