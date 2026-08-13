@@ -577,7 +577,11 @@ function page() {
 }
 
 function render() {
-  document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
+  const app = document.querySelector("#app");
+  if (!app.querySelector(".app-shell")) {
+    app.innerHTML = `<div class="app-shell"><div class="phone"></div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
+  }
+  app.querySelector(".phone").innerHTML = `${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}`;
   requestAnimationFrame(() => { const log = document.querySelector("#chat-log"); if (log) log.scrollTop = log.scrollHeight; });
   requestAnimationFrame(() => window.WorldLayer?.mount());
 }
@@ -652,7 +656,18 @@ document.addEventListener("click", async event => {
   if (action === "back") return goBack();
   if (action === "world-help") return notify("房子进入我的家，信箱查看来信；底部加号使用 GitHub 最新播种流程");
   if (action === "open-home") { ui.route = "world-home"; return render(); }
-  if (action === "open-mailbox-overlay") { markMailboxRead(); ui.openingObject = "mailbox"; ui.mailboxOverlay = true; ui.welcomeLetter = false; render(); setTimeout(() => { ui.openingObject = ""; render(); }, 560); return; }
+  if (action === "open-mailbox-overlay") {
+    markMailboxRead();
+    ui.openingObject = "mailbox";
+    ui.mailboxOverlay = true;
+    ui.welcomeLetter = false;
+    render();
+    setTimeout(() => {
+      ui.openingObject = "";
+      document.querySelector(".world-object-effects")?.classList.remove("opening-mailbox");
+    }, 560);
+    return;
+  }
   if (action === "close-mailbox-overlay") { ui.mailboxOverlay = false; return render(); }
   if (action === "close-welcome-letter") { ui.mailboxOverlay = false; ui.welcomeLetter = false; return render(); }
   if (action === "show-mailbox-preview") { markMailboxRead(); ui.welcomeLetter = false; return render(); }
