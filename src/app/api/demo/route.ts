@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { snapshot } from "@/lib/demo/state";
+import { currentUser } from "@/lib/session";
+import { worldSnapshot } from "@/lib/world-gathering";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/demo — 当前演示快照 */
 export async function GET() {
-  return NextResponse.json(snapshot());
+  const me = await currentUser();
+  if (!me) return NextResponse.json(await worldSnapshot("__anonymous__"));
+  return NextResponse.json(await worldSnapshot(me.id));
 }

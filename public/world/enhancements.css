@@ -136,12 +136,26 @@
 .a2a-chat-row b { color: #607067; font-size: 10px; }
 .a2a-chat-row p { margin: 4px 0 0; font-size: 9px; line-height: 1.6; }
 
-/* Mobile publish-flow type scale and native date selection. */
+/* Mobile publish-flow type scale and calendar selection. */
 .publish-page .agent-bubble strong { font-size: 16px; line-height: 1.45; }
 .publish-page .agent-bubble .tiny { margin-top: 7px; font-size: 12px; line-height: 1.55; }
 .publish-page .flow-card > label { margin-bottom: 10px; font-size: 12px; }
 .publish-page .flow-card > label:not(:first-child) { margin-top: 22px; }
 .publish-page .flow-card > label small { margin-left: 5px; color: var(--muted); font-size: 10px; font-weight: 600; }
+.calendar-picker { margin-bottom: 16px; border: 1px solid rgba(63,120,81,.12); border-radius: 16px; padding: 10px; background: #fffdf7; }
+.calendar-head { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; margin-bottom: 8px; }
+.calendar-head strong { text-align: center; font-size: 13px; }
+.calendar-head button { width: 32px; height: 32px; border: 0; border-radius: 10px; color: var(--primary); background: #fff3cd; font-size: 21px; line-height: 1; }
+.calendar-head button:disabled { color: #c8c1ae; background: transparent; }
+.calendar-weekdays, .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); text-align: center; }
+.calendar-weekdays { margin-bottom: 3px; color: var(--muted); font-size: 9px; font-weight: 700; }
+.calendar-days { row-gap: 2px; }
+.calendar-days > button, .calendar-days > span { min-width: 0; height: 31px; }
+.calendar-days > button { border: 0; border-radius: 50%; color: var(--ink); background: transparent; font-size: 11px; font-weight: 700; }
+.calendar-days > button:hover { background: #f7edca; }
+.calendar-days > button.today { box-shadow: inset 0 0 0 1px #d6bd74; }
+.calendar-days > button.selected { color: white; background: var(--primary); box-shadow: 0 4px 10px rgba(63,120,81,.2); }
+.calendar-days > button:disabled { color: #c7c7bd; background: transparent; box-shadow: none; }
 .date-select-wrap { position: relative; }
 .date-select-wrap select { width: 100%; height: 58px; appearance: none; border: 1px solid rgba(63,120,81,.16); border-radius: 16px; outline: none; padding: 0 44px 0 16px; color: var(--primary); background: white; font-size: 14px; font-weight: 800; }
 .date-select-wrap select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(63,120,81,.12); }
@@ -193,4 +207,204 @@
   body { overflow: hidden; background: #e6ede4; }
   .app-shell { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0; background: radial-gradient(circle at 50% 10%,#fbfcf8,#e2ebe1); }
   .phone { width: 390px; height: 780px; min-height: 780px; border: 8px solid #28543d; border-radius: 42px; }
+}
+
+/* Calm green foundation with warm yellow accents for the Agent's voice. */
+:root {
+  --cream: #f7fbf4;
+  --paper: #f6faf1;
+  --surface: #eef6ea;
+  --card: #fbfef8;
+  --soft: #e6f1df;
+  --line: rgba(63, 120, 81, .14);
+  --agent-soft: #eaf4e2;
+}
+
+.app-shell {
+  background: radial-gradient(circle at 50% 10%, #fbfcf8, #e2ebe1);
+}
+
+.phone {
+  background: #f7fbf4;
+}
+
+.screen,
+.github-aligned-page,
+.mailbox-full-page,
+.publish-page,
+.matching-page,
+.candidates-page,
+.chat-screen,
+.complete-page,
+.profile-page,
+.plant-detail-page,
+.memory-detail-page,
+.memories-screen,
+.candidate-detail-page,
+.candidate-space-page,
+.candidate-a2a-page {
+  background: linear-gradient(180deg, #fbfef8 0%, #eef6ea 100%);
+}
+
+.garden-world-screen .game-hud {
+  display: none;
+}
+
+.card,
+.flow-card,
+.action-list-item,
+.conversation-card,
+.github-aligned-page .seed-card,
+.mailroom-page .latest-seed-card,
+.letter-row,
+.preference-list button,
+.activity-option-list button,
+.choice-grid button,
+.habit-options button,
+.candidate-profile-card,
+.a2a-proof-lite,
+.space-hero,
+.experience-card,
+.memory-tile,
+.github-aligned-page .memory-tile,
+.chat-progress,
+.proposal,
+.agreement {
+  border-color: rgba(63, 120, 81, .13);
+  background: rgba(251, 254, 248, .94);
+  box-shadow: 0 8px 24px rgba(48, 76, 57, .08);
+}
+
+.tabs,
+.chat-tabs,
+.mailbox-full-page .tabs {
+  background: transparent;
+}
+
+.tabs .active,
+.chat-tabs button.active {
+  color: var(--primary);
+  background: #e6f1df;
+}
+
+.tabs {
+  gap: 12px;
+}
+
+.tabs button {
+  border-radius: 14px;
+  padding: 9px 16px;
+}
+
+.letter-avatar,
+.chat-avatar,
+.conversation-card > img,
+.seed-art,
+.github-aligned-page .seed-art,
+.memory-art,
+.memory-tile-art,
+.publish-world-card,
+.activity-confirm-state {
+  background: linear-gradient(180deg, #edf6e8, #f7fbf1);
+}
+
+.agent-message > div,
+.a2a-chat-row > div,
+.custom-companion,
+.a2a-disclosure,
+.proof-facts span,
+.seed-tags span,
+.slot-mini span,
+.letter-facts span {
+  background: var(--soft);
+}
+
+.publish-page .agent-bubble {
+  border: 1px solid rgba(211, 177, 86, .24);
+  background: #fff3cf;
+  box-shadow: 0 8px 22px rgba(115, 92, 36, .06);
+}
+
+.publish-page .agent-orb {
+  background: #fff5ce;
+}
+
+.publish-page .step-count {
+  color: #765f25;
+  background: #fff0bc;
+}
+
+.agent-orb,
+.agent-avatar,
+.agent-pair span,
+.a2a-chat-row > span {
+  background: #edf6e8;
+}
+
+.secondary,
+.publish-quick-grid button,
+.date-strip button,
+.period-strip button,
+.inline-entry input,
+.date-select-wrap select,
+.clarify-actions button,
+.world-dock,
+.room-toolbar,
+.decor-drawer,
+.decor-drawer > div button,
+.world-mailbox-panel,
+.mail-preview-list > button,
+.welcome-letter-body {
+  border-color: rgba(63, 120, 81, .16);
+  background: rgba(248, 252, 245, .92);
+}
+
+.world-mailbox-panel header button {
+  color: var(--primary);
+  background: var(--soft);
+  border-color: rgba(63, 120, 81, .2);
+}
+
+.mailbox-expand {
+  background: var(--primary);
+}
+
+.seed-art.pink,
+.seed-art.gold,
+.chat-avatar.warm,
+.agent-message.peer > div,
+.agent-message.peer .agent-avatar,
+.agent-pair span + span,
+.a2a-chat-row.peer > div,
+.a2a-chat-row.peer > span,
+.memory-tile.tile-tall .memory-art {
+  background: linear-gradient(180deg, #edf6e8, #f7fbf1);
+}
+
+.letter-detail-page {
+  background: linear-gradient(180deg, #fbf7e8 0%, #eef6ea 100%);
+}
+
+.paper-letter,
+.paper-letter::before,
+.memory-letter {
+  border-color: #dfc791;
+}
+
+.paper-letter,
+.memory-letter {
+  background: #fffaf0;
+}
+
+.agent-message > div,
+.agent-message.peer > div,
+.a2a-chat-row > div,
+.a2a-chat-row.peer > div,
+.agent-bubble {
+  background: #fff4d9;
+}
+
+.action-list-item,
+.conversation-card {
+  background: rgba(255, 255, 255, .96);
 }

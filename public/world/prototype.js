@@ -18,6 +18,7 @@ const initialUi = () => {
   toast: "",
   loading: false,
   publishStep: 0,
+  calendarMonthOffset: 0,
   selectedDate: "",
   selectedPeriods: [],
   draft: {
@@ -89,7 +90,10 @@ function escapeHtml(value = "") {
 function actionTitle() { return (server.draft && server.draft.idea) || "周六一起爬磨山"; }
 // partnerName 仅用于展示，直接返回已转义值，避免各调用点漏转义（名字来自 LLM/用户不可控输入）
 function partnerName() { return escapeHtml(server.selectedCandidate || "小蓝"); }
-function candidateList() { return (server.candidates && server.candidates.length) ? server.candidates : candidates; }
+function candidateList() {
+  if (server.published) return server.candidates || [];
+  return (server.candidates && server.candidates.length) ? server.candidates : candidates;
+}
 function candidateAt(index) { return candidateList()[Number(index)] || candidateList()[0]; }
 
 async function api(path, body) {
@@ -113,12 +117,27 @@ async function api(path, body) {
 
 function upcomingDates() {
   const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-  return Array.from({ length: 7 }, (_, offset) => {
-    const date = new Date();
-    date.setDate(date.getDate() + offset);
-    const day = `${date.getMonth() + 1}月${date.getDate()}日`;
-    return { value: `${day} ${weekdays[date.getDay()]}`, day, weekday: offset === 0 ? "今天" : weekdays[date.getDay()] };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const month = new Date(today.getFullYear(), today.getMonth() + ui.calendarMonthOffset, 1);
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const firstWeekday = (month.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const dates = Array.from({ length: daysInMonth }, (_, index) => {
+    const date = new Date(year, monthIndex, index + 1);
+    const day = `${monthIndex + 1}月${date.getDate()}日`;
+    return {
+      value: `${day} ${weekdays[date.getDay()]}`,
+      day: date.getDate(),
+      isToday: date.getTime() === today.getTime(),
+      disabled: date < today,
+    };
   });
+  return {
+    label: `${year}年 ${monthIndex + 1}月`,
+    dates: [...Array(firstWeekday).fill(null), ...dates],
+  };
 }
 
 function startPublishFlow() {
@@ -126,6 +145,7 @@ function startPublishFlow() {
   ui.activityQuestionRequestId += 1;
   ui.route = "publish";
   ui.publishStep = 0;
+  ui.calendarMonthOffset = 0;
   ui.draft = fresh.draft;
   ui.selectedDate = "";
   ui.selectedPeriods = [];
@@ -406,10 +426,10 @@ function PublishPage() {
   const habit = escapeHtml(ui.draft.habit || "还未确认");
   const activityDetail = escapeHtml(ui.draft.activityDetail || "还未确认");
   const progress = ["做什么", "时间", "地点", "同行者", "相处习惯", "活动确认", "确认发布"];
-  const dateOptions = upcomingDates();
+  const calendar = upcomingDates();
   const steps = [
     `<div class="agent-bubble"><strong>最近想和别人一起做什么？</strong><br><span class="muted tiny">选一个最接近的，也可以自己填写</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="idea:轻松爬山">🥾 轻松爬山</button><button data-publish-choice="idea:一起自习">📚 一起自习</button><button data-publish-choice="idea:扫街摄影">📷 扫街摄影</button><button data-publish-choice="idea:看展或演出">🎵 看展／演出</button></div><form id="publish-form" class="custom-companion uniform-entry"><label for="publish-input">自定义想做的事</label><div class="inline-entry"><input id="publish-input" maxlength="40" placeholder="例如：一起练习羽毛球"><button>确定</button></div></form>`,
-    `<div class="agent-bubble"><strong>你希望什么时候进行？</strong><br><span class="muted tiny">选择一个日期；时段可以多选</span></div><section class="time-picker-card flow-card"><label for="date-select">选择日期</label><div class="date-select-wrap"><select id="date-select"><option value="">请选择日期</option>${dateOptions.map(date => `<option value="${date.value}" ${ui.selectedDate === date.value ? "selected" : ""}>${date.weekday} · ${date.day}</option>`).join("")}</select><span>⌄</span></div><label>选择时段 <small>可多选</small></label><div class="period-strip">${["上午", "下午", "晚上"].map(period => `<button class="${ui.selectedPeriods.includes(period) ? "selected" : ""}" data-period="${period}">${period}</button>`).join("")}</div><button class="primary full flow-next" data-action="confirm-time" ${ui.selectedDate && ui.selectedPeriods.length ? "" : "disabled"}>确认时间</button></section>`,
+    `<div class="agent-bubble"><strong>你希望什么时候进行？</strong><br><span class="muted tiny">在日历上选一天；时段可以多选</span></div><section class="time-picker-card flow-card"><label>选择日期</label><div class="calendar-picker"><div class="calendar-head"><button data-action="calendar-prev" aria-label="上个月" ${ui.calendarMonthOffset === 0 ? "disabled" : ""}>‹</button><strong>${calendar.label}</strong><button data-action="calendar-next" aria-label="下个月">›</button></div><div class="calendar-weekdays" aria-hidden="true">${["一", "二", "三", "四", "五", "六", "日"].map(day => `<span>${day}</span>`).join("")}</div><div class="calendar-days" role="grid" aria-label="选择日期">${calendar.dates.map(date => date ? `<button class="${ui.selectedDate === date.value ? "selected" : ""} ${date.isToday ? "today" : ""}" data-date="${date.value}" aria-label="${date.value}" aria-pressed="${ui.selectedDate === date.value ? "true" : "false"}" ${date.disabled ? "disabled" : ""}>${date.day}</button>` : `<span></span>`).join("")}</div></div><label>选择时段 <small>可多选</small></label><div class="period-strip">${["上午", "下午", "晚上"].map(period => `<button class="${ui.selectedPeriods.includes(period) ? "selected" : ""}" data-period="${period}">${period}</button>`).join("")}</div><button class="primary full flow-next" data-action="confirm-time" ${ui.selectedDate && ui.selectedPeriods.length ? "" : "disabled"}>确认时间</button></section>`,
     `<div class="agent-bubble"><strong>活动范围放在哪里比较合适？</strong><br><span class="muted tiny">选择常用范围，或输入具体地址</span></div><div class="choice-grid uniform-choice-grid"><button data-publish-choice="place:校内">校内</button><button data-publish-choice="place:学校附近">学校附近</button><button data-publish-choice="place:市内都可以">市内都可以</button><button data-action="use-location">⌖ 使用我的定位</button></div><form id="place-form" class="custom-companion uniform-entry"><label for="place-input">自定义地点 / 地址</label><div class="inline-entry"><input id="place-input" maxlength="60" placeholder="例如：图书馆东门"><button>确定</button></div></form>`,
     `<div class="agent-bubble"><strong>你希望同行的人是什么样的？</strong><br><span class="muted tiny">选最看重的一点，也可以自己补充</span></div><div class="preference-list"><button data-companion="聊得来，气氛轻松"><span>💬</span><div><strong>聊得来，气氛轻松</strong><small>愿意分享，也尊重彼此表达</small></div><b>›</b></button><button data-companion="守时靠谱"><span>⏱</span><div><strong>守时靠谱</strong><small>确定后尽量不临时变动</small></div><b>›</b></button><button data-companion="愿意一起做决定"><span>🤝</span><div><strong>愿意一起做决定</strong><small>安排可以共同商量</small></div><b>›</b></button><button data-companion="没有特别要求"><span>🌱</span><div><strong>没有特别要求</strong><small>合适就好，保持开放</small></div><b>›</b></button></div><form id="companion-form" class="custom-companion"><label for="companion-input">自定义同行者要求</label><div class="inline-entry"><input id="companion-input" maxlength="40" placeholder="例如：希望对方也有拍摄经验"><button>确定</button></div></form>`,
     `<div class="agent-bubble"><strong>相处时，有什么习惯想提前说清楚？</strong><br><span class="muted tiny">这不是硬性条件，只是帮助彼此更自在</span></div><div class="habit-options"><button data-habit="喜欢边做边聊">边做边聊</button><button data-habit="慢热，先做事再熟悉">我比较慢热</button><button data-habit="不抽烟，少饮酒">不抽烟 / 少饮酒</button><button data-habit="没有特别习惯">没有特别习惯</button></div>`,
@@ -432,6 +452,9 @@ function MatchingPage() {
 
 function CandidatesPage() {
   const list = candidateList();
+  if (!list.length) {
+    return `<main class="screen candidates-page">${topbar("匹配候选", "小绿还在整理", true)}<div class="candidate-intro">${pet(true)}<p><strong>候选人还没有生成出来</strong>需求已经发布到后端了；如果 AI 凭证可用，小绿会继续生成模拟用户并完成匹配。</p></div><button class="primary full" data-action="back">返回花园</button></main>`;
+  }
   return `<main class="screen candidates-page">${topbar("匹配候选", `小绿找到了 ${list.length} 位可能同行的人`, true)}<div class="candidate-intro">${pet(true)}<p><strong>你来做最后选择</strong>我只整理与这次行动有关的事实。没被选中的人，我会替你礼貌回复。</p></div>${list.map((person, index) => `<article class="candidate-card card ${index === 0 ? "recommended" : ""}">${index === 0 ? `<span class="recommend-label">最合拍</span>` : ""}<span class="avatar avatar-${index}">${escapeHtml(person.avatar)}</span><div class="candidate-main"><div><h3>${escapeHtml(person.name)}</h3><span>${escapeHtml(person.match)}</span></div><p>${escapeHtml(person.note)}</p><ul>${person.facts.map(fact => `<li>${escapeHtml(fact)}</li>`).join("")}</ul><div class="match-reason"><strong>为什么适合</strong>${escapeHtml(person.reason)}</div></div><div class="candidate-actions"><button class="secondary" data-candidate-detail="${index}">查看资料</button><button class="primary" data-candidate="${escapeHtml(person.name)}">选择 ${escapeHtml(person.name)}</button></div></article>`).join("")}</main>`;
 }
 
@@ -596,6 +619,10 @@ document.addEventListener("click", async event => {
       : [...ui.selectedPeriods, period];
     return render();
   }
+  if (target.dataset.date) {
+    ui.selectedDate = target.dataset.date;
+    return render();
+  }
   if (target.dataset.publishChoice) {
     const [field, value] = target.dataset.publishChoice.split(":");
     if (field === "idea") { ui.draft.idea = value; ui.publishStep = 1; }
@@ -643,6 +670,8 @@ document.addEventListener("click", async event => {
   if (action === "open-plant-chat") { ui.route = "chat"; return render(); }
   if (action === "open-all-memories") { ui.route = "memory"; return render(); }
   if (action === "view-candidates") { ui.route = "candidates"; return render(); }
+  if (action === "calendar-prev") { ui.calendarMonthOffset = Math.max(0, ui.calendarMonthOffset - 1); return render(); }
+  if (action === "calendar-next") { ui.calendarMonthOffset += 1; return render(); }
   if (action === "confirm-time") {
     if (!ui.selectedDate || !ui.selectedPeriods.length) return notify("请先选好日期和至少一个时段");
     ui.draft.time = `${ui.selectedDate} ${ui.selectedPeriods.join(" / ")}`;
@@ -768,12 +797,6 @@ document.addEventListener("submit", async event => {
     if (!value) return;
     if (await api("/api/chat/messages", { author: "me", text: value })) notify(server.stage === "LEAF" ? "第一次真人对话让植物长出了叶子" : "消息已发送");
   }
-});
-
-document.addEventListener("change", event => {
-  if (event.target.id !== "date-select") return;
-  ui.selectedDate = event.target.value;
-  render();
 });
 
 window.addEventListener("popstate", render);
