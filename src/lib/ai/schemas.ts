@@ -55,9 +55,9 @@ export const a2aSchema = z.object({
         text: z.string(),
       })
     )
-    .describe("4-6 轮双方 Agent 的简短对话，只谈本次事件相关信息"),
-  commonalities: z.array(z.string()).describe("双方与本次事件相关的共同点 2-3 条"),
-  icebreakHints: z.array(z.string()).describe("给真人破冰准备的素材 2-3 条"),
+    .describe("2-3 轮双方 Agent 的简短对话（会展示给用户看），只谈本次事件相关信息"),
+  commonalities: z.array(z.string()).describe("双方与本次事件相关的共同点 2 条"),
+  icebreakHints: z.array(z.string()).describe("给真人破冰准备的素材 2 条"),
 });
 
 /** 成局时的房间开场：双向摘要卡 + 一次破冰 */

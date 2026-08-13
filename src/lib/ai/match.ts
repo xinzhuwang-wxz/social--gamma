@@ -76,7 +76,7 @@ ${JSON.stringify(owner, null, 2)}
 ## 候选人（candidate 的主人）
 ${JSON.stringify(candidate, null, 2)}
 
-生成 2-3 轮对话、共同点与破冰素材。`,
+生成 2-3 轮简短对话、2 条共同点、2 条破冰素材。`,
   });
   return object;
 }

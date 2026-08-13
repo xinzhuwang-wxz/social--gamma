@@ -96,12 +96,18 @@ function candidateList() {
 }
 function candidateAt(index) { return candidateList()[Number(index)] || candidateList()[0]; }
 
-async function api(path, body) {
-  if (ui.loading) return null; // 防连点：进行中的请求未回来前，忽略重复提交
-  ui.loading = true;
-  render();
+async function api(path, body, opts = {}) {
+  // opts.silent：不显示全局 loading 遮罩（用于乐观匹配动画期间后台跑发布）
+  if (ui.loading && !opts.silent) return null; // 防连点：进行中的请求未回来前，忽略重复提交
+  if (!opts.silent) { ui.loading = true; render(); }
   try {
-    const response = await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const doFetch = () => fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    let response = await doFetch();
+    // 持久后端需登录：任一调用遇 401 先建演示会话，再重试一次（对上层透明）
+    if (response.status === 401) {
+      await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "小周", emoji: "🌱", interests: ["社交森林"] }) }).catch(() => {});
+      response = await doFetch();
+    }
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "操作失败");
     server = result;
@@ -110,8 +116,7 @@ async function api(path, body) {
     notify(error.message || "网络开了小差");
     return null;
   } finally {
-    ui.loading = false;
-    render();
+    if (!opts.silent) { ui.loading = false; render(); }
   }
 }
 
@@ -468,7 +473,7 @@ function PublishPage() {
 }
 
 function MatchingPage() {
-  return `<main class="screen matching-page">${topbar("小绿正在旅行", "寻找真正合适的同行者", true)}<section class="travel-scene">${forestBackdrop()}<div class="travel-pet">${pet()}</div><div class="trail"></div></section><h2>种子正在穿过校园</h2><p>先检查时间是否重合，再看地点与行动偏好。匹配理由只来自双方确认过的事实。</p><div class="matching-steps"><span class="done">✓ 时间位图有交集</span><span class="done">✓ 地点范围兼容</span><span class="active"><i></i> 正在整理候选人</span></div></main>`;
+  return `<main class="screen matching-page">${topbar("小绿正在旅行", "寻找真正合适的同行者", true)}<section class="travel-scene">${forestBackdrop()}<div class="travel-pet">${pet()}</div><div class="trail"></div></section><h2>种子正在穿过校园</h2><p>小绿在为你即时物色同行者。匹配理由只来自双方确认过的事实。</p><div class="matching-steps"><span class="done">✓ 即时捏出正好合拍的同行者</span><span class="done">✓ 核对时间位图与地点范围</span><span class="done">✓ 两位 Agent 完成 A2A 预热</span><span class="active"><i></i> 正在整理候选人给你挑选</span></div></main>`;
 }
 
 function CandidatesPage() {
@@ -496,7 +501,12 @@ function CandidateSpacePage(index) {
 
 function CandidateA2APage(index) {
   const person = candidateAt(index);
-  return `<main class="screen candidate-a2a-page">${topbar("A2A 沟通记录", `小绿 × ${escapeHtml(person.name)}的 Agent`, true)}<div class="a2a-disclosure"><span>🔒</span><p><strong>仅展示本次匹配相关内容</strong><br>不交换联系方式，也不使用未授权的个人信息。</p></div><div class="a2a-record-log"><div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 小周的 Agent</b><p>小周想找同行者一起“${escapeHtml(server.draft?.idea || ui.draft.idea || actionTitle())}”，时间是${escapeHtml(server.draft?.time || ui.draft.time || "你发布时选择的时间")}，地点在${escapeHtml(server.draft?.place || ui.draft.place || "你发布时选择的地点")}。</p></div></div><div class="a2a-chat-row peer"><div><b>${escapeHtml(person.name)}的 Agent</b><p>${escapeHtml(person.name)}对这项活动有兴趣。我可以核对与这次同行有关的过往经验。</p></div><span>🦊</span></div>${person.facts.map((fact, factIndex) => `<div class="a2a-chat-row ${factIndex % 2 ? "mine" : "peer"}">${factIndex % 2 ? `<span>🐦</span>` : ""}<div><b>${factIndex % 2 ? "小绿" : `${escapeHtml(person.name)}的 Agent`}</b><p>${escapeHtml(fact)}</p></div>${factIndex % 2 ? "" : `<span>🦊</span>`}</div>`).join("")}<div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 匹配结论</b><p>${escapeHtml(person.reason)} 最终是否选择，仍由小周本人决定。</p></div></div></div></main>`;
+  // 优先展示后端真实生成的两位 Agent A2A 对话；没有则用 facts 兜底拼装
+  const turns = person.a2a && Array.isArray(person.a2a.turns) && person.a2a.turns.length ? person.a2a.turns : null;
+  const midRows = turns
+    ? turns.map(t => { const own = t.agent === "owner"; return `<div class="a2a-chat-row ${own ? "mine" : "peer"}">${own ? `<span>🐦</span>` : ""}<div><b>${own ? "小绿 · 小周的 Agent" : `${escapeHtml(person.name)}的 Agent`}</b><p>${escapeHtml(t.text)}</p></div>${own ? "" : `<span>🦊</span>`}</div>`; }).join("")
+    : person.facts.map((fact, factIndex) => `<div class="a2a-chat-row ${factIndex % 2 ? "mine" : "peer"}">${factIndex % 2 ? `<span>🐦</span>` : ""}<div><b>${factIndex % 2 ? "小绿" : `${escapeHtml(person.name)}的 Agent`}</b><p>${escapeHtml(fact)}</p></div>${factIndex % 2 ? "" : `<span>🦊</span>`}</div>`).join("");
+  return `<main class="screen candidate-a2a-page">${topbar("A2A 沟通记录", `小绿 × ${escapeHtml(person.name)}的 Agent`, true)}<div class="a2a-disclosure"><span>🔒</span><p><strong>仅展示本次匹配相关内容</strong><br>不交换联系方式，也不使用未授权的个人信息。</p></div><div class="a2a-record-log"><div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 小周的 Agent</b><p>小周想找同行者一起“${escapeHtml(server.draft?.idea || ui.draft.idea || actionTitle())}”，时间是${escapeHtml(server.draft?.time || ui.draft.time || "你发布时选择的时间")}，地点在${escapeHtml(server.draft?.place || ui.draft.place || "你发布时选择的地点")}。</p></div></div><div class="a2a-chat-row peer"><div><b>${escapeHtml(person.name)}的 Agent</b><p>${escapeHtml(person.name)}对这项活动有兴趣。我可以核对与这次同行有关的过往经验。</p></div><span>🦊</span></div>${midRows}<div class="a2a-chat-row mine"><span>🐦</span><div><b>小绿 · 匹配结论</b><p>${escapeHtml(person.reason)} 最终是否选择，仍由小周本人决定。</p></div></div></div></main>`;
 }
 
 function ActionsPage() {
@@ -762,11 +772,14 @@ document.addEventListener("click", async event => {
   if (action === "publish-reset") return startPublishFlow();
   if (action === "edit-draft") { ui.publishStep = 0; return render(); }
   if (action === "confirm-publish") {
-    if (!await api("/api/gatherings/publish", ui.draft)) return;
+    // 乐观匹配：立刻进「小绿穿过校园」主题动画，发布在后台静默跑（真实管线：捏人格→匹配→A2A），
+    // 完成后再切候选，把 ~20s 的等待变成有品牌感的过程展示，而不是冻结的 spinner。
     ui.route = "matching";
     render();
-    setTimeout(() => { if (ui.route === "matching") { ui.route = "candidates"; render(); } }, 1500);
-    return;
+    const ok = await api("/api/gatherings/publish", ui.draft, { silent: true });
+    if (!ok) { ui.route = "publish"; ui.publishStep = 6; return render(); }
+    if (ui.route === "matching") ui.route = "candidates";
+    return render();
   }
   if (action === "decline-seed") { ui.route = null; ui.tab = "mailbox"; notify("没关系，小绿会继续帮你留意"); return render(); }
   if (action === "join-seed") { const seedId = ui.route?.split(":")[1]; const joinedSeed = seeds.find(s => s.id === seedId); if (seedId && !ui.joinedSeeds.includes(seedId)) ui.joinedSeeds.push(seedId); notify(`已把参与意向送给${joinedSeed?.peer || "对方"}，等ta确认后就能一起了。最终决定仍由对方完成`); return render(); }

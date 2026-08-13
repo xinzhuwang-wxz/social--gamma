@@ -25,6 +25,7 @@ export type WorldCandidate = {
   note: string;
   facts: string[];
   reason: string;
+  a2a?: { turns: { agent: string; text: string }[] } | null; // 真实两位 Agent 的 A2A 对话（前端展示）
 };
 
 export type WorldSnapshot = {
@@ -137,6 +138,7 @@ function candidateFromMatch(
     note: match.note ?? match.reasons[0]?.text ?? "条件合适，值得聊聊",
     facts: match.a2a?.commonalities?.length ? match.a2a.commonalities : reasons,
     reason: reasons[0] || "匹配条件较好", // 只取最贴切的一条，避免候选卡过长
+    a2a: match.a2a ? { turns: match.a2a.turns } : null, // 透传真实 A2A 对话给前端展示
   };
 }
 
