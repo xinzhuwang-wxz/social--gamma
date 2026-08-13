@@ -64,7 +64,7 @@ export async function runMatching(seedId: string, restrictSimTo?: string[]) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  // 并行生成 A2A
+  // 并行生成 A2A（保留：A2A 是红线#3 的技术栈体现；已用 mini + 2-3 轮轻量化）
   const withA2a = await Promise.all(
     deliverable.map(async (r) => {
       const cand = candidates.find((c) => c.id === r.candidateId);

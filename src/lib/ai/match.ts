@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { fastModel, strongModel, NO_THINK } from "./provider";
+import { fastModel, NO_THINK } from "./provider";
 import { matchEvalSchema, a2aSchema } from "./schemas";
 import type { SeedCard } from "./schemas";
 
@@ -26,7 +26,7 @@ export async function matchCandidates(
   candidates: CandidateProfile[]
 ) {
   const { object } = await generateObject({
-    model: strongModel, // 严格 enum 由 lite 稳产（避免 mini 偶发 schema 失败→空候选）
+    model: fastModel, // type 已放宽为 string，mini 可稳过 → 快；DB reasons 列本就是 string
     schema: matchEvalSchema,
     providerOptions: NO_THINK,
     system: `你是校园行动社交平台的匹配信使。发起人发布了一颗行动种子，你要评估每位候选人的适配度。
@@ -59,14 +59,14 @@ export async function a2aDialogue(
     model: fastModel,
     schema: a2aSchema,
     providerOptions: NO_THINK,
-    system: `你要生成两位用户的个人 Agent（信使鸟）之间的一段预热对话。owner 方 Agent 代表发起人，candidate 方 Agent 代表候选人。
+    system: `你要生成两位用户的个人 Agent（花匠）之间的一段预热对话。owner 方 Agent 代表发起人，candidate 方 Agent 代表候选人。
 目的：判断双方基本条件是否适配、找出与本次事件相关的共同点、为后续真人破冰准备素材。
 硬性边界（违反即失败）：
 - Agent 不替用户承诺参与（只能说「他可能会感兴趣」，不能说「他答应了」）
 - 不决定时间地点方案
 - 不交换联系方式或敏感信息
 - 只使用下面给出的信息，不编造用户没有的经历
-- 语气像两只尽职的信使鸟在互相介绍自己的主人，轻松但克制`,
+- 语气像两只尽职的花匠在互相介绍自己的主人，轻松但克制`,
     prompt: `## 行动种子
 ${JSON.stringify(seed, null, 2)}
 
@@ -76,7 +76,7 @@ ${JSON.stringify(owner, null, 2)}
 ## 候选人（candidate 的主人）
 ${JSON.stringify(candidate, null, 2)}
 
-生成 2-3 轮对话、共同点与破冰素材。`,
+生成 2-3 轮简短对话、2 条共同点、2 条破冰素材。`,
   });
   return object;
 }
