@@ -122,6 +122,102 @@
 .experience-card small { color: var(--muted); font-size: 10px; }
 .experience-card h3 { margin: 3px 0; font-size: 11px; }
 .experience-card p { margin: 0; color: var(--muted); font-size: 10px; }
+.profile-name-link { display: block; border: 0; padding: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.letter-avatar[data-person-profile], .avatar[data-person-profile], .agent-avatar[data-person-profile] { border: 0; cursor: pointer; }
+.person-profile-summary { margin-top: 12px; padding: 16px; }
+.person-profile-summary > small { color: var(--muted); font-size: 9px; font-weight: 800; }
+
+/* A person's profile is their garden world, not a social-media profile feed. */
+.person-garden-world { background: #dce8bd; }
+.person-garden-background { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+.person-garden-hud { position: absolute; z-index: 45; left: 13px; right: 13px; top: 31px; display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,.66); border-radius: 18px; padding: 10px; color: white; background: rgba(48,70,43,.63); box-shadow: 0 8px 22px rgba(36,53,30,.18); backdrop-filter: blur(10px); }
+.person-garden-hud > button { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.46); border-radius: 50%; color: white; background: rgba(255,255,255,.14); font-size: 23px; }
+.person-garden-hud small, .person-garden-hud strong, .person-garden-hud span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-garden-hud small { font-size: 8px; opacity: .76; }
+.person-garden-hud strong { margin: 2px 0; font-size: 15px; }
+.person-garden-hud span { font-size: 8px; opacity: .9; }
+.person-gardener { width: 100px; height: 126px; position: absolute; z-index: 31; left: 50%; top: 48%; transform: translate(-50%,-50%); border: 0; padding: 0; color: #4e5435; background: transparent; filter: drop-shadow(0 7px 6px rgba(52,67,35,.25)); }
+.person-gardener img { width: 100%; height: 100%; display: block; object-fit: contain; animation: pet-bob 1.8s ease-in-out infinite; }
+.person-gardener span { width: max-content; position: absolute; left: 58%; bottom: 1px; transform: translateX(-10%); border: 1px solid rgba(103,104,61,.28); border-radius: 999px; padding: 5px 8px; background: rgba(255,253,229,.92); box-shadow: 0 4px 12px rgba(58,62,35,.14); font-size: 8px; font-weight: 900; }
+.person-experience-flowers { position: absolute; z-index: 27; inset: 0; pointer-events: none; }
+.person-experience-flower { width: 72px; height: 91px; position: absolute; border: 0; padding: 0; color: #4f5434; background: transparent; pointer-events: auto; filter: drop-shadow(0 5px 5px rgba(55,67,32,.2)); }
+.person-experience-flower img { width: 62px; height: 72px; display: block; margin: 0 auto; object-fit: contain; transform-origin: 50% 90%; animation: decor-sway 3.2s ease-in-out infinite alternate; }
+.person-experience-flower span { display: block; width: max-content; max-width: 92px; position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); overflow: hidden; border-radius: 999px; padding: 4px 7px; background: rgba(255,253,229,.92); box-shadow: 0 3px 9px rgba(54,61,34,.14); font-size: 7px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.flower-position-1 { left: 12%; top: 36%; }
+.flower-position-2 { right: 11%; top: 48%; }
+.flower-position-3 { left: 22%; top: 67%; }
+.person-garden-hint { position: absolute; z-index: 44; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; border: 1px solid rgba(255,255,255,.65); border-radius: 999px; padding: 7px 10px; color: white; background: rgba(48,70,43,.62); box-shadow: 0 6px 16px rgba(37,52,31,.16); backdrop-filter: blur(8px); font-size: 8px; font-weight: 800; }
+.profile-world-modal { z-index: 85; }
+.gardener-profile-card, .garden-memory-card { width: 100%; position: relative; border: 2px solid rgba(100,96,57,.72); border-radius: 24px; padding: 20px; color: #4e4b34; background: #fff9de; box-shadow: 0 20px 50px rgba(37,45,25,.34); text-align: center; }
+.profile-modal-close { width: 32px; height: 32px; position: absolute; z-index: 2; right: 13px; top: 13px; border: 0; border-radius: 50%; color: #625f42; background: #ece2b8; font-size: 19px; }
+.gardener-profile-card > img { width: 138px; height: 138px; display: block; margin: -6px auto 2px; object-fit: contain; }
+.gardener-profile-card > small, .garden-memory-card > small { color: #85805e; font-size: 9px; font-weight: 900; letter-spacing: .6px; }
+.gardener-profile-card h2, .garden-memory-card h2 { margin: 5px 0 8px; font-size: 22px; }
+.gardener-profile-card > p, .garden-memory-card > p { margin: 0; color: #6f6a50; font-size: 11px; line-height: 1.7; }
+.gardener-profile-card dl { margin: 13px 0; border-radius: 14px; padding: 11px; background: rgba(223,232,190,.58); text-align: left; }
+.gardener-profile-card dt { margin-bottom: 4px; color: #738044; font-size: 8px; font-weight: 900; }
+.gardener-profile-card dd { margin: 0; font-size: 10px; line-height: 1.6; }
+.gardener-profile-card blockquote { margin: 0; color: #6c673f; font-family: "Songti SC", serif; font-size: 11px; line-height: 1.7; }
+.garden-memory-card > img { width: 116px; height: 136px; display: block; margin: -5px auto 3px; object-fit: contain; }
+.garden-memory-card footer { margin-top: 14px; border-top: 1px dashed #cfbf8c; padding-top: 12px; color: #817859; font-size: 9px; line-height: 1.6; }
+
+/* Chat identity is explicit: partner on the left, 一寸欢喜 on the right. */
+.agent-message.partner-agent { grid-template-columns: 31px 1fr; margin-right: auto; margin-left: 0; }
+.agent-message.partner-agent .agent-avatar { order: 0; }
+.agent-message.partner-agent > div { border-radius: 5px 17px 17px 17px; background: #f6e6d7; }
+.agent-message.my-agent { grid-template-columns: 1fr 31px; margin-right: 0; margin-left: auto; }
+.agent-message.my-agent .agent-avatar { order: 2; }
+.agent-message.my-agent > div { border-radius: 17px 5px 17px 17px; background: #fff4d9; }
+.message-entry { display: grid; margin: 10px 0; }
+.message-entry > small { margin: 0 6px 3px; color: var(--muted); font-size: 8px; }
+.message-entry .message { margin: 0; }
+.message-entry.mine { justify-items: end; }
+.message-entry.theirs { justify-items: start; }
+.chat-avatar.growing-icon { display: grid; place-items: center; overflow: visible; background: #eff3db; }
+.chat-avatar.growing-icon .plant { transform: scale(.55); }
+.growing-garden-slot { width: 86px; height: 106px; display: grid; justify-items: center; align-content: end; }
+.growing-garden-slot .plant { margin-bottom: -9px; transform: scale(.72); transform-origin: bottom center; }
+.growing-garden-slot > span { max-width: 96px; overflow: hidden; border: 1px solid rgba(112,120,70,.22); border-radius: 999px; padding: 4px 7px; background: rgba(255,253,226,.93); box-shadow: 0 3px 9px rgba(55,62,34,.13); font-size: 7px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.conversation-list > button.action-list-item { width: 100%; border: 0; color: inherit; font: inherit; text-align: left; }
+.chat-tabs button b { margin-left: 3px; border-radius: 999px; padding: 1px 5px; color: #fff; background: #899a47; font-size: 8px; }
+.ended-chat-list { padding-bottom: 26px; }
+.ended-chat-item { min-height: 92px; }
+.ended-chat-item > i { color: var(--muted); font-style: normal; font-size: 20px; }
+.completed-garden-flower { width: 58px; height: 74px; z-index: 2; }
+.completed-garden-flower img { width: 58px; height: 70px; }
+.completed-garden-flower span { display: none; }
+.ongoing-garden-sprout { z-index: 8; }
+
+.identity-message { display: flex; align-items: flex-end; gap: 7px; margin: 10px 0; }
+.identity-message.mine { flex-direction: row-reverse; }
+.identity-message .message-entry { max-width: 76%; margin: 0; }
+.speaker-avatar { width: 34px; height: 34px; flex: 0 0 34px; overflow: hidden; border: 1px solid rgba(93,103,57,.18); border-radius: 50%; padding: 2px; background: #fffaf0; }
+.speaker-avatar img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.message-entry small em, .agent-message strong em { margin-left: 4px; border-radius: 999px; padding: 2px 5px; color: #64733d; background: #eef1d8; font-size: 7px; font-style: normal; font-weight: 800; }
+.portrait-agent img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.event-participant-row { display: flex; gap: 7px; margin: 14px 0; overflow-x: auto; }
+.event-participant-row button { min-width: 54px; border: 0; color: #6f6a50; background: transparent; font-size: 8px; }
+.event-participant-row img { width: 42px; height: 42px; display: block; margin: 0 auto 4px; border: 1px solid #dfd4ad; border-radius: 50%; padding: 2px; background: #fffaf0; object-fit: contain; }
+.event-story { margin: 14px 0; border-radius: 18px; padding: 15px; background: rgba(239,237,203,.58); }
+.event-story h3 { margin: 0 0 9px; color: #59633b; font-size: 13px; }
+.event-story p { margin: 8px 0 0; color: #746f58; font-size: 10px; line-height: 1.7; }
+.event-story p b { display: block; color: #879349; font-size: 8px; }
+.photo-placeholder { height: 112px; display: grid; place-items: center; color: #948d6d; background: linear-gradient(145deg,#eeebd6,#ded8b6); font-size: 9px; }
+.history-chat blockquote { margin: 8px 0 14px; border-radius: 14px; padding: 14px; color: #6f674c; background: #fffdf6; font-family: "Songti SC", serif; line-height: 1.7; }
+.history-chat-page .chat-log { padding-bottom: 28px; }
+.history-stage { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 9px; margin: 18px 0 10px; }
+.history-stage > span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: white; background: #879349; font-size: 11px; font-weight: 900; }
+.history-stage small, .history-stage strong { display: block; }
+.history-stage small { color: #879349; font-size: 8px; font-weight: 900; }
+.history-stage strong { margin-top: 2px; color: #4f513f; font-size: 11px; }
+.history-stage.complete > span { background: #d49b50; }
+.completed-progress .growth-plant img { width: 58px; height: 54px; object-fit: contain; }
+.history-bloom-card { border-radius: 20px; padding: 16px; background: #fffaf0; box-shadow: var(--card-shadow); text-align: center; }
+.history-bloom-card > img { width: 102px; height: 118px; object-fit: contain; }
+.history-bloom-card blockquote { margin: 4px 0 13px; color: #71684d; font-family: "Songti SC", serif; font-size: 11px; line-height: 1.7; }
+.portrait-agent { overflow: hidden; padding: 0; }
+.portrait-agent img { width: 100%; height: 100%; display: block; object-fit: contain; }
 
 .a2a-disclosure { display: grid; grid-template-columns: 26px 1fr; gap: 8px; border-radius: 15px; padding: 11px 12px; background: var(--soft); }
 .a2a-disclosure p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.55; }
