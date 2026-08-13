@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { fastModel, strongModel, NO_THINK } from "./provider";
+import { fastModel, NO_THINK } from "./provider";
 import { matchEvalSchema, a2aSchema } from "./schemas";
 import type { SeedCard } from "./schemas";
 
@@ -26,7 +26,7 @@ export async function matchCandidates(
   candidates: CandidateProfile[]
 ) {
   const { object } = await generateObject({
-    model: strongModel, // 严格 enum 由 lite 稳产（避免 mini 偶发 schema 失败→空候选）
+    model: fastModel, // type 已放宽为 string，mini 可稳过 → 快；DB reasons 列本就是 string
     schema: matchEvalSchema,
     providerOptions: NO_THINK,
     system: `你是校园行动社交平台的匹配信使。发起人发布了一颗行动种子，你要评估每位候选人的适配度。

@@ -36,7 +36,7 @@ export const matchEvalSchema = z.object({
       reasons: z
         .array(
           z.object({
-            type: z.enum(["time", "place", "interest", "experience"]),
+            type: z.string().describe("匹配维度，取 time / place / interest / experience 之一"),
             text: z.string().describe("一句话理由，面向候选人展示"),
           })
         )
