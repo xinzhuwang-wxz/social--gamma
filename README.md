@@ -1,66 +1,151 @@
+<div align="center">
+
 # 社交森林 · 发芽 🌱
 
-> 种下一个行动愿望，让它长成一段真实的共同经历。
+**让想做的事，真的发生。**
 
-抖音 AI 社交赛题决赛作品：校园搭子行动社交 H5。用户用一句话种下「行动种子」，信使鸟（个人 Agent）真实调用 LLM 澄清需求、A2A 匹配投递；候选人回应后由发起人**亲自**选人成局；行动房间里事件 AI 只破冰一次、在用户主动「推进」时协助跨过决策卡点；「行动约定」双确认后植物结出花苞，行动真实完成、双方确认后开花；双方都愿意再组队时生成共同回忆进入各自「森林」，并可「结出新种子」再约一次——完整闭环。
+_A campus companion-finding H5 where you plant an "action seed", your AI gardener finds real teammates, and a real meetup blooms into a shared memory._
 
-- 产品蓝本与视觉规范：`docs/social-forest-prd-v0.md`
-- 领域词汇表（写码前必读）：`CONTEXT.md`
-- PRD 与切片：GitHub Issues #1–#9
+种下一个「行动愿望」，你的个人小花匠帮它找到同行者，双方**亲自**确认后成局；<br/>
+行动真实完成、彼此都愿意再见时，它才长成一段共同经历，收进你们的森林。
 
-## 前端（世界原型 · 直接复用合作方前端）
+抖音 AI 社交赛题作品 · 校园搭子行动社交 · 全链路真实调用大模型（火山方舟 ARK / 豆包）
 
-演示前端是合作方的「花园即世界」单页应用，**原样**放在 `public/world/`（`index.html` / `prototype.js` / `prototype.css` / `assets/`）。根路径 `/` 由 `next.config.ts` 重写到 `public/world/index.html`，页面用 `<base href="/world/">` 让相对资源解析到 `/world/`，而 `/api/*` 为绝对路径直连本项目后端——前后端在同一项目内合为一体，以后前端调整都在这里进行。
+</div>
 
-它调用的 8 个端点（`/api/demo`、`/api/gatherings/{publish,select,check-in,archive}`、`/api/chat/messages`、`/api/proposals/confirm`、`/api/demo/reset`）在 `src/app/api/**` + `src/lib/demo/*` 实现，其中**发布捏候选人 / 选人开场 / 聊天回复**接的是真实 LLM（`src/lib/demo/sim.ts`，豆包 mini）——用户侧无感地「真有人正好合拍」。植物阶段（SEED→…→FOREST）只由已确认事实派生（`derivePlantStage`），AI 不能直接写。
+---
 
-## 本地运行
+## 📱 页面一览
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-garden.png" width="190"/><br/><sub><b>花园首页</b><br/>6 个关系花坛 · 花园即世界</sub></td>
+    <td align="center"><img src="docs/screenshots/02-clarify.png" width="190"/><br/><sub><b>种子澄清</b><br/>小花匠真实 LLM 追问</sub></td>
+    <td align="center"><img src="docs/screenshots/03-candidates.png" width="190"/><br/><sub><b>匹配候选</b><br/>AI 出候选 · 真人选择</sub></td>
+    <td align="center"><img src="docs/screenshots/04-a2a.png" width="190"/><br/><sub><b>A2A 沟通记录</b><br/>🔒 不换联系方式</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/05-chat-pact.png" width="190"/><br/><sub><b>行动群聊</b><br/>事件主持人小苗 + 行动约定</sub></td>
+    <td align="center"><img src="docs/screenshots/06-bloom-redline.png" width="190"/><br/><sub><b>打卡开花</b><br/>双方确认才生成回忆</sub></td>
+    <td align="center"><img src="docs/screenshots/08-forest.png" width="190"/><br/><sub><b>森林花朵仓库</b><br/>关系花按等级/人筛选</sub></td>
+    <td align="center"><img src="docs/screenshots/07-mailbox.png" width="190"/><br/><sub><b>种子信箱</b><br/>每封邀约配发起人花匠</sub></td>
+  </tr>
+</table>
+
+---
+
+## 🌿 一颗种子的完整旅程
+
+```
+种子 SEED ──► 发芽 SPROUT ──► 长叶 LEAF ──► 生长 GROWING ──► 花苞 BUD ──► 开花 BLOOM ──► 入林 FOREST
+   │             │              │             │              │            │              │
+ 一句话愿望    双方成局       第一次真人      整理行动约定     双方确认      双方打卡        双方都愿意再组队
+ + 小花匠澄清   两 Agent 交接   在群里对话      (pact 草稿)     确认约定       完成           → 生成共同回忆
+```
+
+1. **种下种子** — 一句话说出想做的事，个人小花匠**小羊**用真实大模型逐步澄清（时间 / 地点 / 同行偏好 + 一条针对活动的临时追问）。
+2. **匹配投递** — 后端即时"捏"出合拍的同行者并完成一次 **A2A（Agent 对 Agent）预热**；匹配理由只来自双方确认过的事实。
+3. **真人选择** — AI 只整理候选与草稿，**由发起人本人**从候选里选人成局，没被选中的人由小花匠礼貌回复。
+4. **行动群聊** — 中立事件主持人**小苗**在需要时帮忙破冰、把你们聊到的时间地点**整理成一份「行动约定」**——它只起草，不替任何人确认。
+5. **双确认 → 打卡** — 双方各自确认行动约定（花苞），行动真实发生后回来打卡（开花）。
+6. **共同回忆** — 只有**双方都确认完成、且都愿意再组队**时，这段经历才物化成一朵花进入双方森林；任一方拒绝则不生成，也不告知是谁。
+7. **关系进化** — 同一段关系的多朵经历花可以**共鸣合成**为更高阶的「关系花」（L1 → L100，接入 Seedream 图生图），原花与原手账永久保留。
+
+---
+
+## 🤖 三种智能体，各司其职
+
+| 角色 | 是谁 | 做什么 | 不做什么 |
+| --- | --- | --- | --- |
+| **小羊** | 你的个人小花匠（发起人 Agent） | 澄清愿望、投递种子、A2A 代聊、保存共同经历 | 不代你承诺、不替你选人 |
+| **对方的小花匠** | 候选人的个人 Agent | 代主人介绍、核对与本次行动相关的过往经历 | 不交换联系方式 / 敏感信息 |
+| **小苗** | 中立「事件主持人」（行动 AI） | 破冰、在卡点处推进、把讨论整理成行动约定草稿 | 从不替用户确认或决定安排 |
+
+---
+
+## 🚦 四条产品红线（不可违反）
+
+> 这是「AI 社交」区别于「AI 代聊」的底线，贯穿全部实现。
+
+1. **AI 只出候选与草稿，连接对象由真人选择。**
+2. **AI 不代答、不代诺、不自动确认安排。**
+3. **A2A 对话必须明确标注为 Agent 对话，且不交换联系方式 / 敏感信息。**
+4. **共同回忆需双方都确认完成、且都愿意再组队才生成；任一方拒绝则不生成，且不告知是谁拒绝。**
+
+---
+
+## 🏗️ 技术栈
+
+- **前端** — 「花园即世界」原生 JS 单页应用（`public/world/`），根路径 `/` 由 `next.config.ts` 重写过去；手绘绘本风 SVG/PNG 世界资产（花匠 / 植物 7 阶段 / 关系花 / 花园场景）。
+- **后端** — Next.js 16（App Router · standalone 输出）· API Routes（`src/app/api/**`）+ 领域逻辑（`src/lib/**`）。
+- **AI** — Vercel AI SDK（`ai` + `@ai-sdk/openai-compatible`）→ **火山方舟 ARK / 豆包**（对话用 `doubao-seed-2.0`，严格 `json_schema` 结构化输出、交互路径关闭深度思考）；关系花图生图接 **Seedream**（`doubao-seedream`）。
+- **数据** — Drizzle ORM + libsql（SQLite，本地 `file:` → 可平滑切 Turso）。
+- **其它** — Zod 4 结构化校验 · sharp 素材处理 · Vitest 单测 · 自托管 LXGW WenKai + Noto Sans SC 字体。
+
+> 植物阶段（SEED→…→FOREST）只由「已确认的房间事实」派生，AI 不能直接写；这既是产品语义，也是红线的技术保证。
+
+---
+
+## 🚀 本地运行
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 填入 ARK_API_KEY（火山方舟）
-pnpm db:push && pnpm db:seed # 建库 + 写入候选池 persona
-pnpm dev                     # http://localhost:3000（手机与电脑同网段可直接访问 Network 地址）
+cp .env.example .env.local     # 填入 ARK_API_KEY（火山方舟密钥）
+pnpm db:push && pnpm db:seed    # 建库 + 写入候选池 persona
+pnpm dev                        # http://localhost:3000
 ```
 
-## 验证（全部真实 LLM，无 mock）
+必要环境变量见 [`.env.example`](.env.example)：`ARK_API_KEY` / `ARK_BASE_URL` / `ARK_CHAT_MODEL` / `ARK_IMAGE_MODEL` / `DATABASE_URL`。
+
+## ✅ 质量校验
 
 ```bash
-pnpm test                       # AI 能力冒烟（6 条，真实 ARK）
-node scripts/demo-journey.mjs   # 新前端契约端到端 21 断言（真实 LLM 捏候选人/聊天 + 阶段机）
+pnpm typecheck   # TypeScript 类型检查
+pnpm test        # Vitest 单测（含 AI 冒烟，真实 ARK）
+pnpm build       # 生产构建（standalone）
+pnpm lint        # ESLint
 ```
 
-> 前端已统一为 `public/world/` 的世界原型 SPA，旧的 React 页面已移除。`src/app/api/{rooms,seeds,…}` 是早期多人后端引擎，当前 SPA 不调用它，保留备用。
+## 📦 服务器部署
 
-## 服务器部署
+一键脚本（安装 → 构建 → 建库 → 装配 standalone → systemd 以普通用户运行、CAP 绑 80 端口）：
 
 ```bash
-docker build -t social-forest .
-docker run -d -p 3000:3000 \
-  -e ARK_API_KEY=你的火山方舟密钥 \
-  -v social-forest-data:/app/data \
-  social-forest
+# 服务器仓库根目录，普通用户执行；前置：已创建 .env.local（含 ARK_API_KEY）
+bash deploy/run.sh
 ```
 
-或免 Docker：
+本地一行同步到服务器（排除 `node_modules` / `.next` / 密钥 / 数据库）：
 
 ```bash
-pnpm build
-cp -r public .next/standalone/            # standalone 不自动带 public/（含 world SPA）
-cp -r .next/static .next/standalone/.next/ # 也不自动带前端静态资源
-pnpm db:push && pnpm db:seed              # 首次建库 + persona
-node .next/standalone/server.js           # 先设好 .env.local
+SERVER=ubuntu@<你的服务器> bash deploy/upload.sh
 ```
 
-（Docker 已在镜像内完成上述拷贝，无需手动。）
+也提供 `Dockerfile`。部署细节见 [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)。
 
-## 技术栈
+---
 
-Next.js 16（App Router/Turbopack）· Vercel AI SDK（`@ai-sdk/openai-compatible` → 火山方舟 doubao-seed-2.0，严格 json_schema 结构化输出，交互路径关闭深度思考）· Drizzle + libsql（SQLite，file→Turso 可平滑切换）· Tailwind v4 · motion · 手绘风 SVG 世界资产（信使鸟/植物 3科×6阶段/花园场景）· LXGW WenKai + Noto Sans SC 自托管。
+## 🗂️ 目录结构
 
-## 产品红线
+```
+public/world/            「花园即世界」前端 SPA（prototype.js / *.css / assets / world-layer.js）
+src/app/api/             API 路由：clarify · gatherings · chat · rooms/[id]/{pact,complete,memory} · bloom-fusions · demo
+src/lib/
+  ├─ ai/                 provider · match(A2A) · clarify · room(事件主持人) · schemas · illustrate(图生图)
+  ├─ world-gathering.ts  核心：发布→匹配→成局→阶段派生 快照
+  ├─ event-coordinator.ts / pacts.ts   事件主持人推进 + 行动约定
+  ├─ bloom-fusion.ts     关系花进化（合成 / 等级 / 图生图请求）
+  ├─ sim.ts              模拟同行者（异步自动确认，让演示闭环）
+  └─ db/                 Drizzle schema + seed
+deploy/                  run.sh · upload.sh · setup.sh · RUNBOOK.md
+docs/                    PRD · ADR · 领域文档 · 截图
+```
 
-1. AI 只出候选与草稿，连接对象由真人选择；
-2. AI 不代答、不代诺、不自动确认安排；
-3. A2A 对话必须明确标注，不交换联系方式；
-4. 共同回忆需双方确认完成且双方愿意再组队，任一方拒绝不生成、不告知是谁。
+## 📚 延伸阅读
+
+- 领域词汇表（写码 / 文档前必读）：[`CONTEXT.md`](CONTEXT.md)
+- 产品蓝本与视觉规范：[`docs/social-forest-prd-v0.md`](docs/social-forest-prd-v0.md)
+- 关系花进化设计：[`docs/bloom-fusion-v0.md`](docs/bloom-fusion-v0.md)
+- 面向 Agent 的协作约定：[`CLAUDE.md`](CLAUDE.md)
+
+<div align="center"><sub>社交森林 · 让想做的事真的发生</sub></div>
