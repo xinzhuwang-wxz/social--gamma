@@ -15,7 +15,7 @@ DB_PATH="$APP_DIR/data/social-forest.db"
 [ -f .env.local ] || { echo "!! 缺少 .env.local（含 ARK_API_KEY），请先创建。参考 .env.example"; exit 1; }
 
 echo "==> [1/5] 安装依赖"
-pnpm install --frozen-lockfile
+CI=true pnpm install --frozen-lockfile
 
 echo "==> [2/5] 构建（standalone）"
 pnpm build
