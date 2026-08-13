@@ -80,7 +80,7 @@ const gardenPlants = Object.fromEntries(completedEvents.map(event => [event.id, 
 const gardenFlowerStyles = [
   "left:58%;top:33.5%;transform:scale(.58)", "left:64%;top:33.5%;transform:scale(.58)",
   "left:26.5%;top:41.2%;transform:scale(.58)", "left:32.5%;top:41.2%;transform:scale(.58)",
-  "left:61%;top:42.5%;transform:scale(.58)", "left:67%;top:42.5%;transform:scale(.58)",
+  "left:61%;top:44%;transform:scale(.58)", "left:67%;top:44%;transform:scale(.58)",
   "left:43.8%;top:63.7%;transform:scale(.62)", "left:36.3%;top:77.6%;transform:scale(.62)",
 ];
 
@@ -402,7 +402,7 @@ function WorldGardenPage() {
       ${sceneImage(world.scenes.garden.image, "绘本风社交花园：小屋、信箱、花圃、小桥和溪流")}
       <div class="garden-growth-layer" aria-label="花园中的行动植物">
         ${completedEvents.map((item, index) => `<button class="real-plant-slot completed-garden-flower" style="${gardenFlowerStyles[index]}" data-memory="${item.id}" aria-label="打开已完成经历：${escapeHtml(item.title)}"><img src="assets/${item.asset}" alt=""><span>${escapeHtml(item.title)}</span></button>`).join("")}
-        <button class="real-plant-slot growing-garden-slot ongoing-garden-sprout" style="left:46%;top:48%;transform:scale(.68)" data-route="hackathon-chat" aria-label="打开正在发芽的行动：一起完成生长黑客松">${plant("SPROUT", "sm", "gold")}<span>生长黑客松 · 发芽</span></button>
+        <button class="real-plant-slot growing-garden-slot ongoing-garden-sprout" style="left:55%;top:48%;transform:scale(.68)" data-route="hackathon-chat" aria-label="打开正在发芽的行动：一起完成生长黑客松">${plant("SPROUT", "sm", "gold")}<span>生长黑客松 · 发芽</span></button>
       </div>
       ${world.objectEffectsMarkup(ui.openingObject)}
       <button class="world-hotspot" data-anchor="home" style="${world.anchorStyle("garden", "home")}" data-action="open-home" aria-label="进入我的家"></button>
