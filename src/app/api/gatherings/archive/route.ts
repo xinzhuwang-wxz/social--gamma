@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getState, appendEvent, snapshot } from "@/lib/demo/state";
 import { readJson } from "@/lib/http";
+import { currentUser } from "@/lib/session";
+import { archiveWorld } from "@/lib/world-gathering";
+
 export async function POST(req: NextRequest) {
-  const body = (await readJson(req)) ?? {};
-  const s = getState();
-  if (!s.checkedIn) return NextResponse.json({ error: "请先完成打卡" }, { status: 409 });
-  s.archived = true; appendEvent("MEMORY_ARCHIVED", body);
-  return NextResponse.json(snapshot());
+  const me = await currentUser();
+  if (!me) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = (await readJson<{ text?: string }>(req)) ?? {};
+  const snap = await archiveWorld(me, body.text ?? "");
+  if (!snap) return NextResponse.json({ error: "请先完成打卡" }, { status: 409 });
+  return NextResponse.json(snap);
 }

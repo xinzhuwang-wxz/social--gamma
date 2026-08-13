@@ -48,6 +48,10 @@ type WorldSessionState = {
   roomId?: string;
   selectedCandidate?: string;
   cleared?: boolean;
+  slots?: { time?: boolean; place?: boolean }; // 时间/地点确认（people 由是否成局派生）
+  checkedIn?: boolean;
+  archived?: boolean;
+  memoryText?: string;
   events: WorldSnapshot["events"];
 };
 
@@ -111,17 +115,6 @@ function draftFromSeed(seed: typeof schema.seeds.$inferSelect): Required<WorldDr
     habit: seed.requirements.flexible[1] ?? "",
     activityDetail: seed.requirements.must[0] ?? "",
   };
-}
-
-function stageFromRoom(stage?: string | null) {
-  if (!stage) return "SEED";
-  return {
-    sprout: "SPROUT",
-    leafing: "LEAF",
-    growing: "GROWING",
-    bud: "BUD",
-    bloom: "BLOOM",
-  }[stage] ?? "SEED";
 }
 
 function candidateFromMatch(
@@ -283,6 +276,41 @@ export async function resetWorldGathering(userId: string) {
   all[userId] = { events: [], cleared: true };
 }
 
+/** 确认时间/地点槽位（写入行动约定，人来点，AI 不代确认） */
+export async function confirmWorldSlot(
+  user: typeof schema.users.$inferSelect,
+  slot: "time" | "place"
+): Promise<WorldSnapshot> {
+  const s = stateFor(user.id);
+  s.slots = { ...s.slots, [slot]: true };
+  appendEvent(user.id, "SLOT_CONFIRMED", { slot });
+  return worldSnapshot(user.id);
+}
+
+/** 真实行动打卡（需已成局 + 时间地点都确认）→ 开花 */
+export async function checkInWorld(
+  user: typeof schema.users.$inferSelect
+): Promise<WorldSnapshot | null> {
+  const snap = await worldSnapshot(user.id);
+  if (!(snap.slots.people && snap.slots.time && snap.slots.place)) return null;
+  stateFor(user.id).checkedIn = true;
+  appendEvent(user.id, "CHECK_IN_CONFIRMED");
+  return worldSnapshot(user.id);
+}
+
+/** 归档共同回忆（需已打卡）→ 入林。红线#4：双方都愿意再组队才生成 */
+export async function archiveWorld(
+  user: typeof schema.users.$inferSelect,
+  text: string
+): Promise<WorldSnapshot | null> {
+  const s = stateFor(user.id);
+  if (!s.checkedIn) return null;
+  s.archived = true;
+  s.memoryText = text;
+  appendEvent(user.id, "MEMORY_ARCHIVED", { text });
+  return worldSnapshot(user.id);
+}
+
 export async function worldSnapshot(userId: string): Promise<WorldSnapshot> {
   const s = stateFor(userId);
   const seed = s.seedId ? await seedForOwner(s.seedId, userId) : s.cleared ? null : await latestSeedForOwner(userId);
@@ -297,15 +325,33 @@ export async function worldSnapshot(userId: string): Promise<WorldSnapshot> {
     ? await messagesForRoom(room.id, userId)
     : [];
 
+  // 阶段由已确认事实派生（与 demo/state 一致），AI 不能直接写
+  const people = Boolean(room);
+  const time = Boolean(s.slots?.time);
+  const place = Boolean(s.slots?.place);
+  const stage = s.archived
+    ? "FOREST"
+    : s.checkedIn
+      ? "BLOOM"
+      : people && time && place
+        ? "BUD"
+        : time || place
+          ? "GROWING"
+          : messages.length
+            ? "LEAF"
+            : room
+              ? "SPROUT"
+              : "SEED";
+
   return {
     published: Boolean(seed),
     selectedCandidate: s.selectedCandidate ?? null,
     messages,
-    slots: { people: Boolean(room), time: false, place: false },
-    checkedIn: room?.stage === "bloom",
-    archived: false,
+    slots: { people, time, place },
+    checkedIn: Boolean(s.checkedIn),
+    archived: Boolean(s.archived),
     events: s.events,
-    stage: stageFromRoom(room?.stage) || (seed ? "SEED" : "SEED"),
+    stage,
     candidates,
     draft: seed ? draftFromSeed(seed) : null,
     seedId: seed?.id ?? null,
