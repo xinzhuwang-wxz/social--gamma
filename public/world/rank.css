@@ -1,0 +1,237 @@
+/* 校园风物榜 —— 视觉层
+   色板遵循 PRD：页面暖白 #F7F0DE / 深橄榄 #4D572E / 主操作绿 #89974B /
+   浅绿 #DCE3AE / 木棕 #B98C50 / 土色 #A9753D / 提醒橙红 #D8613E / 水蓝 #75BAD3 */
+
+.rank-screen { position: relative; padding: 0; overflow: hidden; background: #f4efdc; }
+
+/* ---------- 地图舞台 ---------- */
+.rank-map-stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
+.rank-map-host { position: absolute; inset: 0; cursor: grab; }
+.rank-map-host:active { cursor: grabbing; }
+.rank-map-svg { width: 100%; height: 100%; display: block; }
+
+/* 纸张质感：细噪点 + 四角轻晕影 */
+.rank-map-stage::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background:
+    radial-gradient(120% 90% at 50% 30%, transparent 62%, rgba(120, 100, 52, .14) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .40 0 0 0 0 .26 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.rk-map-label {
+  font-family: "Songti SC", STSong, serif; font-size: 12.5px; fill: #8b8266;
+  paint-order: stroke; stroke: rgba(250, 245, 224, .9); stroke-width: 3px;
+  text-anchor: middle; letter-spacing: .5px; pointer-events: none;
+}
+
+/* ---------- 打卡点标记 ---------- */
+.rank-marker { cursor: pointer; outline: none; }
+.rank-marker .rk-heat { animation: rk-breathe 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.rank-marker:nth-child(2n) .rk-heat { animation-delay: -1.2s; }
+.rank-marker:nth-child(3n) .rk-heat { animation-delay: -2.3s; }
+@keyframes rk-breathe { 50% { transform: scale(1.14); opacity: .82; } }
+.rk-marker-inner { transition: transform .45s cubic-bezier(.34, 1.56, .5, 1); }
+.rk-flower { transform-box: fill-box; transform-origin: 50% 100%; }
+.rank-marker.rk-popped .rk-flower, .rank-marker .rk-pop .rk-flower { animation: rk-sway 4.5s ease-in-out infinite; }
+@keyframes rk-sway { 25% { transform: rotate(2.4deg); } 75% { transform: rotate(-2.2deg); } }
+.rank-marker-name { font-family: "Songti SC", STSong, serif; font-size: 11.5px; font-weight: 700; fill: #4d572e; text-anchor: middle; }
+.rank-marker.active .rk-marker-inner { transform: scale(1.28) !important; }
+.rank-marker:focus-visible .rk-heat { stroke: #89974b; stroke-width: 2; }
+.rk-ring-path { pointer-events: none; animation: rk-ring-in .5s cubic-bezier(.34, 1.56, .5, 1); transform-box: fill-box; transform-origin: center; }
+@keyframes rk-ring-in { from { transform: scale(.5); opacity: 0; } }
+
+/* ---------- HUD ---------- */
+.rank-hud {
+  position: absolute; z-index: 5; top: 14px; left: 13px; right: 13px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid rgba(219, 202, 164, .8); border-radius: 17px; padding: 9px 14px;
+  background: rgba(255, 250, 232, .9); box-shadow: 0 7px 20px rgba(82, 66, 37, .14);
+  backdrop-filter: blur(10px);
+}
+.rank-hud-title small { display: block; margin-bottom: 1px; color: #a8782b; font-size: 9.5px; font-weight: 800; letter-spacing: .8px; }
+.rank-hud-title h1 { margin: 0; font-family: "Songti SC", STSong, serif; font-size: 20px; letter-spacing: 2px; color: #4d572e; }
+.rank-hud-locate {
+  flex: none; min-width: 44px; height: 44px; border: 1px solid #dfcda5; border-radius: 13px;
+  color: #6f6a56; background: rgba(255, 253, 244, .9); font-size: 15px; line-height: 1.05;
+}
+.rank-hud-locate small { display: block; font-size: 8px; font-weight: 800; }
+
+.rank-hint {
+  position: absolute; z-index: 5; top: 84px; left: 50%; transform: translateX(-50%);
+  width: max-content; border-radius: 999px; padding: 7px 13px;
+  color: #6d562c; background: rgba(255, 244, 200, .95); box-shadow: 0 5px 14px rgba(82, 66, 37, .16);
+  font-size: 11px; animation: rk-hint 2.4s ease-in-out infinite;
+}
+@keyframes rk-hint { 50% { transform: translateX(-50%) translateY(4px); } }
+
+.rank-attribution {
+  position: absolute; z-index: 4; left: 14px; margin: 0; pointer-events: none;
+  bottom: calc(15.5% + 78px); transition: bottom .38s ease;
+  color: rgba(107, 99, 74, .62); font-size: 8.5px;
+}
+.rank-screen[data-sheet="half"] .rank-attribution { bottom: calc(52% + 12px); }
+.rank-screen[data-sheet="full"] .rank-attribution { opacity: 0; }
+
+/* ---------- 底部抽屉 ---------- */
+.rank-sheet {
+  position: absolute; z-index: 20; left: 0; right: 0; bottom: 0; height: 52%;
+  display: flex; flex-direction: column;
+  border: 1px solid rgba(226, 211, 177, .9); border-bottom: 0; border-radius: 26px 26px 0 0;
+  background: linear-gradient(180deg, #fffdf5 0%, #fdf8ea 100%);
+  box-shadow: 0 -14px 34px rgba(82, 66, 37, .16);
+  transition: height .42s cubic-bezier(.32, .94, .38, 1);
+}
+.rank-sheet.dragging { transition: none; }
+.rank-sheet[data-state="peek"] { height: 15.5%; }
+.rank-sheet[data-state="half"] { height: 52%; }
+.rank-sheet[data-state="full"] { height: 86%; }
+
+.rank-grip { flex: none; width: 100%; padding: 10px 0 6px; border: 0; background: transparent; cursor: grab; touch-action: none; }
+.rank-grip i { display: block; width: 44px; height: 5px; margin: 0 auto; border-radius: 999px; background: #ddceaa; transition: background .2s; }
+.rank-grip:active i { background: #b98c50; }
+
+.rank-sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 16px 92px; scrollbar-width: none; overscroll-behavior: contain; }
+.rank-sheet-body::-webkit-scrollbar { display: none; }
+.rank-sheet[data-state="peek"] .rank-sheet-body { overflow: hidden; }
+
+/* ---------- 本周气象 ---------- */
+.rank-weather { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 12px; }
+.rank-stat {
+  position: relative; padding: 9px 4px 7px; text-align: center;
+  border: 1px solid rgba(226, 211, 177, .85); border-radius: 15px; background: rgba(255, 253, 247, .9);
+}
+.rank-stat-icon { font-size: 13px; }
+.rank-stat b { display: block; margin: 1px 0 0; color: #4d572e; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rank-stat small { color: #99937a; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+
+/* ---------- 榜单 tabs ---------- */
+.rank-tabs {
+  position: relative; display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid rgba(226, 211, 177, .85); border-radius: 999px; padding: 4px;
+  background: rgba(244, 239, 220, .8); margin-bottom: 9px;
+}
+.rank-tab { position: relative; z-index: 1; height: 32px; border: 0; border-radius: 999px; padding: 0; color: #847e6c; background: transparent; font-size: 11.5px; font-weight: 800; transition: color .25s; }
+.rank-tab.active { color: #fff9ea; }
+.rank-tab-pill {
+  position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 0; width: 25%;
+  border-radius: 999px; background: linear-gradient(135deg, #91a82d, #70861f);
+  box-shadow: 0 4px 10px rgba(106, 127, 28, .28);
+  transition: transform .38s cubic-bezier(.34, 1.3, .4, 1), width .38s cubic-bezier(.34, 1.3, .4, 1);
+}
+.rank-board-noun { margin: 0 2px 10px; color: #99937a; font-size: 10px; }
+
+/* ---------- 前三名 podium ---------- */
+.rank-podium {
+  position: relative; display: grid; grid-template-columns: 1fr 1.14fr 1fr; align-items: end; gap: 8px;
+  padding: 26px 4px 18px; margin-bottom: 8px;
+}
+.rank-podium-shelf {
+  position: absolute; left: 2px; right: 2px; bottom: 8px; height: 10px;
+  border-radius: 6px; background: linear-gradient(180deg, #c99e63, #a97e46);
+  box-shadow: 0 4px 8px rgba(114, 84, 41, .28), inset 0 1.5px 0 rgba(255, 235, 195, .7);
+}
+.rank-podium-shelf::before, .rank-podium-shelf::after {
+  content: ""; position: absolute; top: 9px; width: 7px; height: 9px; border-radius: 0 0 3px 3px; background: #9a7240;
+}
+.rank-podium-shelf::before { left: 13%; }
+.rank-podium-shelf::after { right: 13%; }
+.rank-podium-item {
+  position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  border: 0; padding: 0 2px 16px; background: transparent; color: inherit; text-align: center;
+}
+.rank-podium-flower { width: 52px; height: 60px; object-fit: contain; filter: drop-shadow(0 5px 4px rgba(65, 66, 33, .18)); transform-origin: bottom; }
+.place-1 .rank-podium-flower { width: 68px; height: 80px; animation: rk-sway 5s ease-in-out infinite; }
+.rank-podium-pot { width: 34px; height: 15px; margin-top: -4px; border-radius: 3px 3px 9px 9px; background: linear-gradient(180deg, #c08a52, #a9753d); box-shadow: inset 0 2px 0 rgba(255, 226, 178, .55); }
+.place-1 .rank-podium-pot { width: 42px; height: 18px; }
+.rank-podium-medal { position: absolute; top: -4px; right: 8%; font-size: 16px; filter: drop-shadow(0 2px 2px rgba(82, 66, 37, .25)); }
+.place-1 .rank-podium-medal { font-size: 20px; right: 12%; top: -14px; }
+.rank-podium-item strong { margin-top: 7px; font-family: "Songti SC", STSong, serif; font-size: 12px; line-height: 1.3; color: #393825; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.place-1 strong { font-size: 13.5px; color: #4d572e; }
+.rank-podium-item b { margin-top: 2px; color: #a8782b; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rank-podium-item b i { font-style: normal; font-size: 15px; color: #d89a43; }
+.place-1 b i { font-size: 19px; }
+.rank-podium-item small { color: #99937a; font-size: 9px; }
+.rank-podium-item:active .rank-podium-flower { transform: scale(1.08); }
+
+/* ---------- 4-10 名列表 ---------- */
+.rank-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rank-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px;
+  border: 1px solid rgba(226, 211, 177, .8); border-radius: 16px; background: rgba(255, 253, 247, .92);
+  box-shadow: 0 4px 12px rgba(109, 91, 48, .07);
+}
+.rank-no {
+  flex: none; width: 24px; height: 27px; display: grid; place-items: center; margin-top: 1px;
+  color: #8b6f3d; background: #f2e7c8; border-radius: 50% 50% 50% 6px;
+  font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 -2px 0 rgba(169, 117, 61, .25);
+}
+.rank-row-main { flex: 1; min-width: 0; }
+.rank-row-main h3 { margin: 1px 0 2px; font-size: 13.5px; color: #393825; }
+.rank-row-note { margin: 0 0 5px; color: #99937a; font-size: 10.5px; }
+.rank-row-quote { margin: 0 0 5px; font-family: "Songti SC", STSong, serif; color: #8b8266; font-size: 11px; }
+.rank-spot-chip {
+  border: 1px solid rgba(137, 151, 75, .4); border-radius: 999px; padding: 3px 9px 3px 6px;
+  color: #6c7937; background: rgba(220, 227, 174, .4); font-size: 10px; font-weight: 700;
+  transition: transform .18s, background .18s;
+}
+.rank-spot-chip:active { transform: scale(.94); background: rgba(220, 227, 174, .85); }
+.rank-row-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.rank-row-side b { color: #4d572e; font-size: 12px; font-weight: 800; }
+.rank-row-side b i { font-style: normal; font-size: 16px; font-variant-numeric: tabular-nums; }
+.rank-row-side small { color: #b7af96; font-size: 9px; }
+.rank-delta { font-style: normal; font-size: 9.5px; font-weight: 800; }
+.rank-delta.up { color: #6c7937; }
+.rank-delta.down { color: #d8613e; }
+.rank-delta.flat { color: #b7af96; }
+
+.rank-footer { margin: 16px 4px 6px; color: #b7af96; font-size: 9.5px; line-height: 1.6; text-align: center; }
+
+/* ---------- 地点面板 ---------- */
+.rank-spot-panel { display: flex; flex-direction: column; gap: 11px; }
+.rank-spot-head { display: flex; align-items: center; gap: 11px; }
+.rank-spot-head img { width: 44px; height: 52px; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(65, 66, 33, .16)); }
+.rank-spot-head small { display: block; margin-bottom: 2px; color: #a8782b; font-size: 10px; font-weight: 700; }
+.rank-spot-head h2 { margin: 0; font-family: "Songti SC", STSong, serif; font-size: 21px; letter-spacing: 1px; color: #4d572e; }
+.rank-spot-head > div { flex: 1; min-width: 0; }
+.rank-spot-close { flex: none; width: 34px; height: 34px; border: 1px solid #dfcda5; border-radius: 50%; color: #6f6a56; background: #fffaf0; font-size: 16px; }
+.rank-spot-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.rank-spot-stats > div {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  border: 1px solid rgba(226, 211, 177, .85); border-radius: 15px; padding: 10px 4px; background: rgba(255, 253, 247, .9);
+}
+.rank-spot-stats b { color: #4d572e; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rank-spot-stats small { color: #99937a; font-size: 9px; font-weight: 700; }
+.rank-ring { position: relative; }
+.rank-ring svg { position: absolute; inset: 4px auto auto 50%; width: 46px; height: 46px; transform: translateX(-50%); }
+.rank-ring circle { fill: none; stroke-width: 4.4; stroke-linecap: round; }
+.rank-ring .bg { stroke: #eee3c2; }
+.rank-ring .fg { stroke: #89974b; stroke-dasharray: 100; stroke-dashoffset: calc(100 - var(--p)); transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1s .2s cubic-bezier(.3, .8, .3, 1); }
+.rank-ring b { position: relative; z-index: 1; margin-top: 13px; font-size: 12px !important; }
+.rank-ring small { position: relative; z-index: 1; }
+.rank-spot-top { margin: 0 2px; color: #66664e; font-size: 12px; }
+.rank-spot-top b { color: #4d572e; }
+.rank-spot-seeds { display: flex; flex-direction: column; gap: 7px; }
+.rank-spot-seed {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+  border: 1px solid rgba(226, 211, 177, .8); border-radius: 14px; background: rgba(255, 253, 247, .92);
+}
+.rank-seed-dot { flex: none; width: 9px; height: 12px; border-radius: 50% 50% 60% 60%; background: linear-gradient(180deg, #c08a52, #8b6f3d); box-shadow: inset 0 1.5px 0 rgba(255, 226, 178, .6); }
+.rank-spot-seed h4 { margin: 0; font-size: 12.5px; color: #393825; }
+.rank-spot-seed small { color: #99937a; font-size: 9.5px; }
+.rank-plant-cta { margin-top: 3px; }
+.rank-back-board { border: 0; padding: 5px; color: #847e6c; background: transparent; font-size: 11.5px; font-weight: 700; }
+
+/* ---------- dock 微调（7 格布局 + 自绘图标） ---------- */
+.world-dock.dock-7 { grid-template-columns: 1fr 1fr 1fr 58px 1fr 1fr 1fr; }
+.world-dock.dock-7 small { font-size: 9px; }
+.world-dock .dock-svg { width: 30px; height: 24px; display: block; margin: 0 auto -1px; }
+.world-dock .dock-svg path, .world-dock .dock-svg circle { stroke: #6d694e; }
+.world-dock button.active small { color: #53681d; }
+.world-dock button.active .dock-svg path, .world-dock button.active .dock-svg circle { stroke: #53681d; }
+.rank-screen .world-dock { z-index: 30; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-marker .rk-heat, .place-1 .rank-podium-flower, .rank-hint { animation: none; }
+  .rank-sheet { transition: none; }
+}

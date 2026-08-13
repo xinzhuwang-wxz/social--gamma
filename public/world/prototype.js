@@ -297,6 +297,14 @@ function topbar(title, subtitle = "", back = false) {
   </header>`;
 }
 
+// 世界底部 dock（花园/聊天/校园/＋/信箱/森林/我的），active 高亮当前所在世界
+function worldDock(active = "") {
+  const campusIcon = `<svg class="dock-svg" viewBox="0 0 30 26" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2.6c-4 0-7 3-7 6.8 0 4.8 7 13 7 13s7-8.2 7-13c0-3.8-3-6.8-7-6.8Z"/><circle cx="15" cy="9.4" r="2.6"/></svg>`;
+  const forestIcon = `<svg class="dock-svg" viewBox="0 0 30 26" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 23v-3.4M9.5 5.6 5 12.4h2.4L4 18.4h11L11.6 12.4H14L9.5 5.6Z"/><path d="M21.5 23v-2.8M21.5 9.6l-3.6 5.4h1.9l-2.7 4.6h8.8l-2.7-4.6h1.9l-3.6-5.4Z"/></svg>`;
+  const item = (id, icon, label) => `<button data-world="${id}" class="${active === id ? "active" : ""}">${icon}<small>${label}</small></button>`;
+  return `<div class="world-dock dock-7">${item("garden", `<img src="assets/nav-garden-v2.png" alt="">`, "花园")}${item("actions", `<img src="assets/nav-chat-v2.png" alt="">`, "聊天")}${item("campus", campusIcon, "校园")}<button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button>${item("mailbox", `<img src="assets/nav-mailbox-v2.png" alt="">`, "信箱")}${item("forest", forestIcon, "森林")}${item("profile", `<img src="assets/nav-profile-v2.png" alt="">`, "我的")}</div>`;
+}
+
 function nav() {
   const items = [["garden", "花园"], ["mailbox", "信箱"], ["publish", ""], ["actions", "行动中"], ["profile", "我的"]];
   return `<nav class="bottom-nav">${items.map(([id, label]) => id === "publish"
@@ -322,7 +330,7 @@ function WorldGardenPage() {
       <button class="world-hotspot mailbox-object" data-anchor="mailbox" style="${world.anchorStyle("garden", "mailbox")}" data-action="open-mailbox-overlay" aria-label="打开种子信箱">${ui.unreadMail ? `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>` : ""}</button>
       ${ui.mailboxOverlay ? MailboxOverlay(ui.welcomeLetter) : ""}
     </div>
-    <div class="world-dock"><button data-world="garden"><img src="assets/nav-garden-v2.png" alt=""><small>花园</small></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>聊天</small></button><button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button data-world="profile"><img src="assets/nav-profile-v2.png" alt=""><small>我的</small></button></div>
+    ${worldDock("garden")}
   </main>`;
 }
 
@@ -518,6 +526,7 @@ function ProfilePage() {
 
 function page() {
   if (ui.route === "world-home") return HomeWorldPage();
+  if (ui.route === "rank" && window.CampusRank) return window.CampusRank.page(worldDock("campus"));
   if (ui.route?.startsWith("seed:")) return SeedDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("plant:")) return PlantDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("memory:")) return MemoryDetailPage(ui.route.split(":")[1]);
@@ -533,13 +542,13 @@ function render() {
   // 重建 DOM 前，先把用户正在输入的内容存回 state，避免 toast 定时器/其它 render 把未提交文字清空
   const memoryInput = document.querySelector("#memory-text");
   if (memoryInput) ui.memoryText = memoryInput.value;
-  document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
+  document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>底部「校园」打开校园风物榜</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
   requestAnimationFrame(() => {
     syncPhoneScale();
     const log = document.querySelector("#chat-log");
     if (log) log.scrollTop = log.scrollHeight;
   });
-  requestAnimationFrame(() => window.WorldLayer?.mount());
+  requestAnimationFrame(() => { window.WorldLayer?.mount(); window.CampusRank?.mount(ui.route === "rank"); });
 }
 
 function syncPhoneScale() {
@@ -577,6 +586,14 @@ document.addEventListener("click", async event => {
   if (target.dataset.seed) { ui.mailboxOverlay = false; markMailboxRead(); ui.route = `seed:${target.dataset.seed}`; return render(); }
   if (target.dataset.plant) { ui.route = `plant:${target.dataset.plant}`; return render(); }
   if (target.dataset.memory) { ui.route = `memory:${target.dataset.memory}`; return render(); }
+  // 榜单页内部交互（切榜/选点/抽屉）由 rank.js 自己的委托处理，这里只接“种同款”跳转
+  if (target.dataset.rankPlant) {
+    // 从榜单「种同款」进入发布流程：只预填想法，后续时间/地点/同行者仍由用户逐步确认
+    startPublishFlow();
+    ui.draft.idea = target.dataset.rankPlant;
+    ui.publishStep = 1;
+    return render();
+  }
   if (target.dataset.mailbox) { ui.mailboxMode = target.dataset.mailbox; return render(); }
   if (target.dataset.world) {
     const destination = target.dataset.world;
@@ -584,6 +601,7 @@ document.addEventListener("click", async event => {
     if (destination === "home") ui.route = "world-home";
     if (destination === "mailbox") { ui.route = null; ui.tab = "mailbox"; }
     if (destination === "forest") ui.route = "memory";
+    if (destination === "campus") ui.route = "rank";
     if (destination === "profile") { ui.route = null; ui.tab = "profile"; }
     if (destination === "actions") { ui.route = null; ui.tab = "actions"; }
     if (destination === "plot") ui.route = server.selectedCandidate ? "chat" : "publish";
