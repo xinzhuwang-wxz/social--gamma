@@ -317,6 +317,27 @@ function topbar(title, subtitle = "", back = false) {
   </header>`;
 }
 
+// 世界底部 dock（花园/聊天/校园/＋/信箱/森林/我的），active 高亮当前所在世界
+function worldDock(active = "") {
+  // 彩色填色小图标：与 nav-*-v2.png 绘本插画风统一（暖色填充 + 深棕描边），不用单色线稿
+  const campusIcon = `<svg class="dock-svg" viewBox="0 0 30 26" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="15" cy="23" rx="7.5" ry="2" fill="#c9b585" opacity=".55"/>
+    <path d="M15 2.4c-4.1 0-7.2 3-7.2 6.9 0 5 7.2 13.2 7.2 13.2s7.2-8.2 7.2-13.2c0-3.9-3.1-6.9-7.2-6.9Z" fill="#e0745c" stroke="#8a4a38" stroke-width="1.7"/>
+    <circle cx="15" cy="9.6" r="3" fill="#fff3d8" stroke="#8a4a38" stroke-width="1.3"/>
+    <path d="M12.2 5.6c.8-.7 1.8-1.1 2.8-1.1" fill="none" stroke="#f5b8a0" stroke-width="1.3"/>
+  </svg>`;
+  const forestIcon = `<svg class="dock-svg" viewBox="0 0 30 26" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="15" cy="24" rx="10" ry="1.8" fill="#c9b585" opacity=".55"/>
+    <path d="M9.3 23.6v-3.2" stroke="#8a6a3c" stroke-width="2.2"/>
+    <path d="M9.3 3.8 4.4 11.6h2.3L3.2 17.9h12.2L11.9 11.6h2.3L9.3 3.8Z" fill="#7fa153" stroke="#4f6a33" stroke-width="1.6"/>
+    <path d="M21.6 23.6v-2.6" stroke="#8a6a3c" stroke-width="2"/>
+    <path d="M21.6 8.4 18 13.9h1.9l-2.8 4.8h9l-2.8-4.8h1.9L21.6 8.4Z" fill="#a8bc68" stroke="#5f7a3d" stroke-width="1.5"/>
+    <circle cx="7" cy="14.6" r=".9" fill="#f2d98c"/><circle cx="11.6" cy="15.8" r=".9" fill="#e8a5a0"/>
+  </svg>`;
+  const item = (id, icon, label) => `<button data-world="${id}" class="${active === id ? "active" : ""}">${icon}<small>${label}</small></button>`;
+  return `<div class="world-dock dock-7">${item("garden", `<img src="assets/nav-garden-v2.png" alt="">`, "花园")}${item("actions", `<img src="assets/nav-chat-v2.png" alt="">`, "聊天")}${item("campus", campusIcon, "校园")}<button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button>${item("mailbox", `<img src="assets/nav-mailbox-v2.png" alt="">`, "信箱")}${item("forest", forestIcon, "森林")}${item("profile", `<img src="assets/nav-profile-v2.png" alt="">`, "我的")}</div>`;
+}
+
 function nav() {
   const items = [["garden", "花园"], ["mailbox", "信箱"], ["publish", ""], ["actions", "行动中"], ["profile", "我的"]];
   return `<nav class="bottom-nav">${items.map(([id, label]) => id === "publish"
@@ -342,7 +363,7 @@ function WorldGardenPage() {
       <button class="world-hotspot mailbox-object" data-anchor="mailbox" style="${world.anchorStyle("garden", "mailbox")}" data-action="open-mailbox-overlay" aria-label="打开种子信箱">${ui.unreadMail ? `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>` : ""}</button>
       ${ui.mailboxOverlay ? MailboxOverlay(ui.welcomeLetter) : ""}
     </div>
-    <div class="world-dock"><button data-world="garden"><img src="assets/nav-garden-v2.png" alt=""><small>花园</small></button><button data-world="actions"><img src="assets/nav-chat-v2.png" alt=""><small>聊天</small></button><button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button><button data-world="mailbox"><img src="assets/nav-mailbox-v2.png" alt=""><small>信箱</small></button><button data-world="profile"><img src="assets/nav-profile-v2.png" alt=""><small>我的</small></button></div>
+    ${worldDock("garden")}
   </main>`;
 }
 
@@ -541,6 +562,7 @@ function ProfilePage() {
 
 function page() {
   if (ui.route === "world-home") return HomeWorldPage();
+  if (ui.route === "rank" && window.CampusRank) return window.CampusRank.page(worldDock("campus"));
   if (ui.route?.startsWith("seed:")) return SeedDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("plant:")) return PlantDetailPage(ui.route.split(":")[1]);
   if (ui.route?.startsWith("memory:")) return MemoryDetailPage(ui.route.split(":")[1]);
@@ -556,13 +578,13 @@ function render() {
   // 重建 DOM 前，先把用户正在输入的内容存回 state，避免 toast 定时器/其它 render 把未提交文字清空
   const memoryInput = document.querySelector("#memory-text");
   if (memoryInput) ui.memoryText = memoryInput.value;
-  document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
+  document.querySelector("#app").innerHTML = `<div class="app-shell"><div class="phone">${page()}${ui.loading ? `<div class="loading"><i></i><span>小绿正在跑腿…</span></div>` : ""}${ui.toast ? `<div class="toast">${escapeHtml(ui.toast)}</div>` : ""}</div><aside class="demo-guide"><span>社交森林 · 世界原型</span><h2>花园不是首页，<br>花园就是世界。</h2><p>场景内导航</p><ol><li>点击房子进入可装扮的 Home</li><li>点击信箱读取行动种子</li><li>点击花圃种下愿望或查看成长</li><li>点击宠物进行生活化互动</li><li>底部「校园」打开校园风物榜</li><li>行动完成后，植物进入回忆林</li></ol><small>花园、Home 与植物组件已接入正式绘本资产；交互热点独立于底图，便于继续替换动画层。</small></aside></div>`;
   requestAnimationFrame(() => {
     syncPhoneScale();
     const log = document.querySelector("#chat-log");
     if (log) log.scrollTop = log.scrollHeight;
   });
-  requestAnimationFrame(() => window.WorldLayer?.mount());
+  requestAnimationFrame(() => { window.WorldLayer?.mount(); window.CampusRank?.mount(ui.route === "rank"); });
 }
 
 function syncPhoneScale() {
@@ -600,6 +622,14 @@ document.addEventListener("click", async event => {
   if (target.dataset.seed) { ui.mailboxOverlay = false; markMailboxRead(); ui.route = `seed:${target.dataset.seed}`; return render(); }
   if (target.dataset.plant) { ui.route = `plant:${target.dataset.plant}`; return render(); }
   if (target.dataset.memory) { ui.route = `memory:${target.dataset.memory}`; return render(); }
+  // 榜单页内部交互（切榜/选点/抽屉）由 rank.js 自己的委托处理，这里只接“种同款”跳转
+  if (target.dataset.rankPlant) {
+    // 从榜单「种同款」进入发布流程：只预填想法，后续时间/地点/同行者仍由用户逐步确认
+    startPublishFlow();
+    ui.draft.idea = target.dataset.rankPlant;
+    ui.publishStep = 1;
+    return render();
+  }
   if (target.dataset.mailbox) { ui.mailboxMode = target.dataset.mailbox; return render(); }
   if (target.dataset.world) {
     const destination = target.dataset.world;
@@ -607,6 +637,7 @@ document.addEventListener("click", async event => {
     if (destination === "home") ui.route = "world-home";
     if (destination === "mailbox") { ui.route = null; ui.tab = "mailbox"; }
     if (destination === "forest") ui.route = "memory";
+    if (destination === "campus") ui.route = "rank";
     if (destination === "profile") { ui.route = null; ui.tab = "profile"; }
     if (destination === "actions") { ui.route = null; ui.tab = "actions"; }
     if (destination === "plot") ui.route = server.selectedCandidate ? "chat" : "publish";
