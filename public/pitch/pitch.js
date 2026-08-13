@@ -189,7 +189,7 @@
         '<div class="a2a-link"><span class="pulse"></span></div>' +
         '<div class="a2a-av"><img src="' + AV_PEER + '"></div></div>' +
         '<div class="a2a-tag">A2A WARM-UP</div><div class="msgs"></div>' +
-        '<div class="a2a-ok">合拍！种子已送进对方信箱</div></div>';
+        '<div class="a2a-ok">合拍！种子已送进她的信箱<br><small style="font-size:15px;font-weight:400;opacity:.92">是否同行，由她本人决定</small></div></div>';
       var msgs = $(".msgs", body); msgs.style.cssText = "display:flex;flex-direction:column;gap:10px;width:100%;padding:0 8px";
       var lines = [
         ["ai", "我的小花匠", "她周四晚上有空，时间对得上。"],
@@ -200,7 +200,7 @@
       tl.from($$(".a2a-av", body), { opacity: 0, scale: .5, duration: .6, ease: "pop", stagger: .15 }, .2);
       tl.from($(".a2a-link", body), { opacity: 0, scaleX: 0, duration: .5 }, ">-.2");
       var pulse = $(".pulse", body);
-      tl.add(function () { gsap.fromTo(pulse, { left: "0%" }, { left: "100%", duration: .9, repeat: -1, yoyo: true, ease: "sine.inOut" }); }, "<");
+      tl.fromTo(pulse, { left: "0%" }, { left: "100%", duration: .9, repeat: -1, yoyo: true, ease: "sine.inOut" }, "<");
       lines.forEach(function (L) {
         var d = msgEl(msgs, L[0] === "ai" ? "ai" : "peer", L[1]);
         msgIn(tl, d, ">+.15");
@@ -218,9 +218,9 @@
       var m2 = msgEl(body, "me");
       var m3 = msgEl(body, "ai", '<b>小苗</b> · 事件 AI · 只在需要时出现');
       var tl = gsap.timeline();
-      msgIn(tl, m1, .3); typeInto(tl, $(".mtxt", m1), "周四下午四点半，学校西门集合？", 16, ">-.05");
+      msgIn(tl, m1, .3); typeInto(tl, $(".mtxt", m1), "周四晚上七点半，学校西门集合？", 16, ">-.05");
       msgIn(tl, m2, ">+.3"); typeInto(tl, $(".mtxt", m2), "可以！我带打气筒，顺路检查胎压", 16, ">-.05");
-      msgIn(tl, m3, ">+.4"); typeInto(tl, $(".mtxt", m3), "你们聊到的时间地点，我可以整理成一份行动约定，需要吗？", 15, ">-.05");
+      msgIn(tl, m3, ">+.4"); typeInto(tl, $(".mtxt", m3), "你们都想拍夜景——要不要把路线也聊定？卡住的话随时叫我。", 15, ">-.05");
       return tl;
     },
     pact: function () {
@@ -228,7 +228,7 @@
       var body = $(".pbody", root);
       body.insertAdjacentHTML("beforeend",
         '<div class="pact"><h5>行动约定 · 双方确认</h5><div class="pt-title">西湖夜骑</div>' +
-        '<div class="row"><span class="ok">✓</span>周四 16:30 出发</div>' +
+        '<div class="row"><span class="ok">✓</span>周四 19:30 出发</div>' +
         '<div class="row"><span class="ok">✓</span>学校西门集合</div>' +
         '<div class="row"><span class="ok">✓</span>打气筒 · 头盔 · 车灯</div>' +
         '<div class="confirm">确认这份行动约定（0/2）</div></div>');
@@ -269,6 +269,7 @@
       enter: function (tl) {
         tl.set(hero, { opacity: 0 });
         tl.add(function () { heroTo("cover", { instant: true }); gsap.fromTo(hero, { y: "-=140", opacity: 0, scale: .5 }, { y: "+=140", opacity: 1, scale: 1, duration: 1.2, ease: "soft" }); }, 0.25);
+        gsap.killTweensOf($$(".ring", pg));
         $$(".ring", pg).forEach(function (r, i) {
           tl.fromTo(r, { opacity: 0, scale: .4 }, { opacity: .55, scale: 1, duration: 1, ease: "soft" }, .3 + i * .18);
           gsap.to(r, { opacity: .15, scale: 1.24, duration: 2.6, delay: 1.4 + i * .5, repeat: -1, yoyo: true, ease: "sine.inOut" });
@@ -336,7 +337,7 @@
       var d = document.createElement("div");
       d.className = "rn" + (i === 4 ? " b5" : "");
       d.innerHTML = '<span class="bar"></span><span class="dot"></span><span class="cn">' + t.dataset.cn + '</span><span class="en">' + t.dataset.en + "</span>";
-      d.addEventListener("click", function (e) { e.stopPropagation(); setStage(i); });
+      d.addEventListener("click", function (e) { e.stopPropagation(); setStage(i); if (typeof window.__syncP4Frag === "function") window.__syncP4Frag(i); });
       rail.appendChild(d);
     });
     var cur = -1;
@@ -356,7 +357,7 @@
       sceneTl = SCENES[t.dataset.scene]();
       // 植物生长
       var stem = $("#stemPath"), bud = $("#budPath"), seedc = $("#seedC"), bloom = $("#bloomImg");
-      var stemPct = [0, 28, 58, 100, 100][i];
+      var stemPct = [0, 25, 52, 78, 100][i];
       gsap.to(stem, { drawSVG: "0% " + stemPct + "%", duration: .9, ease: "power2.out" });
       gsap.to(seedc, { opacity: i === 0 ? 1 : 0, scale: i === 0 ? 1 : .4, transformOrigin: "50% 50%", duration: .5 });
       leaves.forEach(function (lf, k) {
@@ -372,14 +373,16 @@
     }
     return {
       enter: function (tl) {
-        heroHide();
         cur = -1;
+        tl.add(function () { heroTo("plantseed", { dur: .9 }); }, .15);
+        tl.add(function () { heroHide(.5); }, 1.2);
         tl.from($(".phone", pg), { opacity: 0, y: 70, scale: .95, duration: 1, ease: "soft" }, 0.1);
         tl.from($(".rail", pg), { opacity: 0, y: 30, duration: .7, ease: "soft" }, .4);
         tl.add(function () { setStage(0); }, .55);
       },
       frags: [1, 2, 3, 4].map(function (i) { return function () { setStage(i); }; }),
       fragBack: function (fi) { setStage(fi); },
+      syncFrag: function (fn) { window.__syncP4Frag = fn; },
       leave: function () { clearTimeout(burstTimer); killScene(); }
     };
   });
@@ -390,10 +393,12 @@
     var burstTimer = null;
     return {
       enter: function (tl) {
+        heroHide();
         tl.from($(".eyebrow", pg), { opacity: 0, x: -30, duration: .7, ease: "soft" }, 0.1);
         tl.set(cards, { opacity: 0, y: 80, scale: 1 });
         tl.set(ask, { opacity: 0 });
         tl.to(cards[0], { opacity: 1, y: 0, duration: .8, ease: "soft" }, .3);
+        tl.to([cards[1], cards[2]], { opacity: .22, y: 24, duration: .8, ease: "soft" }, .45);
         tl.from($(".jreal", pg), { rotate: 6, y: 40, opacity: 0, duration: .8, ease: "pop" }, "<+0.15");
       },
       frags: [
@@ -410,7 +415,7 @@
         },
         function () {
           gsap.set(ask, { opacity: 1 });
-          gsap.to(cards, { opacity: .3, scale: .97, duration: .6, ease: "soft" });
+          gsap.to(cards, { opacity: .55, scale: .97, duration: .6, ease: "soft" });
           var s = ensureSplit(ask);
           gsap.from(s.targets, { yPercent: 118, duration: .8, ease: "soft", stagger: .03 });
         }
@@ -428,10 +433,10 @@
       stopChase();
       var fi = 0;
       frameTimer = setInterval(function () { fi ^= 1; pet.src = frames[fi]; }, 340);
-      chaseTl = gsap.timeline({ repeat: -1, repeatDelay: 1.2 });
-      chaseTl.fromTo(pet, { x: -260 }, { x: 2200, duration: 13, ease: "none" }, 0);
-      chaseTl.fromTo(pet, { y: 0 }, { y: -14, duration: .42, yoyo: true, repeat: 30, ease: "sine.inOut" }, 0);
-      chaseTl.fromTo(bf, { x: -60 }, { x: 2350, duration: 13, ease: "none" }, 0);
+      chaseTl = gsap.timeline({ repeat: -1, yoyo: true });
+      chaseTl.fromTo(pet, { x: -160 }, { x: 1960, duration: 14, ease: "power1.inOut" }, 0);
+      chaseTl.fromTo(pet, { y: 0 }, { y: -14, duration: .42, yoyo: true, repeat: 32, ease: "sine.inOut" }, 0);
+      chaseTl.fromTo(bf, { x: 40 }, { x: 2110, duration: 14, ease: "power1.inOut" }, 0);
       chaseTl.to(bf, { y: "-=46", duration: .8, yoyo: true, repeat: 15, ease: "sine.inOut" }, 0);
       chaseTl.to(bf, { rotate: 10, duration: .5, yoyo: true, repeat: 25, ease: "sine.inOut" }, 0);
       chaseTl.fromTo(seed, { opacity: 0 }, {
@@ -450,6 +455,7 @@
     }
     return {
       enter: function (tl) {
+        heroHide();
         tl.from($(".eyebrow", pg), { opacity: 0, x: -30, duration: .7, ease: "soft" }, 0.1);
         splitIn(tl, $(".q", pg), { at: .3 });
         tl.from($('[data-el="phone6"]', pg), { opacity: 0, y: 60, duration: .9, ease: "soft" }, .5);
@@ -480,8 +486,8 @@
     var RANK = [
       ["1", "启真湖 · 湖边夜谈", "12 朵在开"],
       ["2", "大草坪 · 落日野餐", "9 朵在开"],
-      ["3", "基础图书馆 · 自习搭子", "8 朵在开"],
-      ["4", "紫金港体育馆 · 羽毛球", "6 朵在开"],
+      ["3", "基础图书馆 · 自习", "8 朵在开"],
+      ["4", "体育馆 · 羽毛球", "6 朵在开"],
       ["5", "蓝田学园 · 晨跑团", "5 朵在开"]
     ];
     function buildMap() {
@@ -509,7 +515,7 @@
       tl.from(water, { opacity: 0, scale: .85, transformOrigin: "center", duration: .9, stagger: .03, ease: "soft" }, .35);
       tl.fromTo(roads, { drawSVG: "0%" }, { drawSVG: "100%", duration: .7, stagger: .012, ease: "power1.inOut" }, .5);
       tl.fromTo(rivers, { drawSVG: "0%" }, { drawSVG: "100%", duration: .8, stagger: .02 }, .8);
-      tl.fromTo(paths, { drawSVG: "0%" }, { drawSVG: "100%", duration: .5, stagger: .006, ease: "none" }, 1.0);
+      tl.from(paths, { opacity: 0, duration: .5, stagger: .006, ease: "none" }, 1.0);
       tl.from(blds, { opacity: 0, scale: .5, transformOrigin: "center", duration: .45, stagger: .008, ease: "pop" }, 1.2);
       // 地点花标
       MARKERS.forEach(function (m, i) {
@@ -563,9 +569,10 @@
         gsap.to(rank, { opacity: 1, duration: .6, ease: "soft" });
         gsap.from(rank, { x: 90, duration: .8, ease: "soft" });
         gsap.fromTo($$(".rrow", rows), { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: .5, ease: "soft", stagger: .1, delay: .3 });
+      }, function () {          // 拍2：扣题句（全片弧线收口）
         var c = $(".call", pg); gsap.set(c, { opacity: 1 });
         var s = ensureSplit(c);
-        gsap.from(s.targets, { yPercent: 118, duration: .8, ease: "soft", stagger: .12, delay: .2 });
+        gsap.from(s.targets, { yPercent: 118, duration: .8, ease: "soft", stagger: .12 });
       }],
       leave: function () { stopSeeds(); }
     };
@@ -579,9 +586,16 @@
         splitIn(tl, $(".h-giant", pg), { at: ">-0.1", stagger: .1, dur: 1 });
         tl.add(function () { heroTo("finale", { dur: 1.2 }); }, .3);
         tl.from($(".slog", pg), { opacity: 0, y: 20, duration: .8, ease: "soft" }, ">-0.2");
+        tl.set($(".badges", pg), { opacity: 0 });
         tl.add(function () { petalRain(true); }, ">");
       },
-      frags: [],
+      frags: [function () {   // 落锤：证据徽章 + 情绪顶点
+        var bd = $(".badges", pg);
+        gsap.to(bd, { opacity: 1, duration: .5, ease: "soft" });
+        gsap.from($$(".badge", pg), { opacity: 0, y: 22, scale: .9, duration: .55, ease: "pop", stagger: .12 });
+        gsap.fromTo(hero, { scale: 1 }, { scale: 1.18, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" });
+        petalBurst($(".h-giant", pg), true);
+      }],
       leave: function () { petalRain(false); }
     };
   });
@@ -599,6 +613,7 @@
     dots.appendChild(b);
   });
   $("#cAll").textContent = N;
+  if (built[3] && built[3].syncFrag) built[3].syncFrag(function (i) { if (cur === 3) frag = i; });
 
   function veilSweep(dir) {
     if (reduced) return;
@@ -616,9 +631,10 @@
       if (built[prev]._tl) { built[prev]._tl.progress(1, true).kill(); built[prev]._tl = null; }
       built[prev].leave();
     }
-    if (!instant && prev >= 0) veilSweep(dir);
+    if (typeof confetti !== "undefined" && confetti.reset) confetti.reset();
+    if (!instant && prev >= 0) { veilSweep(dir); gsap.to(pages[prev], { opacity: 0, duration: .22, ease: "power1.in" }); }
     cur = i; frag = 0;
-    location.hash = "p" + (i + 1);
+    try { history.replaceState(null, "", "#p" + (i + 1)); } catch (e) { location.hash = "p" + (i + 1); }
     $("#cNow").textContent = ("0" + (i + 1)).slice(-2);
     $$("button", dots).forEach(function (d, k) { d.classList.toggle("on", k === i); });
     renderNote(i);
@@ -639,7 +655,7 @@
 
   function next() {
     var now = Date.now();
-    if (busy || now - lastAdv < 200) return;
+    if (cur < 0 || busy || now - lastAdv < 200) return;
     lastAdv = now;
     var d = built[cur];
     if (d.frags && frag < d.frags.length) { d.frags[frag](); frag++; return; }
@@ -647,7 +663,7 @@
   }
   function prev() {
     var now = Date.now();
-    if (busy || now - lastAdv < 200) return;
+    if (cur < 0 || busy || now - lastAdv < 200) return;
     lastAdv = now;
     var d = built[cur];
     if (d.frags && frag > 0) {

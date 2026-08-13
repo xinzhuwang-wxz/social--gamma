@@ -24,7 +24,7 @@
   --shadow:0 26px 60px -26px rgba(96,66,24,.35);
   --ease:cubic-bezier(.22,.61,.36,1);
   --serif:'FTKai','LXGW WenKai Screen','Kaiti SC','STKaiti','KaiTi','PingFang SC',serif;
-  --mono:ui-monospace,'SFMono-Regular','Menlo',monospace;
+  --mono:ui-monospace,'SFMono-Regular','Menlo','FTKai','LXGW WenKai Screen','PingFang SC',monospace;
 }
 
 *{box-sizing:border-box;margin:0}
@@ -77,10 +77,10 @@ body{background:#efe6cf;color:var(--ink);font-family:var(--serif);overflow:hidde
 .eyebrow .pt{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;
   border:2px solid var(--gold);color:var(--gold);font-size:19px;letter-spacing:0;font-weight:700;font-family:var(--serif)}
 .h-giant{font-size:200px;line-height:1;font-weight:700;letter-spacing:.02em;
-  background:linear-gradient(174deg,#a9761b 2%,var(--gold) 46%,#e9b95c 120%);
+  background:linear-gradient(174deg,#8a5f0e 2%,#b97a15 48%,#d99a2b 120%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 12px 40px rgba(200,135,30,.3))}
-.h-giant .schar{background:linear-gradient(174deg,#a9761b 2%,var(--gold) 50%,#e9b95c 125%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.h-giant .schar{background:linear-gradient(174deg,#8a5f0e 2%,#b97a15 50%,#d99a2b 125%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .h-big{font-size:84px;line-height:1.22;font-weight:700;color:var(--ink);text-shadow:0 3px 24px rgba(255,251,240,.8)}
 .hl{color:var(--gold)} .grn{color:var(--sprout)} .dm{color:var(--mid)} .rs{color:var(--rose)}
 .small{font-family:var(--mono);font-size:17px;letter-spacing:.08em;color:var(--mid)}
@@ -91,7 +91,7 @@ body{background:#efe6cf;color:var(--ink);font-family:var(--serif);overflow:hidde
 #p1 .ring{position:absolute;border-radius:50%;border:1.5px solid rgba(200,135,30,.5);opacity:0}
 #p1 .subline{font-size:40px;color:var(--ink-2);line-height:1.7}
 #p1 .subline b{color:var(--gold)}
-#p1 .wish{font-size:26px;color:var(--mid);font-family:var(--mono);letter-spacing:.14em}
+#p1 .wish{font-size:26px;color:var(--ink-2);font-family:var(--mono);letter-spacing:.14em}
 
 /* ---------- P2 痛点 ---------- */
 #p2 .wrap{height:100%;display:flex;flex-direction:column;justify-content:center;gap:44px;max-width:1500px}
@@ -114,7 +114,7 @@ body{background:#efe6cf;color:var(--ink);font-family:var(--serif);overflow:hidde
 #p3 .l b{color:var(--gold)}
 #p3 .l .grn{color:var(--sprout)}
 #p3 .seedspot{height:150px;position:relative;width:100%}
-#p3 .stemhint{position:absolute;left:50%;top:100%;transform:translateX(-50%);overflow:visible}
+#p3 .stemhint{position:absolute;left:50%;top:calc(50% + 58px);transform:translateX(-50%);overflow:visible}
 
 /* ---------- P4 核心链路 ---------- */
 #p4 .grid{display:grid;grid-template-columns:505px 1fr;gap:110px;align-items:center;height:calc(100% - 90px);padding-top:0}
@@ -239,9 +239,7 @@ body{background:#efe6cf;color:var(--ink);font-family:var(--serif);overflow:hidde
 #p6 .q b{color:var(--gold)}
 #p6 .q2{font-size:38px;line-height:1.8;color:var(--ink-2);margin-top:40px}
 #p6 .q2 b{color:var(--sprout)}
-#p6 .phone{width:430px;height:718px;border-radius:50px;justify-self:end}
-#p6 .phone .scr{border-radius:38px}
-#p6 .phone .scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+#p6 .shotphone{width:400px;border-radius:40px;justify-self:end;box-shadow:0 46px 90px -30px rgba(70,48,14,.5);border:1px solid rgba(84,120,94,.18)}
 #p6 .chase{position:absolute;left:0;right:0;bottom:36px;height:240px;z-index:3;pointer-events:none}
 #p6 .pet{position:absolute;bottom:0;left:-260px;width:190px;will-change:transform;filter:drop-shadow(0 12px 18px rgba(96,66,24,.35))}
 #p6 .butterfly{position:absolute;bottom:150px;left:-80px;width:92px;will-change:transform;
@@ -326,3 +324,9 @@ body{background:#efe6cf;color:var(--ink);font-family:var(--serif);overflow:hidde
 @keyframes bootpulse{50%{transform:scale(1.08)}}
 
 @media (prefers-reduced-motion:reduce){ #ambient,#rays{display:none} }
+
+/* P8 证据徽章(落锤拍) */
+#p8 .badges{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;opacity:0}
+.badge{font-family:var(--mono);font-size:15px;letter-spacing:.03em;color:var(--ink-2);border:1.5px solid var(--line-2);
+  border-radius:999px;padding:10px 18px;background:var(--card);display:inline-flex;gap:9px;align-items:center;box-shadow:0 12px 26px -14px rgba(96,66,24,.35)}
+.badge .live{width:8px;height:8px;border-radius:50%;background:var(--sprout);box-shadow:0 0 8px var(--sprout)}
