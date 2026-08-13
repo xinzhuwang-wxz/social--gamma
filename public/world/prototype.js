@@ -1340,6 +1340,57 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", syncPhoneScale);
   window.visualViewport.addEventListener("scroll", syncPhoneScale);
 }
-api("/api/demo").then(render);
+const PITCH_VIEWS = {
+  garden() { ui.route = null; ui.tab = "garden"; ui.mailboxOverlay = false; },
+  publish() {
+    ui.route = "publish";
+    ui.publishStep = 0;
+    ui.draft.idea = ui.draft.idea || "想去西湖夜骑";
+  },
+  clarify() {
+    ui.route = "publish";
+    ui.publishStep = 1;
+    ui.draft.idea = ui.draft.idea || "想去西湖夜骑";
+  },
+  matching() { ui.route = "matching"; },
+  candidates() { ui.route = "candidates"; },
+  a2a() { ui.route = "candidate-a2a:0"; },
+  chat() { ui.route = server.selectedCandidate ? "chat" : "hackathon-chat"; },
+  complete() { ui.route = "complete"; },
+  memory() { ui.route = "memory"; },
+  journal() { ui.route = "memory:hackathon"; },
+  fusion() { ui.route = "fusion:partner_orange"; },
+  mailbox() { ui.route = null; ui.tab = "mailbox"; ui.mailboxMode = "received"; },
+  letter() { ui.route = "seed:song"; },
+  rank() { ui.route = "rank"; },
+};
+
+function applyPitchView(view) {
+  const fn = PITCH_VIEWS[view];
+  if (!fn) return false;
+  fn();
+  render();
+  return true;
+}
+
+function applyInitialPitch() {
+  const raw = (location.hash || "").replace(/^#/, "");
+  if (!raw) return false;
+  const params = new URLSearchParams(raw.includes("=") ? raw : `pitch=${raw}`);
+  const view = params.get("pitch");
+  return view ? applyPitchView(view) : false;
+}
+
+window.HuatuobangPitch = { go: applyPitchView, views: Object.keys(PITCH_VIEWS) };
+window.addEventListener("hashchange", applyInitialPitch);
+window.addEventListener("message", event => {
+  const data = event.data;
+  if (!data || data.type !== "huatuobang-roadshow") return;
+  if (data.view) applyPitchView(data.view);
+});
+
+api("/api/demo").then(() => {
+  if (!applyInitialPitch()) render();
+});
 fusionApi(undefined, { silent: true });
 setInterval(refreshWorld, 3000);

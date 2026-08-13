@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
   // 前端本体在 public/world/，以后前端调整都在本项目内进行。
   async rewrites() {
     return {
-      beforeFiles: [{ source: "/", destination: "/world/index.html" }],
+      beforeFiles: [
+        { source: "/", destination: "/world/index.html" },
+        { source: "/pitch", destination: "/pitch/huatuobang-roadshow.html" },
+        { source: "/pitch/", destination: "/pitch/huatuobang-roadshow.html" },
+      ],
       afterFiles: [],
       fallback: [],
     };
