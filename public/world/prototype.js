@@ -216,12 +216,16 @@ async function roomAction(path, body) {
 }
 
 async function refreshWorld() {
-  if (ui.loading || ui.route !== "chat") return;
+  // 聊天页轮询主持人/对方消息与 pact；完成页轮询对方是否也已确认完成（开花）
+  if (ui.loading || (ui.route !== "chat" && ui.route !== "complete")) return;
   try {
     const response = await fetch("/api/demo");
     if (!response.ok) return;
     const snapshot = await response.json();
-    if (JSON.stringify(snapshot.messages) !== JSON.stringify(server.messages) || JSON.stringify(snapshot.pact) !== JSON.stringify(server.pact)) {
+    if (JSON.stringify(snapshot.messages) !== JSON.stringify(server.messages)
+      || JSON.stringify(snapshot.pact) !== JSON.stringify(server.pact)
+      || snapshot.stage !== server.stage
+      || snapshot.checkedIn !== server.checkedIn) {
       server = snapshot;
       render();
     }
@@ -1018,9 +1022,8 @@ document.addEventListener("click", async event => {
     if (result.both) {
       notify("双方都已确认完成，植物开花了！");
     } else {
-      notify(`已记录完成，等待${partnerName()}确认`);
-      ui.route = "chat";
-      render();
+      // 留在完成页；对方确认完成后 refreshWorld 会轮询到开花，自动切到留言/入林
+      notify(`已记录完成，等待${partnerName()}确认…`);
     }
     return;
   }
