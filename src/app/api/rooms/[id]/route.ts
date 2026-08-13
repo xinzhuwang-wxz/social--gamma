@@ -3,6 +3,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser } from "@/lib/session";
 import { roomForUser } from "@/lib/room-access";
+import { decodeEventAiMessage } from "@/lib/event-message";
 
 /** GET /api/rooms/:id — 房间全量（轮询源）：房间、种子、对方、消息、约定、我的角色 */
 export async function GET(
@@ -166,14 +167,18 @@ export async function GET(
     },
     members: membersWithInfo.length > 0 ? membersWithInfo : null,
     a2a: chosen?.a2a ?? null,
-    messages: msgs.map((m) => ({
-      id: m.id,
-      senderId: m.senderId,
-      kind: m.kind,
-      content: m.content,
-      mine: m.senderId === me.id,
-      createdAt: m.createdAt,
-    })),
+    messages: msgs.map((m) => {
+      const event = decodeEventAiMessage(m.content);
+      return {
+        id: m.id,
+        senderId: m.senderId,
+        kind: m.kind,
+        content: event?.text ?? m.content,
+        event,
+        mine: m.senderId === me.id,
+        createdAt: m.createdAt,
+      };
+    }),
     pact: enrichedPact,
     memoryStatus,
     memoryId: memory?.id ?? null,

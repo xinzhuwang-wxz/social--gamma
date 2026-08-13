@@ -7,6 +7,8 @@ import { runMatching } from "@/lib/matching";
 import { roomKickoff, roomKickoffGroup } from "@/lib/ai/room";
 import { seedToCard, toProfile } from "@/lib/matching";
 import { simOnHumanMessage, simOnRoomCreated } from "@/lib/sim";
+import { coordinateRoomAction, insertEventAiMessage } from "@/lib/event-coordinator";
+import { decodeEventAiMessage } from "@/lib/event-message";
 
 export type WorldDraft = {
   idea?: string;
@@ -31,7 +33,21 @@ export type WorldCandidate = {
 export type WorldSnapshot = {
   published: boolean;
   selectedCandidate: string | null;
-  messages: { id: string; author: string; text: string }[];
+  messages: {
+    id: string;
+    author: string;
+    text: string;
+    kind: string;
+    event?: ReturnType<typeof decodeEventAiMessage>;
+  }[];
+  pact: {
+    id: string;
+    status: "draft" | "confirmed";
+    content: { what: string; when: string; where: string; meet: string; notes: string[] };
+    myConfirmed: boolean;
+    confirmedCount: number;
+    memberCount: number;
+  } | null;
   slots: { people: boolean; time: boolean; place: boolean };
   checkedIn: boolean;
   archived: boolean;
@@ -230,8 +246,13 @@ export async function chooseWorldCandidate(
     roomId,
     senderId: null,
     kind: "system",
-    content: "两位 Agent 已完成交接。接下来由你们决定具体怎么安排。",
+    content: "你们已经组队成功，开始聊聊具体安排吧。",
     createdAt: new Date(),
+  });
+  await insertEventAiMessage(roomId, {
+    action: "icebreak",
+    text: kickoff.icebreak.message,
+    options: kickoff.icebreak.quickReplies.slice(0, 3),
   });
 
   s.roomId = roomId;
@@ -267,6 +288,9 @@ export async function addWorldMessage(
   }
 
   appendEvent(user.id, "MESSAGE_SENT", { text: content });
+  // 事件主持人（小苗）的自动推进不阻塞发消息：后台跑，若有话要说会通过 3 秒轮询呈现。
+  // 确定性的「整理成行动约定」由聊天里的按钮触发，演示不依赖这条自动判断。
+  coordinateRoomAction(s.roomId).catch((error) => console.error("[event coordinator]", error));
   simOnHumanMessage(origin, s.roomId);
   return worldSnapshot(user.id);
 }
@@ -324,32 +348,36 @@ export async function worldSnapshot(userId: string): Promise<WorldSnapshot> {
   const messages = room
     ? await messagesForRoom(room.id, userId)
     : [];
+  const pact = room ? await pactForRoom(room.id, userId) : null;
 
-  // 阶段由已确认事实派生（与 demo/state 一致），AI 不能直接写
-  const people = Boolean(room);
-  const time = Boolean(s.slots?.time);
-  const place = Boolean(s.slots?.place);
-  const stage = s.archived
+  // 共同回忆已物化（双方都愿意再组队后 /rooms/[id]/memory 生成）→ 入林。红线#4 的落点。
+  const hasMemory = room ? await roomHasMemory(room.id) : false;
+
+  // 阶段以「房间事实」为唯一真相源：pact 起草→growing，pact 双确认→bud，双方打卡完成→bloom，
+  // 共同回忆生成→forest。AI 只推进、不直接写阶段。
+  const stage = hasMemory
     ? "FOREST"
-    : s.checkedIn
-      ? "BLOOM"
-      : people && time && place
-        ? "BUD"
-        : time || place
-          ? "GROWING"
-          : messages.length
-            ? "LEAF"
-            : room
-              ? "SPROUT"
-              : "SEED";
+    : !room
+      ? "SEED"
+      : room.stage === "bloom"
+        ? "BLOOM"
+        : room.stage === "bud"
+          ? "BUD"
+          : room.stage === "growing"
+            ? "GROWING"
+            : messages.some(message => message.kind === "text")
+              ? "LEAF"
+              : "SPROUT";
 
   return {
     published: Boolean(seed),
     selectedCandidate: s.selectedCandidate ?? null,
     messages,
-    slots: { people, time, place },
-    checkedIn: Boolean(s.checkedIn),
-    archived: Boolean(s.archived),
+    pact,
+    // slots 保留给前端做信息展示：有房间=已组队；有 pact=已整理时间/地点
+    slots: { people: Boolean(room), time: Boolean(pact), place: Boolean(pact) },
+    checkedIn: room?.stage === "bloom",
+    archived: hasMemory,
     events: s.events,
     stage,
     candidates,
@@ -406,9 +434,51 @@ async function messagesForRoom(roomId: string, meId: string) {
     .where(eq(schema.messages.roomId, roomId))
     .orderBy(asc(schema.messages.createdAt));
 
-  return rows.map(({ message, user }) => ({
-    id: message.id,
-    author: message.senderId === meId ? "me" : user?.name ?? "system",
-    text: message.content,
-  }));
+  return rows.map(({ message, user }) => {
+    const event = decodeEventAiMessage(message.content);
+    return {
+      id: message.id,
+      author: message.senderId === meId ? "me" : user?.name ?? "system",
+      text: event?.text ?? message.content,
+      kind: message.kind,
+      event,
+    };
+  });
+}
+
+// 是否已生成共同回忆（双方都愿意再组队时 /rooms/[id]/memory 才写入 memories）→ 入林信号
+async function roomHasMemory(roomId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: schema.memories.id })
+    .from(schema.memories)
+    .where(eq(schema.memories.roomId, roomId))
+    .limit(1);
+  return Boolean(row);
+}
+
+async function pactForRoom(roomId: string, meId: string): Promise<WorldSnapshot["pact"]> {
+  const [pact] = await db
+    .select()
+    .from(schema.pacts)
+    .where(eq(schema.pacts.roomId, roomId))
+    .orderBy(desc(schema.pacts.version))
+    .limit(1);
+  if (!pact) return null;
+
+  const confirmations = await db
+    .select()
+    .from(schema.pactConfirmations)
+    .where(eq(schema.pactConfirmations.pactId, pact.id));
+  const members = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, roomId));
+  return {
+    id: pact.id,
+    status: pact.status,
+    content: pact.content,
+    myConfirmed: confirmations.some((confirmation) => confirmation.userId === meId),
+    confirmedCount: confirmations.length,
+    memberCount: members.length || 2,
+  };
 }

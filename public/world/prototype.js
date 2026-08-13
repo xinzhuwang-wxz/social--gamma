@@ -39,7 +39,6 @@ const initialUi = () => {
   detailReturnRoute: null,
   profileGardenerOpen: false,
   profileEventIndex: null,
-  proposalsOpen: false,
   completionOpen: false,
   memoryText: "",
   mailboxMode: "received",
@@ -51,12 +50,14 @@ const initialUi = () => {
   decorated: false,
   petMood: "idle",
   joinedSeeds: [],
+  dismissedSystemNoticeIds: [],
   });
 };
 
 let ui = initialUi();
-let server = { stage: "SEED", published: false, selectedCandidate: null, messages: [], slots: { people: false, time: false, place: false }, checkedIn: false, archived: false };
+let server = { stage: "SEED", published: false, selectedCandidate: null, messages: [], pact: null, slots: { people: false, time: false, place: false }, checkedIn: false, archived: false };
 let toastTimer;
+let stageNoticeTimer;
 
 const seeds = [
   { id: "song", title: "在草坪上办一场夏末点歌会", type: "音乐", time: "本周五 18:00", place: "校内草坪", peer: "饭团", gardener: "团团", color: "sage", asset: "flower-1.png", petAsset: "pet-mail.png", preview: "每个人带一首最近喜欢的歌，落日前给你留一个位置。", letter: "致一寸欢喜：\n\n饭团想在本周五傍晚，带一只小音箱去校园草坪坐坐。每个人只需带来一首最近最喜欢的歌，不用准备节目，也不必把气氛弄得很热闹。团团记得你喜欢听歌，也喜欢记录有光线和风的时刻；你和饭团还一起熬过黑客松的夜，见面不会太陌生。\n\n如果你愿意，落日前的草坪会为你留一个位置。要不要接受，仍由你自己决定。\n\n祝这个夏末，有一首歌恰好被人认真听见。\n\n团团", tags: ["音乐", "草坪", "仅本校"], reason: "你和饭团都喜欢音乐，也都偏爱有氛围但不太正式的活动。" },
@@ -188,6 +189,43 @@ async function api(path, body, opts = {}) {
   } finally {
     if (!opts.silent) { ui.loading = false; render(); }
   }
+}
+
+async function roomAction(path, body) {
+  if (ui.loading) return null;
+  ui.loading = true;
+  render();
+  try {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "操作失败");
+    const snapshot = await fetch("/api/demo").then(value => value.json());
+    server = snapshot;
+    return result;
+  } catch (error) {
+    notify(error.message || "网络开了小差");
+    return null;
+  } finally {
+    ui.loading = false;
+    render();
+  }
+}
+
+async function refreshWorld() {
+  if (ui.loading || ui.route !== "chat") return;
+  try {
+    const response = await fetch("/api/demo");
+    if (!response.ok) return;
+    const snapshot = await response.json();
+    if (JSON.stringify(snapshot.messages) !== JSON.stringify(server.messages) || JSON.stringify(snapshot.pact) !== JSON.stringify(server.pact)) {
+      server = snapshot;
+      render();
+    }
+  } catch {}
 }
 
 function upcomingDates() {
@@ -509,7 +547,7 @@ function SeedDetailPage(id) {
     <section class="paper-letter"><header><button class="letter-avatar large" data-person-profile="${seed.peer}" aria-label="查看${seed.peer}的个人主页"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.gardener}送来的信"></button><div><small>来自花园外</small><button class="profile-name-link" data-person-profile="${seed.peer}"><strong>${seed.peer} · 校园已认证</strong></button></div><span class="paper-stamp">小羊<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.gardener}<br><time>2026 年 8 月 13 日</time></footer></section>
     <div class="letter-facts"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span>${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div>
     <section class="match-box"><div>${pet(true)}</div><p><strong>为什么带给你</strong>${seed.reason}</p></section>
-    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button>${ui.joinedSeeds.includes(seed.id) ? `<div class="joined-state">✓ 已表达参与意向 · 等待${escapeHtml(seed.peer)}确认</div>` : `<button class="primary" data-action="join-seed">愿意加入</button>`}</div>
+    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button>${ui.joinedSeeds.includes(seed.id) ? `<div class="joined-state">✓ 已表达参与意向 · 等待${escapeHtml(seed.peer)}确认</div>` : `<button class="primary" data-action="join-seed">感兴趣</button>`}</div>
   </main>`;
 }
 
@@ -630,24 +668,36 @@ function HackathonChatPage() {
 
 function ChatPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
-  const messages = server.messages.map(message => {
+  const visibleMessages = server.messages.filter(message => message.kind !== "system");
+  const latestSystemMessage = [...server.messages].reverse().find(message => message.kind === "system");
+  const stageNotice = latestSystemMessage && !ui.dismissedSystemNoticeIds.includes(latestSystemMessage.id)
+    ? `<button class="chat-stage-notice" data-action="dismiss-stage-notice" data-notice-id="${escapeHtml(latestSystemMessage.id)}"><span>${escapeHtml(latestSystemMessage.text.startsWith("个人 Agent 已完成交接") ? "你们已经组队成功，开始聊聊具体安排吧。" : latestSystemMessage.text)}</span><i>×</i></button>`
+    : "";
+  // 事件主持人（小苗）用浅黄气泡 + 角色标注渲染，真人发言用带头像的 humanMessage（区分「真人 / Agent 代聊 / AI 主持人」三种身份）
+  const messages = visibleMessages.map((message, index) => {
+    if (message.kind === "ai") {
+      const options = index === visibleMessages.length - 1 && message.event?.options?.length
+        ? `<div class="event-ai-options">${message.event.options.map(option => `<button data-event-reply="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}</div>`
+        : "";
+      return `<div class="chat-turn ai"><span class="chat-speaker-avatar">🌿</span><div class="chat-turn-content"><div class="chat-speaker-name"><strong>小苗</strong><span>行动主持人 · 事件 AI</span></div><div class="message them event-ai-bubble">${escapeHtml(message.text)}</div>${options}</div></div>`;
+    }
     const mine = message.author === "me";
     return humanMessage(mine ? "一寸欢喜" : partnerName(), message.text, mine);
   }).join("");
-  const allConfirmed = server.slots.people && server.slots.time && server.slots.place;
+  const pact = server.pact;
+  const pactCard = pact ? `<section class="agreement card event-pact"><span class="mini-label">行动约定 · ${pact.status === "confirmed" ? "已确认" : `${pact.confirmedCount}/${pact.memberCount} 人确认`}</span><h2>${escapeHtml(pact.content.what)}</h2><p>${icon("clock")} ${escapeHtml(pact.content.when)}</p><p>${icon("pin")} ${escapeHtml(pact.content.where)}</p>${pact.content.meet && pact.content.meet !== "待商量" ? `<p>${icon("people")} ${escapeHtml(pact.content.meet)}</p>` : ""}${pact.status === "confirmed" ? `<button class="primary full" data-action="open-completion">行动后回来打卡</button>` : pact.myConfirmed ? `<button class="secondary full" disabled>已确认，等待其他成员</button>` : `<button class="primary full" data-action="confirm-pact">确认这份行动约定</button>`}</section>` : "";
+  // 确定性兜底：还没有行动约定时，随时可以请主持人把已聊到的时间/地点整理成一份可确认的约定（不替你确认）
+  const draftPactCta = !pact && server.selectedCandidate ? `<button class="secondary full chat-help" data-action="draft-pact">请小苗整理成行动约定</button>` : "";
   return `<main class="screen chat-screen github-aligned-page">${topbar(escapeHtml(actionTitle()), "4 位群聊成员", true)}
     <section class="chat-progress"><div class="growth-plant">${plant(server.stage, "sm", "green")}</div><div><strong>行动状态 · ${meta[0]}</strong><small>${meta[1]}</small></div></section>
     <div class="chat-log" id="chat-log">
       <div class="chat-divider"><span>匹配阶段 · 两位 Agent 的对话记录</span></div>
       <div class="agent-message peer partner-agent"><button class="agent-avatar portrait-agent" data-person-profile="${escapeHtml(partnerName())}" aria-label="查看${escapeHtml(partnerName())}的花园"><img src="${personWorld(partnerName()).gardenerImage}" alt="${escapeHtml(personWorld(partnerName()).gardener)}"></button><div><strong>${escapeHtml(partnerName())}的${escapeHtml(personWorld(partnerName()).gardener)} <em>Agent 代聊</em></strong><p>${escapeHtml(partnerName())}时间和你合得上，对这次行动也很有兴趣，愿意一起完成。</p><small>小花匠正在代主人同步组队信息</small></div></div>
       <div class="agent-message own my-agent"><span class="agent-avatar portrait-agent"><img src="${profileWorlds["一寸欢喜"].gardenerImage}" alt="小羊"></span><div><strong>一寸欢喜的小羊 <em>Agent 代聊</em></strong><p>一寸欢喜想找一位搭子一起「${escapeHtml(actionTitle())}」，希望时间、地点和活动节奏都合得来。</p><small>小羊正在代一寸欢喜说明发布时确认的信息</small></div></div>
-      <div class="chat-divider active"><span>双方已确认组队 · 四方行动群聊开始</span></div>
-      ${server.messages.length ? "" : humanMessage(partnerName(), "嗨！很期待和你一起，咱们把时间地点定一下吧～")}${messages}
-      ${!ui.proposalsOpen && !allConfirmed ? `<button class="secondary full chat-help" data-action="help-progress">请小羊整理时间与地点</button>` : ""}
-      ${ui.proposalsOpen ? `<section class="proposal card"><div class="proposal-head">${pet(true)}<div><span class="mini-label">AI 提案 · 需要人确认</span><h3>我只整理了你们刚才说过的</h3></div></div><div class="proposal-item ${server.slots.time ? "confirmed" : ""}"><span>${icon("clock")}</span><div><small>时间</small><strong>${escapeHtml(server.draft?.time || ui.draft.time || "你发布时选择的时间")}</strong></div><button data-slot="time">${server.slots.time ? "已确认 ✓" : "确认时间"}</button></div><div class="proposal-item ${server.slots.place ? "confirmed" : ""}"><span>${icon("pin")}</span><div><small>集合地点</small><strong>${escapeHtml(server.draft?.place || ui.draft.place || "你发布时选择的地点")}</strong></div><button data-slot="place">${server.slots.place ? "已确认 ✓" : "确认地点"}</button></div><p class="proposal-note">小羊只生成提案；你的点击才会写入行动约定。</p></section>` : ""}
-      ${allConfirmed ? `<section class="agreement card"><span class="mini-label">行动确认卡 · 双方已接受</span><h2>${escapeHtml(actionTitle())}</h2><p>${icon("clock")} ${escapeHtml(server.draft?.time || ui.draft.time || "时间待定")}</p><p>${icon("pin")} ${escapeHtml(server.draft?.place || ui.draft.place || "地点待定")}</p><p>${icon("people")} 一寸欢喜、${partnerName()} · 节奏共同商量</p><button class="primary full" data-action="open-completion">行动后回来打卡</button></section>` : ""}
+      <div class="chat-divider active"><span>双方已确认组队 · 群聊开始，行动主持人小苗会在需要时帮你们推进</span></div>
+      ${stageNotice}${visibleMessages.length ? "" : humanMessage(partnerName(), "嗨！很期待和你一起，咱们把时间地点定一下吧～")}${messages}${pactCard}${draftPactCta}
     </div>
-    <form class="chat-compose" id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="在四方群聊中发消息…"><button aria-label="发送">发送</button></form>
+    <form class="chat-compose" id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="发消息，一起把行动定下来…"><button aria-label="发送">发送</button></form>
   </main>`;
 }
 
@@ -724,8 +774,19 @@ function render() {
     syncPhoneScale();
     const log = document.querySelector("#chat-log");
     if (log) log.scrollTop = log.scrollHeight;
+    const notice = document.querySelector("[data-notice-id]");
+    if (notice) {
+      clearTimeout(stageNoticeTimer);
+      stageNoticeTimer = setTimeout(() => dismissStageNotice(notice.dataset.noticeId), 3200);
+    }
   });
   requestAnimationFrame(() => { window.WorldLayer?.mount(); window.CampusRank?.mount(ui.route === "rank"); });
+}
+
+function dismissStageNotice(id) {
+  if (!id || ui.dismissedSystemNoticeIds.includes(id)) return;
+  ui.dismissedSystemNoticeIds.push(id);
+  render();
 }
 
 function syncPhoneScale() {
@@ -839,17 +900,13 @@ document.addEventListener("click", async event => {
     notify(`已和${target.dataset.candidate}成为搭子，另外两位已由小羊礼貌回复`);
     return render();
   }
-  if (target.dataset.slot) {
-    const slot = target.dataset.slot;
-    if (server.slots[slot]) return;
-    const value = slot === "time" ? (server.draft?.time || "时间待定") : (server.draft?.place || "地点待定");
-    if (!await api("/api/proposals/confirm", { slot, value })) return;
-    const done = server.slots.people && server.slots.time && server.slots.place;
-    notify(done ? "时间、地点都确认了，花苞出现了" : `${slot === "time" ? "时间" : "地点"}已确认，植物又长高了一点`);
+  if (target.dataset.eventReply) {
+    if (await api("/api/chat/messages", { author: "me", text: target.dataset.eventReply })) notify("已发送");
     return;
   }
 
   const action = target.dataset.action;
+  if (action === "dismiss-stage-notice") return dismissStageNotice(target.dataset.noticeId);
   if (action === "back") return goBack();
   if (action === "open-profile-gardener") { ui.profileGardenerOpen = true; ui.profileEventIndex = null; return render(); }
   if (action === "close-profile-overlay") { ui.profileGardenerOpen = false; ui.profileEventIndex = null; return render(); }
@@ -941,19 +998,45 @@ document.addEventListener("click", async event => {
   }
   if (action === "decline-seed") { ui.route = null; ui.tab = "mailbox"; notify("没关系，小羊会继续帮你留意"); return render(); }
   if (action === "join-seed") { const seedId = ui.route?.split(":")[1]; const joinedSeed = seeds.find(s => s.id === seedId); if (seedId && !ui.joinedSeeds.includes(seedId)) ui.joinedSeeds.push(seedId); notify(`已把参与意向送给${joinedSeed?.peer || "对方"}，等对方确认后就能一起了。最终决定仍由对方完成`); return render(); }
-  if (action === "help-progress") { ui.proposalsOpen = true; return render(); }
+  // 请行动主持人把已聊到的内容整理成一份「行动约定」草稿（只整理、不替人确认）——确定性兜底，不必等 AI 自己起草
+  if (action === "draft-pact") {
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    if (await roomAction(`/api/rooms/${server.roomId}/pact`, { action: "draft" })) notify("小苗整理好了一份行动约定，请双方各自确认");
+    return;
+  }
+  if (action === "confirm-pact") {
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    if (await roomAction(`/api/rooms/${server.roomId}/pact`, { action: "confirm" })) notify("已确认行动约定");
+    return;
+  }
   if (action === "show-stage") return notify(`${stageMeta[server.stage][0]}：${stageMeta[server.stage][1]}`);
   if (action === "open-completion") { ui.route = "complete"; return render(); }
-  if (action === "check-in") { if (await api("/api/gatherings/check-in", {})) notify("打卡成功，植物开花了！"); return; }
+  if (action === "check-in") {
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    const result = await roomAction(`/api/rooms/${server.roomId}/complete`, {});
+    if (!result) return;
+    if (result.both) {
+      notify("双方都已确认完成，植物开花了！");
+    } else {
+      notify(`已记录完成，等待${partnerName()}确认`);
+      ui.route = "chat";
+      render();
+    }
+    return;
+  }
   if (action === "archive-memory") {
-    ui.memoryText = document.querySelector("#memory-text")?.value.trim() || "湖边的光比想象中更好看。";
-    if (!await api("/api/gatherings/archive", { text: ui.memoryText })) return;
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    ui.memoryText = document.querySelector("#memory-text")?.value.trim() || "这次一起完成，值得记住。";
+    // 红线#4：我这边「愿意再组队 + 留言」。是否真的生成共同回忆取决于双方；后端不回传结果
+    // （避免第二个提交者反推对方拒绝），因此前端也不断言对方的选择。
+    if (!await roomAction(`/api/rooms/${server.roomId}/memory`, { willRejoin: true, text: ui.memoryText })) return;
     ui.route = "memory";
-    notify("双方都愿意再组队，共同回忆已进入你们的森林");
+    notify("你的心愿已收好，等对方也愿意，这段回忆就会长进你们的森林");
     return render();
   }
-  // 红线#4：任一方不愿再组队 → 不生成共同回忆，也不告知对方是谁、原因（植物停在开花，不入林）
+  // 红线#4：任一方不愿再组队 → 后端记录 willRejoin:false，共同回忆不生成，也不告知对方是谁、原因
   if (action === "decline-reteam") {
+    if (server.roomId) await roomAction(`/api/rooms/${server.roomId}/memory`, { willRejoin: false });
     ui.route = null;
     ui.tab = "garden";
     notify("尊重你的选择。这段回忆不会生成，我们也不会把原因告诉对方。");
@@ -1009,3 +1092,4 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener("scroll", syncPhoneScale);
 }
 api("/api/demo").then(render);
+setInterval(refreshWorld, 3000);

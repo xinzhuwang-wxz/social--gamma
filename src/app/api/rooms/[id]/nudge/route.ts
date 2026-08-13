@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { asc, desc, eq } from "drizzle-orm";
-import { db, schema } from "@/lib/db/client";
-import { currentUser, uid } from "@/lib/session";
-import { nudge } from "@/lib/ai/room";
-import { seedToCard } from "@/lib/matching";
+import { currentUser } from "@/lib/session";
 import { roomForUser } from "@/lib/room-access";
-import { emitRoom } from "@/lib/room-events";
+import { coordinateRoomAction } from "@/lib/event-coordinator";
 
-/** POST /api/rooms/:id/nudge — 用户主动请求小苗 推进（一次一个卡点） */
+/** POST /api/rooms/:id/nudge — 兼容旧客户端的手动推进入口。 */
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,48 +16,9 @@ export async function POST(
   // 已开花的房间不再推进（浪费 AI token + 插入误导消息）
   if (room.stage === "bloom") return NextResponse.json({ error: "room already completed" }, { status: 409 });
 
-  const [seed] = await db.select().from(schema.seeds).where(eq(schema.seeds.id, room.seedId));
-  const msgs = await db
-    .select({ m: schema.messages, u: schema.users })
-    .from(schema.messages)
-    .leftJoin(schema.users, eq(schema.messages.senderId, schema.users.id))
-    .where(eq(schema.messages.roomId, id))
-    .orderBy(asc(schema.messages.createdAt));
-
-  const [pact] = await db
-    .select()
-    .from(schema.pacts)
-    .where(eq(schema.pacts.roomId, id))
-    .orderBy(desc(schema.pacts.version))
-    .limit(1);
-
   try {
-    const result = await nudge(
-      seedToCard(seed),
-      msgs.slice(-30).map(({ m, u }) => ({
-        senderName: m.kind === "text" ? u?.name ?? "?" : "小苗",
-        content: m.content,
-        kind: m.kind,
-      })),
-      pact ? { status: pact.status, content: pact.content } : null
-    );
-
-    const text =
-      result.kind === "options" && result.options?.length
-        ? `${result.text}\n${result.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}\n（当然，也可以继续聊聊）`
-        : result.text;
-
-    await db.insert(schema.messages).values({
-      id: `msg_${uid()}`,
-      roomId: id,
-      senderId: null,
-      kind: "ai",
-      content: text,
-      createdAt: new Date(),
-    });
-
-    emitRoom(id);
-    return NextResponse.json({ ok: true, kind: result.kind });
+    const result = await coordinateRoomAction(id, { force: true });
+    return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     console.error("nudge error", e);
     return NextResponse.json({ error: "ai_failed" }, { status: 502 });
