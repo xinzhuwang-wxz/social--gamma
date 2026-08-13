@@ -73,7 +73,16 @@
   let dragState = null;
   let caughtSeeds = 0;
   let activeChase = null;
+  let butterflySerial = 0;
+  let butterflySpawner = null;
+  let walkFrameTimer = null;
+  const butterflyTimers = new Map();
   const caughtFlightIds = new Set();
+  const butterflyPerches = [
+    { x: 50, y: 36, label: "绣球花" }, { x: 31, y: 66, label: "信箱" },
+    { x: 80, y: 45, label: "石灯" }, { x: 20, y: 38, label: "灌木丛" },
+    { x: 68, y: 34, label: "花圃" }, { x: 41, y: 49, label: "小路边" },
+  ];
 
   const savePreferences = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
   const saveAnchors = () => localStorage.setItem(ANCHOR_KEY, JSON.stringify(anchorOverrides));
@@ -114,7 +123,84 @@
   }
 
   function seedButterfliesMarkup() {
-    return `<div class="seed-butterfly-layer" aria-label="从其他花园飞来的种子蝴蝶">${seedFlights.filter(flight => !caughtFlightIds.has(flight.id)).map((flight, index) => `<button class="seed-butterfly seed-flight-${index + 1}" data-seed-flight="${flight.id}" style="--butterfly-x:${flight.x}%;--butterfly-y:${flight.y}%;--flight-delay:${flight.delay}s" aria-label="捕捉从${flight.garden}飞来的蝴蝶"><img src="assets/insect-butterfly.png" alt=""><span>${flight.garden}</span></button>`).join("")}</div><aside class="seed-hunt-guide"><img src="assets/insect-butterfly.png" alt=""><div><strong>追蝴蝶，采种子</strong><small>点蝴蝶让小绿追过去 · 已采 ${caughtSeeds} 颗</small></div></aside>`;
+    return `<div class="seed-butterfly-layer" aria-label="从其他花园飞来的种子蝴蝶"></div><aside class="seed-hunt-guide"><img src="assets/insect-butterfly.png" alt=""><div><strong>追蝴蝶，采种子</strong><small>蝴蝶会停一会儿 · 已采 ${caughtSeeds} 颗</small></div></aside>`;
+  }
+
+  function clearButterflyTimer(button) {
+    const timers = butterflyTimers.get(button);
+    timers?.forEach(clearTimeout);
+    butterflyTimers.delete(button);
+  }
+
+  function setButterflyPosition(button, x, y, state = "flying") {
+    button.dataset.x = x;
+    button.dataset.y = y;
+    button.dataset.state = state;
+    button.style.setProperty("--butterfly-x", `${x}%`);
+    button.style.setProperty("--butterfly-y", `${y}%`);
+  }
+
+  function removeButterfly(button) {
+    clearButterflyTimer(button);
+    if (activeChase === button) activeChase = null;
+    button.remove();
+    scheduleButterflySpawn();
+  }
+
+  function flyButterflyAway(button) {
+    if (!button?.isConnected || button.classList.contains("caught")) return;
+    clearButterflyTimer(button);
+    button.dataset.state = "leaving";
+    button.classList.add("leaving");
+    setButterflyPosition(button, Math.random() > .5 ? 108 : -8, 18 + Math.random() * 38, "leaving");
+    butterflyTimers.set(button, [setTimeout(() => removeButterfly(button), 1500)]);
+  }
+
+  function roamButterfly(button, stepsLeft = 5) {
+    if (!button?.isConnected || button.classList.contains("targeted")) return;
+    if (stepsLeft <= 0) return flyButterflyAway(button);
+    const perch = butterflyPerches[Math.floor(Math.random() * butterflyPerches.length)];
+    button.classList.remove("resting");
+    setButterflyPosition(button, perch.x + (Math.random() * 5 - 2.5), perch.y + (Math.random() * 4 - 2), "flying");
+    const flightTime = 1500 + Math.random() * 900;
+    const restTime = 950 + Math.random() * 1500;
+    const settle = setTimeout(() => {
+      if (!button.isConnected || button.classList.contains("targeted")) return;
+      button.classList.add("resting");
+      button.dataset.state = "resting";
+      button.querySelector("span").textContent = `停在${perch.label}`;
+    }, flightTime);
+    const next = setTimeout(() => roamButterfly(button, stepsLeft - 1), flightTime + restTime);
+    butterflyTimers.set(button, [settle, next]);
+  }
+
+  function spawnButterfly(force = false) {
+    const layer = document.querySelector(".garden-world-screen .seed-butterfly-layer");
+    if (!layer || layer.children.length >= 3 || (!force && document.hidden)) return scheduleButterflySpawn();
+    const available = seedFlights.filter(flight => !caughtFlightIds.has(flight.id));
+    if (!available.length) return;
+    const flight = available[butterflySerial % available.length];
+    butterflySerial += 1;
+    const fromLeft = Math.random() > .5;
+    const button = document.createElement("button");
+    button.className = "seed-butterfly entering";
+    button.dataset.seedFlight = flight.id;
+    button.setAttribute("aria-label", `捕捉从${flight.garden}飞来的蝴蝶`);
+    button.innerHTML = `<img src="assets/insect-butterfly.png" alt=""><span>${flight.garden}</span>`;
+    setButterflyPosition(button, fromLeft ? -8 : 108, 24 + Math.random() * 30, "entering");
+    layer.append(button);
+    requestAnimationFrame(() => {
+      button.classList.remove("entering");
+      roamButterfly(button, 4 + Math.floor(Math.random() * 3));
+    });
+    scheduleButterflySpawn();
+  }
+
+  function scheduleButterflySpawn() {
+    clearTimeout(butterflySpawner);
+    const layer = document.querySelector(".garden-world-screen .seed-butterfly-layer");
+    if (!layer || layer.children.length >= 3) return;
+    butterflySpawner = setTimeout(() => spawnButterfly(), 5000 + Math.random() * 4500);
   }
 
   function objectEffectsMarkup(active = "") {
@@ -150,9 +236,19 @@
   function setPetBehavior(behavior, moving = false) {
     const pet = document.querySelector(".living-pet");
     if (!pet) return;
+    clearInterval(walkFrameTimer);
+    walkFrameTimer = null;
     pet.className = `living-pet behavior-${moving ? "walk" : behavior.id}`;
     const image = pet.querySelector("img");
     image.src = `assets/pet-actions/${moving ? "pet-walk.png" : behavior.asset}`;
+    if (moving) {
+      let alternate = false;
+      walkFrameTimer = setInterval(() => {
+        if (!image.isConnected || !pet.classList.contains("behavior-walk")) return clearInterval(walkFrameTimer);
+        alternate = !alternate;
+        image.src = `assets/pet-actions/${alternate ? "pet-walk-alt.png" : "pet-walk.png"}`;
+      }, 210);
+    }
     pet.querySelector("span").textContent = behavior.line;
   }
 
@@ -203,26 +299,49 @@
 
   function updateHuntCount() {
     const label = document.querySelector(".seed-hunt-guide small");
-    if (label) label.textContent = `点蝴蝶让小绿追过去 · 已采 ${caughtSeeds} 颗`;
+    if (label) label.textContent = `蝴蝶会停一会儿 · 已采 ${caughtSeeds} 颗`;
   }
 
   function chaseButterfly(button) {
     if (!button || button.classList.contains("caught") || activeChase) return;
     const flight = seedFlights.find(item => item.id === button.dataset.seedFlight);
     if (!flight) return;
-    activeChase = flight.id;
+    activeChase = button;
+    clearButterflyTimer(button);
     button.classList.add("targeted");
+    button.classList.remove("resting");
+    const escapePerch = butterflyPerches[Math.floor(Math.random() * butterflyPerches.length)];
+    setButterflyPosition(button, escapePerch.x, escapePerch.y, "escaping");
+    if (Math.random() < .58) {
+      setTimeout(() => {
+        if (!button.isConnected || activeChase !== button) return;
+        const secondPerch = butterflyPerches.filter(perch => perch !== escapePerch)[Math.floor(Math.random() * (butterflyPerches.length - 1))];
+        setButterflyPosition(button, secondPerch.x, secondPerch.y, "escaping");
+      }, 620);
+    }
     const scene = button.closest(".world-scene");
     const sceneBox = scene?.getBoundingClientRect();
-    const butterflyBox = button.getBoundingClientRect();
     if (!sceneBox) { activeChase = null; return; }
-    const x = Math.max(10, Math.min(90, (butterflyBox.left + butterflyBox.width / 2 - sceneBox.left) / sceneBox.width * 100));
-    const y = Math.max(26, Math.min(68, (butterflyBox.top + butterflyBox.height - sceneBox.top) / sceneBox.height * 100 + 5));
+    const x = Math.max(10, Math.min(90, escapePerch.x - 3));
+    const y = Math.max(28, Math.min(68, escapePerch.y + 7));
     movePetTo(x, y, "等等我，把那颗种子留下！", pet => {
       button.classList.remove("targeted");
-      button.classList.add("caught");
+      const butterflyBox = button.getBoundingClientRect();
+      const petBox = pet.getBoundingClientRect();
+      const distance = Math.hypot(butterflyBox.left + butterflyBox.width / 2 - (petBox.left + petBox.width / 2), butterflyBox.top + butterflyBox.height / 2 - (petBox.top + petBox.height * .35));
+      clearInterval(walkFrameTimer);
+      pet.querySelector("img").src = "assets/pet-actions/pet-catch-v2-final.png";
       pet.classList.add("behavior-catch");
-      pet.querySelector("span").textContent = `抓到啦！是${flight.garden}的种子。`;
+      pet.querySelector("span").textContent = distance < 86 ? "看我的小网兜！" : "哎呀，差一点点！";
+      if (distance >= 86) {
+        activeChase = null;
+        setTimeout(() => {
+          setPetBehavior(behaviors.idle, false);
+          if (button.isConnected) roamButterfly(button, 3);
+        }, 720);
+        return;
+      }
+      button.classList.add("caught");
       button.getBoundingClientRect();
       button.style.setProperty("--butterfly-x", "29%");
       button.style.setProperty("--butterfly-y", "71%");
@@ -234,8 +353,9 @@
         const sceneNow = document.querySelector(".garden-world-screen .world-scene");
         if (sceneNow) sceneNow.insertAdjacentHTML("beforeend", `<div class="seed-caught-card"><img src="assets/${flight.seed.asset}" alt=""><div><small>采种成功 · 已送进信箱</small><strong>${flight.seed.title}</strong><span>来自${flight.garden}</span></div></div>`);
         setTimeout(() => document.querySelector(".seed-caught-card")?.remove(), 3200);
-        button.remove();
+        removeButterfly(button);
         activeChase = null;
+        setTimeout(() => setPetBehavior(behaviors.idle, false), 420);
       }, 850);
     });
   }
@@ -290,6 +410,11 @@
     screen.insertAdjacentHTML("beforeend", controlsMarkup());
     scene.removeEventListener("click", directPet);
     scene.addEventListener("click", directPet);
+    const butterflies = scene.querySelector(".seed-butterfly-layer");
+    if (butterflies && butterflies.children.length === 0) {
+      spawnButterfly(true);
+    }
+    scheduleButterflySpawn();
     schedulePet();
     if (new URLSearchParams(location.search).get("sceneDebug") === "1") enableAnchorDebug("garden");
   }

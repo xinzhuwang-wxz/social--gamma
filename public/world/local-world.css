@@ -76,27 +76,30 @@
 .living-pet.behavior-nap img { animation:pet-nap 2.2s ease-in-out infinite; }
 .living-pet.behavior-talk span { opacity:1; transform:none; }
 .living-pet.directed span,.living-pet.behavior-catch span { opacity:1; transform:none; }
-.living-pet.behavior-catch img { animation:pet-catch .26s ease-in-out 3 alternate; }
+.living-pet.behavior-catch { width:92px; height:118px; }
+.living-pet.behavior-catch img { animation:pet-catch .24s ease-in-out 3 alternate; transform-origin:42% 92%; }
 @keyframes pet-step-left { to { transform:scaleX(-1) translateY(-3px) rotate(-1deg); } }
 @keyframes pet-water { 50% { transform:rotate(2deg) translateY(-1px); } }
 @keyframes pet-catch { to { transform:translateY(-9px) rotate(-5deg) scale(1.05); } }
 .pet-asset { border-radius:0; object-fit:contain; box-shadow:none; }
 
 .seed-butterfly-layer { position:absolute; z-index:29; inset:0; pointer-events:none; }
-.seed-butterfly { --drift-x:15px; --drift-y:-11px; width:46px; height:46px; display:grid; place-items:center; position:absolute; left:var(--butterfly-x); top:var(--butterfly-y); border:0; padding:0; border-radius:50%; color:#57542f; background:rgba(255,251,209,.16); filter:drop-shadow(0 4px 4px rgba(70,72,35,.28)); pointer-events:auto; transform:translate(-50%,-50%); animation:seed-butterfly-float 3.6s ease-in-out var(--flight-delay) infinite; transition:left .82s cubic-bezier(.32,.82,.3,1),top .82s cubic-bezier(.32,.82,.3,1),filter .2s; }
-.seed-butterfly img { width:32px; height:32px; display:block; object-fit:contain; animation:seed-butterfly-wing .34s ease-in-out infinite alternate; }
-.seed-butterfly span { width:max-content; position:absolute; left:50%; top:35px; border:1px solid rgba(99,94,52,.24); border-radius:999px; padding:3px 6px; color:#65613e; background:rgba(255,251,221,.92); box-shadow:0 3px 8px rgba(58,55,29,.12); font-size:6px; font-weight:800; opacity:0; transform:translateX(-50%) translateY(3px); transition:.2s; }
+.seed-butterfly { width:34px; height:34px; display:grid; place-items:center; position:absolute; left:var(--butterfly-x); top:var(--butterfly-y); border:0; padding:0; border-radius:50%; color:#57542f; background:transparent; filter:drop-shadow(0 3px 3px rgba(70,72,35,.26)); pointer-events:auto; transform:translate(-50%,-50%); transition:left 1.65s cubic-bezier(.36,.08,.28,1),top 1.65s cubic-bezier(.36,.08,.28,1),filter .2s,opacity 1s; }
+.seed-butterfly img { width:21px; height:21px; display:block; object-fit:contain; animation:seed-butterfly-wing .3s ease-in-out infinite alternate; }
+.seed-butterfly span { width:max-content; position:absolute; left:50%; top:27px; border:1px solid rgba(99,94,52,.24); border-radius:999px; padding:3px 6px; color:#65613e; background:rgba(255,251,221,.92); box-shadow:0 3px 8px rgba(58,55,29,.12); font-size:6px; font-weight:800; opacity:0; transform:translateX(-50%) translateY(3px); transition:.2s; }
 .seed-butterfly:hover span,.seed-butterfly:focus-visible span,.seed-butterfly.targeted span { opacity:1; transform:translateX(-50%); }
 .seed-butterfly:focus-visible { outline:3px solid rgba(255,245,145,.95); outline-offset:2px; }
-.seed-flight-2,.seed-flight-5 { --drift-x:-18px; --drift-y:12px; }
-.seed-flight-3,.seed-flight-6 { --drift-x:12px; --drift-y:16px; }
-.seed-butterfly.targeted { z-index:3; filter:drop-shadow(0 0 7px rgba(255,245,127,.95)); animation:seed-butterfly-alert .38s ease-in-out infinite alternate; }
+.seed-butterfly.entering { opacity:0; }
+.seed-butterfly.resting img { animation:seed-butterfly-rest .8s ease-in-out infinite alternate; }
+.seed-butterfly.targeted { z-index:3; filter:drop-shadow(0 0 5px rgba(255,245,127,.95)); transition-duration:.72s; }
+.seed-butterfly.targeted img { animation:seed-butterfly-alert .22s ease-in-out infinite alternate; }
+.seed-butterfly.leaving { opacity:0; pointer-events:none; transition-duration:1.45s; }
 .seed-butterfly.caught { z-index:4; animation:none; pointer-events:none; }
 .seed-butterfly.caught span { opacity:0; }
 .seed-butterfly.caught img { animation:seed-butterfly-wing .16s ease-in-out infinite alternate; }
-@keyframes seed-butterfly-float { 0%,100% { transform:translate(-50%,-50%); } 48% { transform:translate(calc(-50% + var(--drift-x)),calc(-50% + var(--drift-y))) rotate(7deg); } 75% { transform:translate(calc(-50% - 7px),calc(-50% + 5px)) rotate(-6deg); } }
 @keyframes seed-butterfly-wing { to { transform:scaleX(.72) rotate(5deg); } }
-@keyframes seed-butterfly-alert { to { transform:translate(calc(-50% + 7px),calc(-50% - 7px)) rotate(8deg) scale(1.08); } }
+@keyframes seed-butterfly-rest { to { transform:scaleX(.82) translateY(1px); } }
+@keyframes seed-butterfly-alert { to { transform:translate(2px,-2px) rotate(10deg) scaleX(.68); } }
 .seed-hunt-guide { position:absolute; z-index:43; left:11px; top:80px; display:flex; align-items:center; gap:7px; border:1px solid rgba(255,250,218,.72); border-radius:15px; padding:7px 9px 7px 7px; color:#fffce2; background:rgba(64,77,36,.58); box-shadow:0 6px 15px rgba(50,58,30,.15); backdrop-filter:blur(9px); pointer-events:none; animation:hunt-guide-in .55s ease-out; }
 .seed-hunt-guide img { width:25px; height:25px; object-fit:contain; }
 .seed-hunt-guide strong,.seed-hunt-guide small { display:block; }
