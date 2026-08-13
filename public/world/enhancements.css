@@ -161,6 +161,27 @@
 .garden-memory-card > img { width: 116px; height: 136px; display: block; margin: -5px auto 3px; object-fit: contain; }
 .garden-memory-card footer { margin-top: 14px; border-top: 1px dashed #cfbf8c; padding-top: 12px; color: #817859; font-size: 9px; line-height: 1.6; }
 
+/* Chat identity is explicit: partner on the left, 一寸欢喜 on the right. */
+.agent-message.partner-agent { grid-template-columns: 31px 1fr; margin-right: auto; margin-left: 0; }
+.agent-message.partner-agent .agent-avatar { order: 0; }
+.agent-message.partner-agent > div { border-radius: 5px 17px 17px 17px; background: #f6e6d7; }
+.agent-message.my-agent { grid-template-columns: 1fr 31px; margin-right: 0; margin-left: auto; }
+.agent-message.my-agent .agent-avatar { order: 2; }
+.agent-message.my-agent > div { border-radius: 17px 5px 17px 17px; background: #fff4d9; }
+.message-entry { display: grid; margin: 10px 0; }
+.message-entry > small { margin: 0 6px 3px; color: var(--muted); font-size: 8px; }
+.message-entry .message { margin: 0; }
+.message-entry.mine { justify-items: end; }
+.message-entry.theirs { justify-items: start; }
+.chat-avatar.growing-icon { display: grid; place-items: center; overflow: visible; background: #eff3db; }
+.chat-avatar.growing-icon .plant { transform: scale(.55); }
+.growing-garden-slot { width: 86px; height: 106px; display: grid; justify-items: center; align-content: end; }
+.growing-garden-slot .plant { margin-bottom: -9px; transform: scale(.72); transform-origin: bottom center; }
+.growing-garden-slot > span { max-width: 96px; overflow: hidden; border: 1px solid rgba(112,120,70,.22); border-radius: 999px; padding: 4px 7px; background: rgba(255,253,226,.93); box-shadow: 0 3px 9px rgba(55,62,34,.13); font-size: 7px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.conversation-list > button.action-list-item { width: 100%; border: 0; color: inherit; font: inherit; text-align: left; }
+.portrait-agent { overflow: hidden; padding: 0; }
+.portrait-agent img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
 .a2a-disclosure { display: grid; grid-template-columns: 26px 1fr; gap: 8px; border-radius: 15px; padding: 11px 12px; background: var(--soft); }
 .a2a-disclosure p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.55; }
 .a2a-disclosure strong { color: var(--primary); font-size: 9px; }
