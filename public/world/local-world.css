@@ -75,9 +75,44 @@
 .living-pet.behavior-water img { animation:pet-water 1.2s ease-in-out infinite; }
 .living-pet.behavior-nap img { animation:pet-nap 2.2s ease-in-out infinite; }
 .living-pet.behavior-talk span { opacity:1; transform:none; }
+.living-pet.directed span,.living-pet.behavior-catch span { opacity:1; transform:none; }
+.living-pet.behavior-catch img { animation:pet-catch .26s ease-in-out 3 alternate; }
 @keyframes pet-step-left { to { transform:scaleX(-1) translateY(-3px) rotate(-1deg); } }
 @keyframes pet-water { 50% { transform:rotate(2deg) translateY(-1px); } }
+@keyframes pet-catch { to { transform:translateY(-9px) rotate(-5deg) scale(1.05); } }
 .pet-asset { border-radius:0; object-fit:contain; box-shadow:none; }
+
+.seed-butterfly-layer { position:absolute; z-index:29; inset:0; pointer-events:none; }
+.seed-butterfly { --drift-x:15px; --drift-y:-11px; width:46px; height:46px; display:grid; place-items:center; position:absolute; left:var(--butterfly-x); top:var(--butterfly-y); border:0; padding:0; border-radius:50%; color:#57542f; background:rgba(255,251,209,.16); filter:drop-shadow(0 4px 4px rgba(70,72,35,.28)); pointer-events:auto; transform:translate(-50%,-50%); animation:seed-butterfly-float 3.6s ease-in-out var(--flight-delay) infinite; transition:left .82s cubic-bezier(.32,.82,.3,1),top .82s cubic-bezier(.32,.82,.3,1),filter .2s; }
+.seed-butterfly img { width:32px; height:32px; display:block; object-fit:contain; animation:seed-butterfly-wing .34s ease-in-out infinite alternate; }
+.seed-butterfly span { width:max-content; position:absolute; left:50%; top:35px; border:1px solid rgba(99,94,52,.24); border-radius:999px; padding:3px 6px; color:#65613e; background:rgba(255,251,221,.92); box-shadow:0 3px 8px rgba(58,55,29,.12); font-size:6px; font-weight:800; opacity:0; transform:translateX(-50%) translateY(3px); transition:.2s; }
+.seed-butterfly:hover span,.seed-butterfly:focus-visible span,.seed-butterfly.targeted span { opacity:1; transform:translateX(-50%); }
+.seed-butterfly:focus-visible { outline:3px solid rgba(255,245,145,.95); outline-offset:2px; }
+.seed-flight-2,.seed-flight-5 { --drift-x:-18px; --drift-y:12px; }
+.seed-flight-3,.seed-flight-6 { --drift-x:12px; --drift-y:16px; }
+.seed-butterfly.targeted { z-index:3; filter:drop-shadow(0 0 7px rgba(255,245,127,.95)); animation:seed-butterfly-alert .38s ease-in-out infinite alternate; }
+.seed-butterfly.caught { z-index:4; animation:none; pointer-events:none; }
+.seed-butterfly.caught span { opacity:0; }
+.seed-butterfly.caught img { animation:seed-butterfly-wing .16s ease-in-out infinite alternate; }
+@keyframes seed-butterfly-float { 0%,100% { transform:translate(-50%,-50%); } 48% { transform:translate(calc(-50% + var(--drift-x)),calc(-50% + var(--drift-y))) rotate(7deg); } 75% { transform:translate(calc(-50% - 7px),calc(-50% + 5px)) rotate(-6deg); } }
+@keyframes seed-butterfly-wing { to { transform:scaleX(.72) rotate(5deg); } }
+@keyframes seed-butterfly-alert { to { transform:translate(calc(-50% + 7px),calc(-50% - 7px)) rotate(8deg) scale(1.08); } }
+.seed-hunt-guide { position:absolute; z-index:43; left:11px; top:80px; display:flex; align-items:center; gap:7px; border:1px solid rgba(255,250,218,.72); border-radius:15px; padding:7px 9px 7px 7px; color:#fffce2; background:rgba(64,77,36,.58); box-shadow:0 6px 15px rgba(50,58,30,.15); backdrop-filter:blur(9px); pointer-events:none; animation:hunt-guide-in .55s ease-out; }
+.seed-hunt-guide img { width:25px; height:25px; object-fit:contain; }
+.seed-hunt-guide strong,.seed-hunt-guide small { display:block; }
+.seed-hunt-guide strong { font-size:8px; }
+.seed-hunt-guide small { margin-top:1px; color:rgba(255,252,226,.78); font-size:6px; }
+@keyframes hunt-guide-in { from { opacity:0; transform:translateY(-7px); } }
+.seed-caught-card { position:absolute; z-index:65; left:50%; bottom:88px; width:250px; display:grid; grid-template-columns:50px 1fr; gap:9px; align-items:center; border:2px solid #726b45; border-radius:18px; padding:9px 12px; color:#575036; background:#fff4c5; box-shadow:0 13px 30px rgba(51,50,27,.3); transform:translateX(-50%); animation:seed-card-in 3.2s ease both; }
+.seed-caught-card img { width:48px; height:52px; grid-row:1 / span 3; object-fit:contain; }
+.seed-caught-card small,.seed-caught-card strong,.seed-caught-card span { display:block; }
+.seed-caught-card small { color:#8a7e56; font-size:7px; font-weight:800; }
+.seed-caught-card strong { margin:2px 0; font-family:"Songti SC",STSong,serif; font-size:12px; }
+.seed-caught-card span { color:#71694d; font-size:7px; }
+@keyframes seed-card-in { 0% { opacity:0; transform:translate(-50%,14px) scale(.94); } 9%,82% { opacity:1; transform:translate(-50%,0) scale(1); } 100% { opacity:0; transform:translate(-50%,-7px) scale(.98); } }
+.mailbox-object.seed-arrived { animation:mailbox-seed-arrived .85s ease; }
+@keyframes mailbox-seed-arrived { 35% { transform:rotate(-2deg) scale(1.04); } 68% { transform:rotate(2deg) scale(1.02); } }
+.has-world-modal .seed-hunt-guide,.has-world-modal .seed-butterfly-layer { visibility:hidden; }
 
 .world-modal-backdrop { position:absolute; z-index:80; inset:0; display:grid; place-items:center; padding:28px; background:rgba(65,66,42,.37); backdrop-filter:blur(2px); animation:modal-in .42s ease-out; }
 .has-world-modal .living-pet,.has-world-modal .world-tools { visibility:hidden; }

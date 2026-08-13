@@ -10,6 +10,26 @@ function markMailboxRead() {
   try { localStorage.setItem(MAIL_READ_KEY, "1"); } catch {}
 }
 
+function receiveCaughtSeed(seed) {
+  if (!seed || seeds.some(item => item.id === seed.id)) return;
+  seeds.unshift(seed);
+  ui.unreadMail += 1;
+  try { localStorage.removeItem(MAIL_READ_KEY); } catch {}
+  const mailbox = document.querySelector(".garden-world-screen .mailbox-object");
+  if (!mailbox) return;
+  let notice = mailbox.querySelector(".mail-notice");
+  if (!notice) {
+    mailbox.insertAdjacentHTML("beforeend", `<span class="mail-notice"><img src="assets/nav-mailbox-v2.png" alt=""><b>${ui.unreadMail}</b></span>`);
+    notice = mailbox.querySelector(".mail-notice");
+  } else {
+    notice.querySelector("b").textContent = ui.unreadMail;
+  }
+  mailbox.classList.remove("seed-arrived");
+  mailbox.getBoundingClientRect();
+  mailbox.classList.add("seed-arrived");
+  setTimeout(() => mailbox.classList.remove("seed-arrived"), 900);
+}
+
 const initialUi = () => {
   const unreadMail = unreadMailCount();
   return ({
@@ -348,7 +368,7 @@ function nav() {
   const items = [["garden", "花园"], ["mailbox", "信箱"], ["publish", ""], ["actions", "行动中"], ["profile", "我的"]];
   return `<nav class="bottom-nav">${items.map(([id, label]) => id === "publish"
     ? `<button class="publish-button" data-action="publish" aria-label="种下一颗行动种子"><span>＋</span></button>`
-    : `<button class="nav-item ${ui.tab === id && !ui.route ? "active" : ""}" data-tab="${id}">${icon(id)}<small>${label}</small>${id === "mailbox" ? "<b>3</b>" : ""}</button>`).join("")}</nav>`;
+    : `<button class="nav-item ${ui.tab === id && !ui.route ? "active" : ""}" data-tab="${id}">${icon(id)}<small>${label}</small>${id === "mailbox" && ui.unreadMail ? `<b>${ui.unreadMail}</b>` : ""}</button>`).join("")}</nav>`;
 }
 
 function WorldGardenPage() {
@@ -431,7 +451,7 @@ function GardenPage() {
 function MailboxPage() {
   return `<main class="screen github-aligned-page mailbox-full-page">
     ${topbar("种子信箱", "与你匹配的找搭子需求", true)}
-    <div class="tabs"><button class="${ui.mailboxMode === "received" ? "active" : ""}" data-mailbox="received">收到的种子 3</button><button class="${ui.mailboxMode === "sent" ? "active" : ""}" data-mailbox="sent">我发出的 ${server.published ? 1 : 0}</button></div>
+    <div class="tabs"><button class="${ui.mailboxMode === "received" ? "active" : ""}" data-mailbox="received">收到的种子 ${seeds.length}</button><button class="${ui.mailboxMode === "sent" ? "active" : ""}" data-mailbox="sent">我发出的 ${server.published ? 1 : 0}</button></div>
     ${ui.mailboxMode === "received" ? `<div class="letter-list">${seeds.map(seed => `<button class="letter-row" data-seed="${seed.id}"><span class="letter-avatar"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><span class="letter-summary"><b>${seed.peer}</b><strong>${seed.title}</strong><small>${seed.preview}</small></span><time>${seed.time.split(" ")[0]}</time><i>›</i></button>`).join("")}</div>` : `<section class="card sent-seed">${plant(server.stage, "md", "green")}<span class="mini-label">${server.published ? "匹配进行中" : "还没有发出的种子"}</span><h2>${server.published ? escapeHtml(actionTitle()) : "种下一件想做的事"}</h2><p>${server.published ? "小绿正在寻找时间合适的同行者。" : "一句话就可以开始。"}</p><button class="primary" data-action="${server.published ? "view-candidates" : "publish"}">${server.published ? "查看候选" : "去种一颗"}</button></section>`}
   </main>`;
 }
@@ -725,6 +745,8 @@ document.addEventListener("click", async event => {
   if (action === "again") { ui.route = "publish"; ui.publishStep = 1; ui.draft.idea = "再约一次磨山轻徒步"; return render(); }
   if (action === "reset-demo") { await api("/api/demo/reset", {}); try { localStorage.removeItem(MAIL_READ_KEY); } catch {} ui = initialUi(); notify("演示进度已重置"); return render(); }
 });
+
+document.addEventListener("cobloom:seed-caught", event => receiveCaughtSeed(event.detail?.seed));
 
 document.addEventListener("submit", async event => {
   event.preventDefault();

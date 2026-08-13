@@ -46,4 +46,15 @@ No actionable P0, P1 or P2 mismatch remains.
 
 - Pass 1: no P0-P2 differences found. The only remaining items are deliberately deferred P3 asset swaps described above; no corrective visual loop was required.
 
+## Butterfly seed-hunt extension
+
+- Source visual truth: the existing production garden illustration and interaction layer in `public/world/assets/garden-world-v2.png`.
+- Rendered implementation: `output/butterfly-seed-hunt-before.png` and `output/butterfly-seed-hunt-success.png`.
+- Viewport: 1280 x 720 CSS px, deviceScaleFactor 1.
+- State: six butterflies visible in the unchanged garden; then one targeted, chased by the pet and deposited at the physical mailbox.
+
+The feature remains an overlay on the established garden, preserving the house, mailbox, flower plots, water, pet and GitHub-aligned bottom dock. Butterfly hit areas are 46 px while the drawn insects remain visually light. The guide uses the same translucent olive tool language already present in the garden and does not cover interactive world objects.
+
+Interaction verification passed for butterfly targeting, directed pet movement, catch state, butterfly-to-mailbox flight, mailbox unread increment, full inbox count, caught seed ordering and detailed letter content. Opening the physical mailbox retained the stable scene shell and showed no full-page flash. No actionable P0, P1 or P2 mismatch remains.
+
 final result: passed
