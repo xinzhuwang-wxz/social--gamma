@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { fastModel, strongModel, NO_THINK } from "./provider";
+import { fastModel, NO_THINK } from "./provider";
 import { kickoffSchema, nudgeSchema, pactDraftSchema, memorySummarySchema } from "./schemas";
 import type { CandidateProfile } from "./match";
 import type { SeedCard } from "./schemas";
@@ -18,7 +18,7 @@ export async function roomKickoff(
   a2a: A2A | null
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
     system: `两位用户刚为一次共同行动成局，你是属于这次事件的小苗。生成：
@@ -48,7 +48,7 @@ export async function roomKickoffGroup(
   a2aList: (A2A | null)[]
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
     system: `多位用户刚为一次共同行动成局（${partners.length + 1} 人），你是属于这次事件的小苗。生成：
@@ -104,7 +104,7 @@ ${messages.map((m) => `${m.senderName}: ${m.content}`).join("\n")}`,
 /** 行动约定草稿：只整理双方谈过的内容 */
 export async function draftPact(seed: SeedCard, messages: RoomMessage[]) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: pactDraftSchema,
     providerOptions: NO_THINK,
     system: `把两位用户聊天中「已经谈妥」的内容整理成行动约定。

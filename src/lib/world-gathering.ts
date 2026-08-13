@@ -127,13 +127,16 @@ function candidateFromMatch(
   match: typeof schema.matches.$inferSelect,
   user: typeof schema.users.$inferSelect
 ): WorldCandidate {
+  const type = match.reasons[0]?.type ?? "interest";
+  const MATCH_LABEL: Record<string, string> = { time: "时间匹配", place: "地点匹配", interest: "兴趣匹配", experience: "经验匹配", skill: "经验匹配" };
+  const reasons = match.reasons.map((r) => r.text).filter(Boolean);
   return {
     name: user.name,
     avatar: user.name.slice(0, 1) || user.emoji,
-    match: match.reasons[0]?.type ?? "interest",
+    match: MATCH_LABEL[type] ?? "合拍匹配",
     note: match.note ?? match.reasons[0]?.text ?? "条件合适，值得聊聊",
-    facts: match.a2a?.commonalities?.length ? match.a2a.commonalities : match.reasons.map((r) => r.text),
-    reason: match.reasons.map((r) => r.text).join("；") || "匹配条件较好",
+    facts: match.a2a?.commonalities?.length ? match.a2a.commonalities : reasons,
+    reason: reasons[0] || "匹配条件较好", // 只取最贴切的一条，避免候选卡过长
   };
 }
 
@@ -166,10 +169,12 @@ export async function publishWorldGathering(
   appendEvent(user.id, "GATHERING_PUBLISHED", { seedId });
 
   try {
+    let freshIds: string[] | undefined;
     if (simEnabled()) {
-      await fabricatePersonas(card, partnersNeeded(card.groupSize));
+      const personas = await fabricatePersonas(card, Math.max(3, partnersNeeded(card.groupSize) + 1));
+      freshIds = personas.map((p) => p.id); // 只匹配本次为这颗种子新捏的人格
     }
-    await runMatching(seedId);
+    await runMatching(seedId, freshIds);
     appendEvent(user.id, "MATCHING_COMPLETED", { seedId });
   } catch (error) {
     console.error("[world] matching failed", error);

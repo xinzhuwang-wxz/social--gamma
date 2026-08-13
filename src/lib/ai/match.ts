@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { strongModel, NO_THINK } from "./provider";
+import { fastModel, strongModel, NO_THINK } from "./provider";
 import { matchEvalSchema, a2aSchema } from "./schemas";
 import type { SeedCard } from "./schemas";
 
@@ -26,7 +26,7 @@ export async function matchCandidates(
   candidates: CandidateProfile[]
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: strongModel, // 严格 enum 由 lite 稳产（避免 mini 偶发 schema 失败→空候选）
     schema: matchEvalSchema,
     providerOptions: NO_THINK,
     system: `你是校园行动社交平台的匹配信使。发起人发布了一颗行动种子，你要评估每位候选人的适配度。
@@ -56,7 +56,7 @@ export async function a2aDialogue(
   candidate: CandidateProfile
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: a2aSchema,
     providerOptions: NO_THINK,
     system: `你要生成两位用户的个人 Agent（信使鸟）之间的一段预热对话。owner 方 Agent 代表发起人，candidate 方 Agent 代表候选人。
@@ -76,7 +76,7 @@ ${JSON.stringify(owner, null, 2)}
 ## 候选人（candidate 的主人）
 ${JSON.stringify(candidate, null, 2)}
 
-生成 4-6 轮对话、共同点与破冰素材。`,
+生成 2-3 轮对话、共同点与破冰素材。`,
   });
   return object;
 }
