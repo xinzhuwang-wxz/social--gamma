@@ -35,7 +35,6 @@ const initialUi = () => {
   activityQuestionLoading: false,
   activityQuestionError: false,
   activityQuestionRequestId: 0,
-  proposalsOpen: false,
   completionOpen: false,
   memoryText: "",
   mailboxMode: "received",
@@ -46,12 +45,14 @@ const initialUi = () => {
   decorated: false,
   petMood: "idle",
   joinedSeeds: [],
+  dismissedSystemNoticeIds: [],
   });
 };
 
 let ui = initialUi();
-let server = { stage: "SEED", published: false, selectedCandidate: null, messages: [], slots: { people: false, time: false, place: false }, checkedIn: false, archived: false };
+let server = { stage: "SEED", published: false, selectedCandidate: null, messages: [], pact: null, slots: { people: false, time: false, place: false }, checkedIn: false, archived: false };
 let toastTimer;
+let stageNoticeTimer;
 
 const seeds = [
   { id: "hike", title: "周六一起去爬山", type: "户外", time: "周六 08:30", place: "学校周边", peer: "小蓝", color: "sage", asset: "flower-1.png", petAsset: "pet-mail.png", preview: "看到你也想去爬山，要不要一起走一条轻松的路线？", letter: "嗨，小周：\n\n看到你也想在周六出去走走。我去过磨山两次，有一条不陡、沿途也很好拍照的路线。我们可以慢慢走，累了就停下来看看风景，新手也完全没问题。\n\n如果你愿意，我们周六早上从学校北门出发，当天回来。", tags: ["新手友好", "当天往返"], reason: "你们周六上午都有空，都接受新手路线，也都希望当天往返。" },
@@ -113,6 +114,43 @@ async function api(path, body) {
     ui.loading = false;
     render();
   }
+}
+
+async function roomAction(path, body) {
+  if (ui.loading) return null;
+  ui.loading = true;
+  render();
+  try {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "操作失败");
+    const snapshot = await fetch("/api/demo").then(value => value.json());
+    server = snapshot;
+    return result;
+  } catch (error) {
+    notify(error.message || "网络开了小差");
+    return null;
+  } finally {
+    ui.loading = false;
+    render();
+  }
+}
+
+async function refreshWorld() {
+  if (ui.loading || ui.route !== "chat") return;
+  try {
+    const response = await fetch("/api/demo");
+    if (!response.ok) return;
+    const snapshot = await response.json();
+    if (JSON.stringify(snapshot.messages) !== JSON.stringify(server.messages) || JSON.stringify(snapshot.pact) !== JSON.stringify(server.pact)) {
+      server = snapshot;
+      render();
+    }
+  } catch {}
 }
 
 function upcomingDates() {
@@ -437,7 +475,7 @@ function SeedDetailPage(id) {
     <section class="paper-letter"><header><span class="letter-avatar large"><img src="assets/pet-actions/${seed.petAsset}" alt="${seed.peer}的小花匠"></span><div><small>来自花园外</small><strong>${seed.peer} · 校园已认证</strong></div><span class="paper-stamp">小绿<br>已送达</span></header><div class="letter-copy">${escapeHtml(seed.letter).replace(/\n/g, "<br>")}</div><footer>${seed.peer}<br><time>${seed.time}</time></footer></section>
     <div class="letter-facts"><span>${icon("clock")} ${seed.time}</span><span>${icon("pin")} ${seed.place}</span>${seed.tags.map(tag => `<span>${tag}</span>`).join("")}</div>
     <section class="match-box"><div>${pet(true)}</div><p><strong>为什么带给你</strong>${seed.reason}</p></section>
-    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button>${ui.joinedSeeds.includes(seed.id) ? `<div class="joined-state">✓ 已表达参与意向 · 等待${escapeHtml(seed.peer)}确认</div>` : `<button class="primary" data-action="join-seed">愿意加入</button>`}</div>
+    <div class="sticky-actions"><button class="secondary" data-action="decline-seed">这次不合适</button>${ui.joinedSeeds.includes(seed.id) ? `<div class="joined-state">✓ 已表达参与意向 · 等待${escapeHtml(seed.peer)}确认</div>` : `<button class="primary" data-action="join-seed">感兴趣</button>`}</div>
   </main>`;
 }
 
@@ -502,28 +540,40 @@ function CandidateA2APage(index) {
 function ActionsPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
   const body = server.selectedCandidate
-    ? `<div class="conversation-list"><article class="action-list-item" data-route="chat"><div class="chat-avatar"><img src="assets/flower-7.png" alt=""></div><div class="chat-summary"><div><h3>${escapeHtml(actionTitle())}</h3><time>刚刚</time></div><p>${server.messages.length ? `${server.messages[server.messages.length - 1].author === "me" ? "我" : partnerName()}：${escapeHtml(server.messages[server.messages.length - 1].text)}` : `${partnerName()}：期待和你一起～`}</p><span>${meta[0]} · 4 位群聊成员</span></div><div class="unread">1</div></article></div>`
+    ? `<div class="conversation-list"><article class="action-list-item" data-route="chat"><div class="chat-avatar"><img src="assets/flower-7.png" alt=""></div><div class="chat-summary"><div><h3>${escapeHtml(actionTitle())}</h3><time>刚刚</time></div><p>${server.messages.length ? `${server.messages[server.messages.length - 1].author === "me" ? "我" : partnerName()}：${escapeHtml(server.messages[server.messages.length - 1].text)}` : `${partnerName()}：期待和你一起～`}</p><span>${meta[0]} · 2 位成员</span></div><div class="unread">1</div></article></div>`
     : `<section class="card sent-seed">${plant("SEED", "md", "green")}<span class="mini-label">还没有进行中的行动</span><h2>先种下一件想做的事</h2><p>成局之后，你和同行者的群聊会出现在这里。</p><button class="primary" data-action="publish">种一颗种子</button></section>`;
   return `<main class="screen github-aligned-page">${topbar("聊天列表", "同行与协作", true)}<div class="tabs chat-tabs"><button class="active">进行中的聊天</button><button>已结束</button></div>${body}</main>`;
 }
 
 function ChatPage() {
   const meta = stageMeta[server.stage] || stageMeta.SEED;
-  const messages = server.messages.map(message => `<div class="message ${message.author === "me" ? "me" : "them"}">${escapeHtml(message.text)}</div>`).join("");
-  const allConfirmed = server.slots.people && server.slots.time && server.slots.place;
-  return `<main class="screen chat-screen github-aligned-page">${topbar(escapeHtml(actionTitle()), "4 位群聊成员", true)}
+  const visibleMessages = server.messages.filter(message => message.kind !== "system");
+  const latestSystemMessage = [...server.messages].reverse().find(message => message.kind === "system");
+  const stageNotice = latestSystemMessage && !ui.dismissedSystemNoticeIds.includes(latestSystemMessage.id)
+    ? `<button class="chat-stage-notice" data-action="dismiss-stage-notice" data-notice-id="${escapeHtml(latestSystemMessage.id)}"><span>${escapeHtml(latestSystemMessage.text.startsWith("个人 Agent 已完成交接") ? "你们已经组队成功，开始聊聊具体安排吧。" : latestSystemMessage.text)}</span><i>×</i></button>`
+    : "";
+  const messages = visibleMessages.map((message, index) => {
+    if (message.kind === "ai") {
+      const options = index === visibleMessages.length - 1 && message.event?.options?.length
+        ? `<div class="event-ai-options">${message.event.options.map(option => `<button data-event-reply="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}</div>`
+        : "";
+      return `<div class="chat-turn ai"><span class="chat-speaker-avatar">🌿</span><div class="chat-turn-content"><div class="chat-speaker-name"><strong>小绿</strong><span>行动主持人</span></div><div class="message them event-ai-bubble">${escapeHtml(message.text)}</div>${options}</div></div>`;
+    }
+    const mine = message.author === "me";
+    return `<div class="chat-turn ${mine ? "mine" : "peer"}"><span class="chat-speaker-avatar">${mine ? "🐦" : "🦊"}</span><div class="chat-turn-content"><div class="chat-speaker-name"><strong>${mine ? "小周" : partnerName()}</strong><span>${mine ? "我" : "同行者"}</span></div><div class="message ${mine ? "me" : "them"}">${escapeHtml(message.text)}</div></div></div>`;
+  }).join("");
+  const pact = server.pact;
+  const pactCard = pact ? `<section class="agreement card event-pact"><span class="mini-label">行动约定 · ${pact.status === "confirmed" ? "已确认" : `${pact.confirmedCount}/${pact.memberCount} 人确认`}</span><h2>${escapeHtml(pact.content.what)}</h2><p>${icon("clock")} ${escapeHtml(pact.content.when)}</p><p>${icon("pin")} ${escapeHtml(pact.content.where)}</p>${pact.content.meet && pact.content.meet !== "待商量" ? `<p>${icon("people")} ${escapeHtml(pact.content.meet)}</p>` : ""}${pact.status === "confirmed" ? `<button class="primary full" data-action="open-completion">行动后回来打卡</button>` : pact.myConfirmed ? `<button class="secondary full" disabled>已确认，等待其他成员</button>` : `<button class="primary full" data-action="confirm-pact">确认这份行动约定</button>`}</section>` : "";
+  return `<main class="screen chat-screen github-aligned-page">${topbar(escapeHtml(actionTitle()), "2 位成员", true)}
     <section class="chat-progress"><div class="growth-plant">${plant(server.stage, "sm", "green")}</div><div><strong>行动状态 · ${meta[0]}</strong><small>${meta[1]}</small></div></section>
     <div class="chat-log" id="chat-log">
       <div class="chat-divider"><span>匹配阶段 · 两位 Agent 的对话记录</span></div>
       <div class="agent-message own"><span class="agent-avatar">🐦</span><div><strong>小周的 Agent</strong><p>小周想找一位搭子一起「${escapeHtml(actionTitle())}」，希望时间和路线都合得来。</p><small>来自小周发布种子时确认的信息</small></div></div>
       <div class="agent-message peer"><span class="agent-avatar">🦊</span><div><strong>${partnerName()}的 Agent</strong><p>${partnerName()}时间和你合得上，对这次行动也很有兴趣，愿意一起完成。</p><small>来自${partnerName()}向自己 Agent 确认的信息</small></div></div>
-      <div class="chat-divider active"><span>双方已确认组队 · 四方行动群聊开始</span></div>
-      ${server.messages.length ? "" : `<div class="message them">嗨！很期待和你一起，咱们把时间地点定一下吧～</div>`}${messages}
-      ${!ui.proposalsOpen && !allConfirmed ? `<button class="secondary full chat-help" data-action="help-progress">请小绿整理时间与地点</button>` : ""}
-      ${ui.proposalsOpen ? `<section class="proposal card"><div class="proposal-head">${pet(true)}<div><span class="mini-label">AI 提案 · 需要人确认</span><h3>我只整理了你们刚才说过的</h3></div></div><div class="proposal-item ${server.slots.time ? "confirmed" : ""}"><span>${icon("clock")}</span><div><small>时间</small><strong>${escapeHtml(server.draft?.time || "你发布时选择的时间")}</strong></div><button data-slot="time">${server.slots.time ? "已确认 ✓" : "确认时间"}</button></div><div class="proposal-item ${server.slots.place ? "confirmed" : ""}"><span>${icon("pin")}</span><div><small>集合地点</small><strong>${escapeHtml(server.draft?.place || "你发布时选择的地点")}</strong></div><button data-slot="place">${server.slots.place ? "已确认 ✓" : "确认地点"}</button></div><p class="proposal-note">小绿只生成提案；你的点击才会写入行动约定。</p></section>` : ""}
-      ${allConfirmed ? `<section class="agreement card"><span class="mini-label">行动确认卡 · 双方已接受</span><h2>${escapeHtml(actionTitle())}</h2><p>${icon("clock")} ${escapeHtml(server.draft?.time || "时间待定")}</p><p>${icon("pin")} ${escapeHtml(server.draft?.place || "地点待定")}</p><p>${icon("people")} 小周、${partnerName()} · 轻松路线</p><button class="primary full" data-action="open-completion">行动后回来打卡</button></section>` : ""}
+      <div class="chat-divider active"><span>双方已确认组队 · 群聊开始</span></div>
+      ${stageNotice}${visibleMessages.length ? "" : `<div class="chat-turn peer"><span class="chat-speaker-avatar">🦊</span><div class="chat-turn-content"><div class="chat-speaker-name"><strong>${partnerName()}</strong><span>同行者</span></div><div class="message them">嗨！很期待和你一起，咱们把时间地点定一下吧～</div></div></div>`}${messages}${pactCard}
     </div>
-    <form class="chat-compose" id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="在四方群聊中发消息…"><button aria-label="发送">发送</button></form>
+    <form class="chat-compose" id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="发消息，一起把行动定下来…"><button aria-label="发送">发送</button></form>
   </main>`;
 }
 
@@ -583,8 +633,19 @@ function render() {
     syncPhoneScale();
     const log = document.querySelector("#chat-log");
     if (log) log.scrollTop = log.scrollHeight;
+    const notice = document.querySelector("[data-notice-id]");
+    if (notice) {
+      clearTimeout(stageNoticeTimer);
+      stageNoticeTimer = setTimeout(() => dismissStageNotice(notice.dataset.noticeId), 3200);
+    }
   });
   requestAnimationFrame(() => { window.WorldLayer?.mount(); window.CampusRank?.mount(ui.route === "rank"); });
+}
+
+function dismissStageNotice(id) {
+  if (!id || ui.dismissedSystemNoticeIds.includes(id)) return;
+  ui.dismissedSystemNoticeIds.push(id);
+  render();
 }
 
 function syncPhoneScale() {
@@ -673,17 +734,13 @@ document.addEventListener("click", async event => {
     notify(`已和${target.dataset.candidate}成为搭子，另外两位已由小绿礼貌回复`);
     return render();
   }
-  if (target.dataset.slot) {
-    const slot = target.dataset.slot;
-    if (server.slots[slot]) return;
-    const value = slot === "time" ? (server.draft?.time || "时间待定") : (server.draft?.place || "地点待定");
-    if (!await api("/api/proposals/confirm", { slot, value })) return;
-    const done = server.slots.people && server.slots.time && server.slots.place;
-    notify(done ? "时间、地点都确认了，花苞出现了" : `${slot === "time" ? "时间" : "地点"}已确认，植物又长高了一点`);
+  if (target.dataset.eventReply) {
+    if (await api("/api/chat/messages", { author: "me", text: target.dataset.eventReply })) notify("已发送");
     return;
   }
 
   const action = target.dataset.action;
+  if (action === "dismiss-stage-notice") return dismissStageNotice(target.dataset.noticeId);
   if (action === "back") return goBack();
   if (action === "world-help") return notify("点房子进我的家，点信箱看来信，点中间的加号种下一件想做的事");
   if (action === "open-home") { ui.route = "world-home"; return render(); }
@@ -770,10 +827,26 @@ document.addEventListener("click", async event => {
   }
   if (action === "decline-seed") { ui.route = null; ui.tab = "mailbox"; notify("没关系，小绿会继续帮你留意"); return render(); }
   if (action === "join-seed") { const seedId = ui.route?.split(":")[1]; const joinedSeed = seeds.find(s => s.id === seedId); if (seedId && !ui.joinedSeeds.includes(seedId)) ui.joinedSeeds.push(seedId); notify(`已把参与意向送给${joinedSeed?.peer || "对方"}，等ta确认后就能一起了。最终决定仍由对方完成`); return render(); }
-  if (action === "help-progress") { ui.proposalsOpen = true; return render(); }
+  if (action === "confirm-pact") {
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    if (await roomAction(`/api/rooms/${server.roomId}/pact`, { action: "confirm" })) notify("已确认行动约定");
+    return;
+  }
   if (action === "show-stage") return notify(`${stageMeta[server.stage][0]}：${stageMeta[server.stage][1]}`);
   if (action === "open-completion") { ui.route = "complete"; return render(); }
-  if (action === "check-in") { if (await api("/api/gatherings/check-in", {})) notify("打卡成功，植物开花了！"); return; }
+  if (action === "check-in") {
+    if (!server.roomId) return notify("行动房间还没有准备好");
+    const result = await roomAction(`/api/rooms/${server.roomId}/complete`, {});
+    if (!result) return;
+    if (result.both) {
+      notify("双方都已确认完成，植物开花了！");
+    } else {
+      notify(`已记录完成，等待${partnerName()}确认`);
+      ui.route = "chat";
+      render();
+    }
+    return;
+  }
   if (action === "archive-memory") {
     ui.memoryText = document.querySelector("#memory-text")?.value.trim() || "湖边的光比想象中更好看。";
     if (!await api("/api/gatherings/archive", { text: ui.memoryText })) return;
@@ -833,3 +906,4 @@ document.addEventListener("submit", async event => {
 window.addEventListener("popstate", render);
 window.addEventListener("resize", syncPhoneScale);
 api("/api/demo").then(render);
+setInterval(refreshWorld, 3000);

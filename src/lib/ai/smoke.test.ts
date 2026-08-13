@@ -95,8 +95,8 @@ describe("AI 能力冒烟（真实 ARK）", () => {
       ],
       null
     );
-    expect(["summary", "options", "consensus", "pact_suggest"]).toContain(r.kind);
-    expect(r.text.length).toBeGreaterThan(0);
+    expect(["none", "ask_missing", "offer_choices", "request_decision", "confirm_decision", "create_pact"]).toContain(r.action);
+    if (r.shouldIntervene) expect(r.text.length).toBeGreaterThan(0);
   }, 60000);
 
   it("draftPact: 未谈到的要素进 missing 而非编造", async () => {

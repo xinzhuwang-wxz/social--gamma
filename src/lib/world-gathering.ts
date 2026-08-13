@@ -7,6 +7,8 @@ import { runMatching } from "@/lib/matching";
 import { roomKickoff, roomKickoffGroup } from "@/lib/ai/room";
 import { seedToCard, toProfile } from "@/lib/matching";
 import { simOnHumanMessage, simOnRoomCreated } from "@/lib/sim";
+import { coordinateRoomAction, insertEventAiMessage } from "@/lib/event-coordinator";
+import { decodeEventAiMessage } from "@/lib/event-message";
 
 export type WorldDraft = {
   idea?: string;
@@ -30,7 +32,21 @@ export type WorldCandidate = {
 export type WorldSnapshot = {
   published: boolean;
   selectedCandidate: string | null;
-  messages: { id: string; author: string; text: string }[];
+  messages: {
+    id: string;
+    author: string;
+    text: string;
+    kind: string;
+    event?: ReturnType<typeof decodeEventAiMessage>;
+  }[];
+  pact: {
+    id: string;
+    status: "draft" | "confirmed";
+    content: { what: string; when: string; where: string; meet: string; notes: string[] };
+    myConfirmed: boolean;
+    confirmedCount: number;
+    memberCount: number;
+  } | null;
   slots: { people: boolean; time: boolean; place: boolean };
   checkedIn: boolean;
   archived: boolean;
@@ -235,8 +251,13 @@ export async function chooseWorldCandidate(
     roomId,
     senderId: null,
     kind: "system",
-    content: "两位 Agent 已完成交接。接下来由你们决定具体怎么安排。",
+    content: "你们已经组队成功，开始聊聊具体安排吧。",
     createdAt: new Date(),
+  });
+  await insertEventAiMessage(roomId, {
+    action: "icebreak",
+    text: kickoff.icebreak.message,
+    options: kickoff.icebreak.quickReplies.slice(0, 3),
   });
 
   s.roomId = roomId;
@@ -272,6 +293,11 @@ export async function addWorldMessage(
   }
 
   appendEvent(user.id, "MESSAGE_SENT", { text: content });
+  try {
+    await coordinateRoomAction(s.roomId);
+  } catch (error) {
+    console.error("[event coordinator]", error);
+  }
   simOnHumanMessage(origin, s.roomId);
   return worldSnapshot(user.id);
 }
@@ -294,11 +320,13 @@ export async function worldSnapshot(userId: string): Promise<WorldSnapshot> {
   const messages = room
     ? await messagesForRoom(room.id, userId)
     : [];
+  const pact = room ? await pactForRoom(room.id, userId) : null;
 
   return {
     published: Boolean(seed),
     selectedCandidate: s.selectedCandidate ?? null,
     messages,
+    pact,
     slots: { people: Boolean(room), time: false, place: false },
     checkedIn: room?.stage === "bloom",
     archived: false,
@@ -358,9 +386,41 @@ async function messagesForRoom(roomId: string, meId: string) {
     .where(eq(schema.messages.roomId, roomId))
     .orderBy(asc(schema.messages.createdAt));
 
-  return rows.map(({ message, user }) => ({
-    id: message.id,
-    author: message.senderId === meId ? "me" : user?.name ?? "system",
-    text: message.content,
-  }));
+  return rows.map(({ message, user }) => {
+    const event = decodeEventAiMessage(message.content);
+    return {
+      id: message.id,
+      author: message.senderId === meId ? "me" : user?.name ?? "system",
+      text: event?.text ?? message.content,
+      kind: message.kind,
+      event,
+    };
+  });
+}
+
+async function pactForRoom(roomId: string, meId: string): Promise<WorldSnapshot["pact"]> {
+  const [pact] = await db
+    .select()
+    .from(schema.pacts)
+    .where(eq(schema.pacts.roomId, roomId))
+    .orderBy(desc(schema.pacts.version))
+    .limit(1);
+  if (!pact) return null;
+
+  const confirmations = await db
+    .select()
+    .from(schema.pactConfirmations)
+    .where(eq(schema.pactConfirmations.pactId, pact.id));
+  const members = await db
+    .select()
+    .from(schema.roomMembers)
+    .where(eq(schema.roomMembers.roomId, roomId));
+  return {
+    id: pact.id,
+    status: pact.status,
+    content: pact.content,
+    myConfirmed: confirmations.some((confirmation) => confirmation.userId === meId),
+    confirmedCount: confirmations.length,
+    memberCount: members.length || 2,
+  };
 }
