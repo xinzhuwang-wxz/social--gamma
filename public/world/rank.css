@@ -48,8 +48,9 @@
   background: rgba(255, 250, 232, .9); box-shadow: 0 7px 20px rgba(82, 66, 37, .14);
   backdrop-filter: blur(10px);
 }
-.rank-hud-title small { display: block; margin-bottom: 1px; color: #a8782b; font-size: 9.5px; font-weight: 800; letter-spacing: .8px; }
-.rank-hud-title h1 { margin: 0; font-family: "Songti SC", STSong, serif; font-size: 20px; letter-spacing: 2px; color: #4d572e; }
+.rank-hud-title { flex: 1; min-width: 0; text-align: center; }
+.rank-hud-title h1 { margin: 0; overflow: hidden; font-family: "Songti SC", STSong, serif; font-size: 16.5px; letter-spacing: 1.5px; color: #4d572e; white-space: nowrap; text-overflow: ellipsis; }
+.rank-hud-title small { display: block; margin-top: 1px; color: #a8782b; font-size: 9px; font-weight: 800; letter-spacing: 1.2px; }
 .rank-hud-locate {
   flex: none; min-width: 44px; height: 44px; border: 1px solid #dfcda5; border-radius: 13px;
   color: #6f6a56; background: rgba(255, 253, 244, .9); font-size: 15px; line-height: 1.05;
@@ -225,10 +226,9 @@
 /* ---------- dock 微调（7 格布局 + 自绘图标） ---------- */
 .world-dock.dock-7 { grid-template-columns: 1fr 1fr 1fr 58px 1fr 1fr 1fr; }
 .world-dock.dock-7 small { font-size: 9px; }
-.world-dock .dock-svg { width: 30px; height: 24px; display: block; margin: 0 auto -1px; }
-.world-dock .dock-svg path, .world-dock .dock-svg circle { stroke: #6d694e; }
+.world-dock .dock-svg { width: 30px; height: 24px; display: block; margin: 0 auto -1px; filter: drop-shadow(0 1px 1px rgba(82,66,37,.18)); }
 .world-dock button.active small { color: #53681d; }
-.world-dock button.active .dock-svg path, .world-dock button.active .dock-svg circle { stroke: #53681d; }
+.world-dock button.active .dock-svg { filter: drop-shadow(0 1px 1px rgba(82,66,37,.18)) saturate(1.25) brightness(1.04); }
 .rank-screen .world-dock { z-index: 30; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -246,7 +246,7 @@
 
 /* ---------- 屏幕固定角标：校名图章 + 指北针（不随地图缩放） ---------- */
 .rank-map-stamp {
-  position: absolute; z-index: 4; left: 14px; top: 96px; pointer-events: none;
+  position: absolute; z-index: 4; left: 14px; top: 138px; pointer-events: none;
   border: 1.4px solid rgba(183, 169, 126, .8); border-radius: 8px; padding: 4px 10px;
   transform: rotate(-2.5deg);
   color: #8a6a34; background: rgba(255, 250, 240, .82);
@@ -261,3 +261,17 @@
 .rank-map-compass svg { width: 26px; height: 26px; }
 .rank-map-compass b { color: #8a7a52; font-family: "Songti SC", STSong, serif; font-size: 9px; }
 .rank-screen[data-mode="spot"] .rank-map-stamp { opacity: 0; transition: opacity .3s; }
+
+/* ---------- 地图缩放按钮（跟随抽屉高度上浮） ---------- */
+.rank-map-ctrl {
+  position: absolute; z-index: 5; right: 12px; display: grid; gap: 7px;
+  bottom: calc(15.5% + 64px); transition: bottom .42s cubic-bezier(.32, .94, .38, 1), opacity .25s;
+}
+.rank-screen[data-sheet="half"] .rank-map-ctrl { bottom: calc(52% + 14px); }
+.rank-screen[data-sheet="full"] .rank-map-ctrl { opacity: 0; pointer-events: none; }
+.rank-map-ctrl button {
+  width: 38px; height: 38px; border: 1px solid #dfcda5; border-radius: 12px;
+  color: #6f6a56; background: rgba(255, 253, 244, .92); font-size: 17px; font-weight: 700; line-height: 1;
+  box-shadow: 0 4px 10px rgba(109, 91, 48, .16); transition: transform .15s;
+}
+.rank-map-ctrl button:active { transform: scale(.92); }

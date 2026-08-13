@@ -299,8 +299,21 @@ function topbar(title, subtitle = "", back = false) {
 
 // 世界底部 dock（花园/聊天/校园/＋/信箱/森林/我的），active 高亮当前所在世界
 function worldDock(active = "") {
-  const campusIcon = `<svg class="dock-svg" viewBox="0 0 30 26" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2.6c-4 0-7 3-7 6.8 0 4.8 7 13 7 13s7-8.2 7-13c0-3.8-3-6.8-7-6.8Z"/><circle cx="15" cy="9.4" r="2.6"/></svg>`;
-  const forestIcon = `<svg class="dock-svg" viewBox="0 0 30 26" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 23v-3.4M9.5 5.6 5 12.4h2.4L4 18.4h11L11.6 12.4H14L9.5 5.6Z"/><path d="M21.5 23v-2.8M21.5 9.6l-3.6 5.4h1.9l-2.7 4.6h8.8l-2.7-4.6h1.9l-3.6-5.4Z"/></svg>`;
+  // 彩色填色小图标：与 nav-*-v2.png 绘本插画风统一（暖色填充 + 深棕描边），不用单色线稿
+  const campusIcon = `<svg class="dock-svg" viewBox="0 0 30 26" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="15" cy="23" rx="7.5" ry="2" fill="#c9b585" opacity=".55"/>
+    <path d="M15 2.4c-4.1 0-7.2 3-7.2 6.9 0 5 7.2 13.2 7.2 13.2s7.2-8.2 7.2-13.2c0-3.9-3.1-6.9-7.2-6.9Z" fill="#e0745c" stroke="#8a4a38" stroke-width="1.7"/>
+    <circle cx="15" cy="9.6" r="3" fill="#fff3d8" stroke="#8a4a38" stroke-width="1.3"/>
+    <path d="M12.2 5.6c.8-.7 1.8-1.1 2.8-1.1" fill="none" stroke="#f5b8a0" stroke-width="1.3"/>
+  </svg>`;
+  const forestIcon = `<svg class="dock-svg" viewBox="0 0 30 26" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="15" cy="24" rx="10" ry="1.8" fill="#c9b585" opacity=".55"/>
+    <path d="M9.3 23.6v-3.2" stroke="#8a6a3c" stroke-width="2.2"/>
+    <path d="M9.3 3.8 4.4 11.6h2.3L3.2 17.9h12.2L11.9 11.6h2.3L9.3 3.8Z" fill="#7fa153" stroke="#4f6a33" stroke-width="1.6"/>
+    <path d="M21.6 23.6v-2.6" stroke="#8a6a3c" stroke-width="2"/>
+    <path d="M21.6 8.4 18 13.9h1.9l-2.8 4.8h9l-2.8-4.8h1.9L21.6 8.4Z" fill="#a8bc68" stroke="#5f7a3d" stroke-width="1.5"/>
+    <circle cx="7" cy="14.6" r=".9" fill="#f2d98c"/><circle cx="11.6" cy="15.8" r=".9" fill="#e8a5a0"/>
+  </svg>`;
   const item = (id, icon, label) => `<button data-world="${id}" class="${active === id ? "active" : ""}">${icon}<small>${label}</small></button>`;
   return `<div class="world-dock dock-7">${item("garden", `<img src="assets/nav-garden-v2.png" alt="">`, "花园")}${item("actions", `<img src="assets/nav-chat-v2.png" alt="">`, "聊天")}${item("campus", campusIcon, "校园")}<button class="dock-seed" data-action="publish" aria-label="种下一件想做的事"><span class="dock-plus" aria-hidden="true"></span></button>${item("mailbox", `<img src="assets/nav-mailbox-v2.png" alt="">`, "信箱")}${item("forest", forestIcon, "森林")}${item("profile", `<img src="assets/nav-profile-v2.png" alt="">`, "我的")}</div>`;
 }

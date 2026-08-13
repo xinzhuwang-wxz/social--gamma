@@ -114,16 +114,17 @@
         style: `--halo:${TONE_COLOR[spot.tone] || "#d89a43"}`,
         tabindex: "0", role: "button", "aria-label": `${spot.name}：本周 ${spot.seeds} 颗种子，${spot.blooms} 朵开花`,
       }, markerLayer);
-      svgEl("circle", { class: "rk-heat", r: 26 + heat * 30, fill: "url(#rk-halo)" }, g);
+      // 光晕/阴影/选中圈都不吃指针：只有花朵与名牌可点，其余区域留给地图拖拽
+      svgEl("circle", { class: "rk-heat", r: 26 + heat * 30, fill: "url(#rk-halo)", "pointer-events": "none" }, g);
       const inner = svgEl("g", { class: "rk-marker-inner", transform: `scale(${scale})` }, g);
-      svgEl("ellipse", { cx: 0, cy: 2, rx: 12, ry: 4, fill: "rgba(84,74,40,.18)" }, inner);
+      svgEl("ellipse", { cx: 0, cy: 2, rx: 12, ry: 4, fill: "rgba(84,74,40,.18)", "pointer-events": "none" }, inner);
       svgEl("image", { href: `assets/${TONE_ASSET[spot.tone] || "flower-3.png"}`, x: -21, y: -52, width: 42, height: 54, class: "rk-flower", preserveAspectRatio: "xMidYMax meet" }, inner);
       const badge = svgEl("g", { class: "rk-badge", transform: "translate(0 14)" }, inner);
       svgEl("rect", { x: -26, y: -9, width: 52, height: 18, rx: 9, fill: "rgba(255,251,232,.94)", stroke: "#d8c391", "stroke-width": 1 }, badge);
       const label = svgEl("text", { x: 0, y: 4, class: "rk-marker-name" }, badge);
       label.textContent = spot.name;
       // 选中时的手绘圈（rough.js），先占位
-      svgEl("g", { class: "rk-rough-ring" }, g);
+      svgEl("g", { class: "rk-rough-ring", "pointer-events": "none" }, g);
     }
     mapSvg = svg;
     return svg;
@@ -137,9 +138,13 @@
         <div class="rank-map-host" id="rank-map-host" aria-label="拖动查看校园，捏合缩放"></div>
         <header class="rank-hud">
           <button class="rank-hud-back" data-action="back" aria-label="返回花园">‹</button>
-          <div class="rank-hud-title"><small>${esc(w.campus)} · ${esc(w.week)}</small><h1>校园风物榜</h1></div>
+          <div class="rank-hud-title"><h1>${esc(w.campus)}</h1><small>${esc(w.week)}</small></div>
           <button class="rank-hud-locate" data-rank-reset aria-label="回到全景">◎<small>全景</small></button>
         </header>
+        <div class="rank-map-ctrl" role="group" aria-label="地图缩放">
+          <button data-rank-zoom="in" aria-label="放大地图">＋</button>
+          <button data-rank-zoom="out" aria-label="缩小地图">－</button>
+        </div>
         ${state.hintDone ? "" : `<div class="rank-hint">轻点一朵花，看看那里正在发生什么</div>`}
         <span class="rank-map-stamp" aria-hidden="true">紫金港校区</span>
         <span class="rank-map-compass" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#fffaf0" stroke="#8a7a52" stroke-width="1.4"/><path d="M12 5.5 L14.6 15 12 12.8 9.4 15Z" fill="#df6434"/></svg><b>北</b></span>
@@ -290,7 +295,7 @@
       host.appendChild(svg);
       if (!panzoomInstance && window.panzoom) {
         panzoomInstance = window.panzoom(svg, {
-          maxZoom: 4, minZoom: 0.3, bounds: true, boundsPadding: 0.32,
+          maxZoom: 4, minZoom: 0.3, bounds: true, boundsPadding: 0.12,
           zoomDoubleClickSpeed: 2.4, smoothScroll: true,
           beforeMouseDown: e => e.target.closest(".rank-marker") ? true : false,
           onTouch: e => !e.target.closest(".rank-marker"),
@@ -372,6 +377,14 @@
 
   // 抽屉上方还露出的地图窗口占整屏的比例
   function visibleRatio() { return 1 - (SHEET_RATIO[state.sheet] ?? 0.52); }
+
+  // ＋/－ 按钮：围绕抽屉上方可视窗口的中心平滑缩放
+  function zoomBy(mult) {
+    if (!panzoomInstance) return;
+    flyToken++; // 打断进行中的飞行动画
+    const [cw, ch] = stageSize();
+    panzoomInstance.smoothZoom(cw / 2, ch * visibleRatio() * 0.5, mult);
+  }
 
   function fitCampus(smooth = true) {
     const [, , vw, vh] = mapData().viewBox;
@@ -600,7 +613,15 @@
     const stop = () => event.stopImmediatePropagation();
     if (event.target.closest("[data-rank-plant], [data-action]")) return; // 交给 prototype.js
     const spotTrigger = event.target.closest("[data-rank-spot]");
-    if (spotTrigger) { stop(); focusSpot(spotTrigger.dataset.rankSpot); return; }
+    if (spotTrigger) {
+      stop();
+      // 再点一次已选中的花 = 收起并回全景（少一步「全景」按钮）
+      if (state.spot === spotTrigger.dataset.rankSpot && spotTrigger.closest(".rank-marker")) closeSpot();
+      else focusSpot(spotTrigger.dataset.rankSpot);
+      return;
+    }
+    const zoomBtn = event.target.closest("[data-rank-zoom]");
+    if (zoomBtn) { stop(); zoomBy(zoomBtn.dataset.rankZoom === "in" ? 1.5 : 1 / 1.5); return; }
     if (event.target.closest("[data-rank-close]")) { stop(); closeSpot(); return; }
     if (event.target.closest("[data-rank-reset]")) { stop(); state.spot = null; rerenderLocal(); syncMarkerActive(); fitCampus(); return; }
     const boardBtn = event.target.closest("[data-rank-board]");
@@ -618,8 +639,9 @@
       if (ref) setTimeout(() => focusSpot(ref), 350);
       return;
     }
-    // 点地图空白处：收抽屉到 peek，专心看地图
+    // 点地图空白处：聚焦态直接退回全景；否则收抽屉到 peek，专心看地图
     if (event.target.closest(".rank-map-host") && !event.target.closest(".rank-marker")) {
+      if (state.spot) { closeSpot(); return; }
       if (state.sheet !== "peek") { state.sheetTouched = true; setSheet("peek"); }
     }
   });
