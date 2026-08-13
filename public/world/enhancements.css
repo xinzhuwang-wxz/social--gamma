@@ -81,6 +81,9 @@
 .draft-summary p > b { color: var(--muted); font-size: 9px; }
 .draft-summary .activity-detail-summary { border-radius: 12px; padding: 10px 8px; background: var(--soft); }
 
+/* 修复：候选头像从 <span> 改成 <button>(点头像进主页)后，被旧规则「.candidate-card > button 占满整行」误伤，
+   导致头像横占两列、把姓名/事实/理由挤成 48px 窄列。把头像放回第 1 列即可恢复「头像 | 资料」两栏布局。 */
+.candidate-card > button.avatar { grid-column: 1; }
 .candidate-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; margin-top: 2px; }
 .candidate-actions button { min-height: 43px; border: 0; border-radius: 14px; font-size: 10px; font-weight: 900; }
 .candidate-detail-page, .candidate-space-page, .candidate-a2a-page { padding-bottom: 120px; background: var(--surface); color: #193126; }
