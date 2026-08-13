@@ -54,7 +54,7 @@ chmod 600 /opt/social-forest/.env.local
 ### 4. 构建并起服务（服务器上执行；每次更新代码后重跑此步）
 ```bash
 cd /opt/social-forest
-sudo bash deploy/run.sh        # install → build → 装配 standalone → systemd 起 80 端口
+bash deploy/run.sh             # 不加 sudo：install→build→建库→装配→systemd(ubuntu运行,CAP绑80)
 ```
 
 ### 5. 验证
