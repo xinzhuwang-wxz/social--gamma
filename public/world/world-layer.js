@@ -110,7 +110,7 @@
   }
 
   function petMarkup() {
-    return `<button class="living-pet behavior-idle" style="--pet-x:${currentPoint.x}%;--pet-y:${currentPoint.y}%" data-action="pet-talk" aria-label="和小绿说话"><img src="assets/pet-actions/pet-idle.png" alt="小绿"><i aria-hidden="true"></i><span>${behaviors.idle.line}</span></button>`;
+    return `<button class="living-pet behavior-idle" style="--pet-x:${currentPoint.x}%;--pet-y:${currentPoint.y}%" data-action="pet-talk" aria-label="和小羊说话"><img src="assets/pet-actions/pet-idle.png" alt="小羊"><i aria-hidden="true"></i><span>${behaviors.idle.line}</span></button>`;
   }
 
   function controlsMarkup() {
