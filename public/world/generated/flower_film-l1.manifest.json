@@ -1,0 +1,199 @@
+{
+  "eventId": "memory_film",
+  "title": "用一卷胶片拍完校园的夏天",
+  "selection": {
+    "speciesId": "forget-me-not",
+    "displayName": "勿忘我",
+    "englishName": "forget-me-not",
+    "latinName": "Myosotis",
+    "reason": "deterministic-core-library-score",
+    "isHybrid": false,
+    "meanings": [
+      "companionship",
+      "remembrance"
+    ],
+    "eventMeaning": "不能重拍以后，反而更相信彼此按下快门的那一秒"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 3,
+      "mode": "countable",
+      "unit": "major-blossoms",
+      "description": "Show exactly 3 clearly countable participant-linked major blossoms. Preserve the natural anatomy of forget-me-not."
+    },
+    "participantRelationship": "taking-turns",
+    "relationshipDescription": "The participant-linked blooms alternate in height with a clear call-and-response rhythm.",
+    "palette": {
+      "colors": [
+        "leaf-green",
+        "film-gold",
+        "sky-blue",
+        "soft-blue",
+        "sage green"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "film-perforation",
+        "sourceFact": "三个人共同分完一卷不能重拍的胶片",
+        "evidenceRef": "memory_film.title",
+        "intensity": "visible",
+        "prompt": "a small rounded film-perforation pattern appears as a restrained border motif on one leaf; intensity: visible; it must not obscure species recognition"
+      },
+      {
+        "type": "shared-light",
+        "sourceFact": "糊掉的画面也保留了真实发生的那一秒",
+        "evidenceRef": "memory_film.quote",
+        "intensity": "restrained",
+        "prompt": "several participant-linked light points gather around one shared center; intensity: restrained; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "small sky-blue five-petaled flowers with warm yellow centers on delicate branching stems",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real forget-me-not (Myosotis), recognizable by small sky-blue five-petaled flowers with warm yellow centers on delicate branching stems. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 3 clearly countable participant-linked major blossoms. Preserve the natural anatomy of forget-me-not. The participant-linked blooms alternate in height with a clear call-and-response rhythm. Palette: leaf-green, film-gold, sky-blue, soft-blue, sage green. Use flat pastel fills and minimal internal detail. Event memory glyph: a small rounded film-perforation pattern appears as a restrained border motif on one leaf; intensity: visible; it must not obscure species recognition; several participant-linked light points gather around one shared center; intensity: restrained; it must not obscure species recognition. Emotional meaning in CoBloom: 不能重拍以后，反而更相信彼此按下快门的那一秒. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "core",
+    "explicitSpeciesMatched": false,
+    "rankedCandidates": [
+      {
+        "speciesId": "forget-me-not",
+        "displayName": "勿忘我",
+        "score": 122,
+        "meaningMatches": [
+          "companionship",
+          "remembrance"
+        ],
+        "eventMatches": [
+          "photography",
+          "film"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "cherry-blossom",
+        "displayName": "樱花",
+        "score": 119,
+        "meaningMatches": [
+          "companionship",
+          "seizing-the-moment",
+          "remembrance"
+        ],
+        "eventMatches": [
+          "photography"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "dahlia",
+        "displayName": "大丽花",
+        "score": 80,
+        "meaningMatches": [
+          "creativity"
+        ],
+        "eventMatches": [
+          "film",
+          "creative-collaboration"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "iris",
+        "displayName": "鸢尾",
+        "score": 75,
+        "meaningMatches": [
+          "trust"
+        ],
+        "eventMatches": [
+          "film"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "orchid",
+        "displayName": "兰花",
+        "score": 75,
+        "meaningMatches": [
+          "creativity"
+        ],
+        "eventMatches": [
+          "creative-collaboration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "rosemary",
+        "displayName": "迷迭香",
+        "score": 72,
+        "meaningMatches": [
+          "remembrance"
+        ],
+        "eventMatches": [
+          "photography"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "tulip",
+        "displayName": "郁金香",
+        "score": 70,
+        "meaningMatches": [
+          "companionship",
+          "seizing-the-moment"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "violet",
+        "displayName": "紫罗兰",
+        "score": 68,
+        "meaningMatches": [
+          "companionship",
+          "remembrance"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "osmanthus",
+        "displayName": "桂花",
+        "score": 67,
+        "meaningMatches": [
+          "companionship",
+          "remembrance"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "hydrangea",
+        "displayName": "绣球花",
+        "score": 65,
+        "meaningMatches": [],
+        "eventMatches": [
+          "film",
+          "creative-collaboration"
+        ],
+        "seasonMatch": true
+      }
+    ],
+    "evidenceRefs": [
+      "memory_film.title",
+      "memory_film.quote"
+    ]
+  }
+}

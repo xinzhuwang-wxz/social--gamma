@@ -1,0 +1,197 @@
+{
+  "eventId": "event_campus_lawn_music",
+  "title": "草坪上那场没有围墙的音乐会",
+  "selection": {
+    "speciesId": "gerbera",
+    "displayName": "非洲菊",
+    "englishName": "gerbera",
+    "latinName": "Gerbera jamesonii",
+    "reason": "deterministic-core-library-score",
+    "isHybrid": false,
+    "meanings": [
+      "joy",
+      "friendship"
+    ],
+    "eventMeaning": "有人认真唱，也有人认真听，让一首歌在散场以后仍被记得"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 4,
+      "mode": "countable",
+      "unit": "flower-heads",
+      "description": "Show exactly 4 clearly countable participant-linked flower heads. Preserve the natural anatomy of gerbera."
+    },
+    "participantRelationship": "taking-turns",
+    "relationshipDescription": "The participant-linked blooms alternate in height with a clear call-and-response rhythm.",
+    "palette": {
+      "colors": [
+        "lawn green",
+        "stage warm gold",
+        "glow-stick violet",
+        "orange",
+        "yellow"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "music-notes",
+        "sourceFact": "草坪舞台上有人拿着话筒唱歌",
+        "evidenceRef": "event-media/music/cover.jpg",
+        "intensity": "visible",
+        "prompt": "a few simple music-note glyphs float in a rhythmic arc near the petals; intensity: visible; it must not obscure species recognition"
+      },
+      {
+        "type": "sound-waves",
+        "sourceFact": "观众围坐在草地上听完整场演出",
+        "evidenceRef": "event-media/music/detail-1.jpg",
+        "intensity": "subtle",
+        "prompt": "two or three rounded sound-wave arcs echo between the blooms; intensity: subtle; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "large cheerful daisy-like heads with many even ray petals on clean leafless stems",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real gerbera (Gerbera jamesonii), recognizable by large cheerful daisy-like heads with many even ray petals on clean leafless stems. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 4 clearly countable participant-linked flower heads. Preserve the natural anatomy of gerbera. The participant-linked blooms alternate in height with a clear call-and-response rhythm. Palette: lawn green, stage warm gold, glow-stick violet, orange, yellow. Use flat pastel fills and minimal internal detail. Event memory glyph: a few simple music-note glyphs float in a rhythmic arc near the petals; intensity: visible; it must not obscure species recognition; two or three rounded sound-wave arcs echo between the blooms; intensity: subtle; it must not obscure species recognition. Emotional meaning in CoBloom: 有人认真唱，也有人认真听，让一首歌在散场以后仍被记得. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "core",
+    "explicitSpeciesMatched": false,
+    "rankedCandidates": [
+      {
+        "speciesId": "gerbera",
+        "displayName": "非洲菊",
+        "score": 105,
+        "meaningMatches": [
+          "joy",
+          "friendship"
+        ],
+        "eventMatches": [
+          "celebration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "orchid",
+        "displayName": "兰花",
+        "score": 95,
+        "meaningMatches": [
+          "respect"
+        ],
+        "eventMatches": [
+          "performance",
+          "celebration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "tulip",
+        "displayName": "郁金香",
+        "score": 90,
+        "meaningMatches": [
+          "companionship",
+          "joy"
+        ],
+        "eventMatches": [
+          "celebration"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "bluebell",
+        "displayName": "蓝铃花",
+        "score": 89,
+        "meaningMatches": [
+          "companionship",
+          "respect"
+        ],
+        "eventMatches": [
+          "music"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "forget-me-not",
+        "displayName": "勿忘我",
+        "score": 82,
+        "meaningMatches": [
+          "companionship",
+          "friendship"
+        ],
+        "eventMatches": [],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "sunflower",
+        "displayName": "向日葵",
+        "score": 75,
+        "meaningMatches": [
+          "joy"
+        ],
+        "eventMatches": [
+          "celebration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "jasmine",
+        "displayName": "茉莉",
+        "score": 73,
+        "meaningMatches": [
+          "companionship"
+        ],
+        "eventMatches": [
+          "music"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "cosmos",
+        "displayName": "波斯菊",
+        "score": 69,
+        "meaningMatches": [
+          "companionship",
+          "joy"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "osmanthus",
+        "displayName": "桂花",
+        "score": 67,
+        "meaningMatches": [
+          "companionship",
+          "joy"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "daisy",
+        "displayName": "雏菊",
+        "score": 55,
+        "meaningMatches": [
+          "joy"
+        ],
+        "eventMatches": [],
+        "seasonMatch": true
+      }
+    ],
+    "evidenceRefs": [
+      "event-media/music/cover.jpg",
+      "event-media/music/detail-1.jpg"
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "eventId": "event_taiziwan_tulips",
+  "title": "去太子湾追上花期末尾的郁金香",
+  "selection": {
+    "speciesId": "tulip",
+    "displayName": "郁金香",
+    "englishName": "tulip",
+    "latinName": "Tulipa",
+    "reason": "explicit-witnessed-species",
+    "isHybrid": false,
+    "meanings": [
+      "companionship",
+      "seizing-the-moment",
+      "joy"
+    ],
+    "eventMeaning": "不因为担心来迟，就错过仍在发生的春天"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 4,
+      "mode": "countable",
+      "unit": "flowering-stems",
+      "description": "Show exactly 4 clearly countable participant-linked flowering stems. Preserve the natural anatomy of tulip."
+    },
+    "participantRelationship": "shared-destination",
+    "relationshipDescription": "The participant-linked stems rise from one base and gather into one balanced destination-shaped cluster.",
+    "palette": {
+      "colors": [
+        "coral pink",
+        "tulip red",
+        "spring green",
+        "red",
+        "pink"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "falling-petals",
+        "sourceFact": "花期已经接近尾声，花丛中仍有明亮颜色",
+        "evidenceRef": "event-media/tulip/cover.jpg",
+        "intensity": "subtle",
+        "prompt": "two or three small petals fall naturally beside the plant; intensity: subtle; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "upright smooth stems, broad blade-like leaves, unmistakable cup-shaped blooms",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real tulip (Tulipa), recognizable by upright smooth stems, broad blade-like leaves, unmistakable cup-shaped blooms. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 4 clearly countable participant-linked flowering stems. Preserve the natural anatomy of tulip. The participant-linked stems rise from one base and gather into one balanced destination-shaped cluster. Palette: coral pink, tulip red, spring green, red, pink. Use flat pastel fills and minimal internal detail. Event memory glyph: two or three small petals fall naturally beside the plant; intensity: subtle; it must not obscure species recognition. Emotional meaning in CoBloom: 不因为担心来迟，就错过仍在发生的春天. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "explicit-species-index",
+    "explicitSpeciesMatched": true,
+    "rankedCandidates": [],
+    "evidenceRefs": [
+      "event-media/tulip/cover.jpg"
+    ]
+  }
+}

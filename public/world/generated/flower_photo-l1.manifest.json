@@ -1,0 +1,78 @@
+{
+  "eventId": "memory_photo",
+  "title": "在花落完以前替朋友拍人像",
+  "selection": {
+    "speciesId": "cherry-blossom",
+    "displayName": "樱花",
+    "englishName": "cherry blossom",
+    "latinName": "Prunus serrulata",
+    "reason": "explicit-witnessed-species",
+    "isHybrid": false,
+    "meanings": [
+      "companionship",
+      "seizing-the-moment",
+      "remembrance"
+    ],
+    "eventMeaning": "在花落完以前，一起把普通的笑留了下来"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 3,
+      "mode": "countable",
+      "unit": "major-blossoms",
+      "description": "Show exactly 3 clearly countable participant-linked major blossoms. Preserve the natural anatomy of cherry blossom."
+    },
+    "participantRelationship": "converging-collaboration",
+    "relationshipDescription": "The participant-linked stems converge toward one shared floral crown.",
+    "palette": {
+      "colors": [
+        "pale-pink",
+        "spring-white",
+        "white",
+        "fresh spring green",
+        "soft pink"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "falling-petals",
+        "sourceFact": "花瓣落在肩上时，三个人刚好一起笑了",
+        "evidenceRef": "memory_photo.summary",
+        "intensity": "visible",
+        "prompt": "two or three small petals fall naturally beside the plant; intensity: visible; it must not obscure species recognition"
+      },
+      {
+        "type": "camera-spark",
+        "sourceFact": "这次共同经历是替朋友拍人像",
+        "evidenceRef": "memory_photo.title",
+        "intensity": "restrained",
+        "prompt": "one simple camera-flash sparkle appears beside the main bloom; intensity: restrained; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "arching woody branch with several five-petaled blossoms and a few rounded buds",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real cherry blossom (Prunus serrulata), recognizable by arching woody branch with several five-petaled blossoms and a few rounded buds. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 3 clearly countable participant-linked major blossoms. Preserve the natural anatomy of cherry blossom. The participant-linked stems converge toward one shared floral crown. Palette: pale-pink, spring-white, white, fresh spring green, soft pink. Use flat pastel fills and minimal internal detail. Event memory glyph: two or three small petals fall naturally beside the plant; intensity: visible; it must not obscure species recognition; one simple camera-flash sparkle appears beside the main bloom; intensity: restrained; it must not obscure species recognition. Emotional meaning in CoBloom: 在花落完以前，一起把普通的笑留了下来. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "explicit-species-index",
+    "explicitSpeciesMatched": true,
+    "rankedCandidates": [],
+    "evidenceRefs": [
+      "memory_photo.summary",
+      "memory_photo.title"
+    ]
+  }
+}

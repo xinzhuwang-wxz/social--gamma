@@ -1,0 +1,189 @@
+{
+  "eventId": "event_long_trip_gelato",
+  "title": "坐很远的车去吃一支 Gelato",
+  "selection": {
+    "speciesId": "cosmos",
+    "displayName": "波斯菊",
+    "englishName": "cosmos",
+    "latinName": "Cosmos bipinnatus",
+    "reason": "deterministic-core-library-score",
+    "isHybrid": false,
+    "meanings": [
+      "companionship",
+      "joy",
+      "curiosity"
+    ],
+    "eventMeaning": "目的地很小，路却因为有人一起出发而刚刚好"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 3,
+      "mode": "countable",
+      "unit": "flower-heads",
+      "description": "Show exactly 3 clearly countable participant-linked flower heads. Preserve the natural anatomy of cosmos."
+    },
+    "participantRelationship": "shared-destination",
+    "relationshipDescription": "The participant-linked stems rise from one base and gather into one balanced destination-shaped cluster.",
+    "palette": {
+      "colors": [
+        "pistachio green",
+        "rice white",
+        "blush pink",
+        "pink",
+        "white"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [],
+    "speciesRecognition": "airy branching stems with simple eight-petaled daisy-like blooms and feathery leaves",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real cosmos (Cosmos bipinnatus), recognizable by airy branching stems with simple eight-petaled daisy-like blooms and feathery leaves. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 3 clearly countable participant-linked flower heads. Preserve the natural anatomy of cosmos. The participant-linked stems rise from one base and gather into one balanced destination-shaped cluster. Palette: pistachio green, rice white, blush pink, pink, white. Use flat pastel fills and minimal internal detail. No extra event glyph is required. Emotional meaning in CoBloom: 目的地很小，路却因为有人一起出发而刚刚好. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "core",
+    "explicitSpeciesMatched": false,
+    "rankedCandidates": [
+      {
+        "speciesId": "cosmos",
+        "displayName": "波斯菊",
+        "score": 154,
+        "meaningMatches": [
+          "companionship",
+          "joy",
+          "curiosity"
+        ],
+        "eventMatches": [
+          "journey",
+          "exploration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "tulip",
+        "displayName": "郁金香",
+        "score": 120,
+        "meaningMatches": [
+          "companionship",
+          "joy",
+          "seizing-the-moment"
+        ],
+        "eventMatches": [
+          "journey"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "nasturtium",
+        "displayName": "旱金莲",
+        "score": 115,
+        "meaningMatches": [
+          "joy"
+        ],
+        "eventMatches": [
+          "food",
+          "journey",
+          "exploration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "osmanthus",
+        "displayName": "桂花",
+        "score": 107,
+        "meaningMatches": [
+          "companionship",
+          "joy"
+        ],
+        "eventMatches": [
+          "food",
+          "journey"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "iris",
+        "displayName": "鸢尾",
+        "score": 80,
+        "meaningMatches": [
+          "curiosity"
+        ],
+        "eventMatches": [
+          "journey",
+          "exploration"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "evening-primrose",
+        "displayName": "月见草",
+        "score": 74,
+        "meaningMatches": [
+          "companionship"
+        ],
+        "eventMatches": [
+          "journey"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "jasmine",
+        "displayName": "茉莉",
+        "score": 73,
+        "meaningMatches": [
+          "companionship"
+        ],
+        "eventMatches": [
+          "food"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "cherry-blossom",
+        "displayName": "樱花",
+        "score": 69,
+        "meaningMatches": [
+          "companionship",
+          "seizing-the-moment"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "dandelion",
+        "displayName": "蒲公英",
+        "score": 65,
+        "meaningMatches": [],
+        "eventMatches": [
+          "journey",
+          "exploration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "daisy",
+        "displayName": "雏菊",
+        "score": 60,
+        "meaningMatches": [
+          "joy"
+        ],
+        "eventMatches": [
+          "food"
+        ],
+        "seasonMatch": false
+      }
+    ],
+    "evidenceRefs": []
+  }
+}
