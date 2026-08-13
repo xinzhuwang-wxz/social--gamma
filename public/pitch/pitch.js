@@ -705,7 +705,7 @@
 
   /* ---------- 预加载 → 启动 ---------- */
   var boot = $("#boot");
-  var preload = ["../world/assets/garden-world-v2.png", "../world/assets/flower-5.png", "../world/assets/flower-4.png", "assets/journal-real.webp"];
+  var preload = ["../world/assets/garden-background.png", "../world/assets/flower-5.png", "../world/assets/flower-4.png", "assets/journal-real.webp"];
   Promise.all([
     document.fonts ? document.fonts.ready : Promise.resolve(),
     Promise.all(preload.map(function (src) {
