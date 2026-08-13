@@ -384,6 +384,7 @@
   function focusSpot(id, { fly = true } = {}) {
     state.spot = id;
     state.sheet = "half";
+    state.sheetTouched = true;
     if (!state.hintDone) { state.hintDone = true; try { localStorage.setItem(HINT_KEY, "1"); } catch {} }
     rerenderLocal();
     const anchor = mapData().spotAnchors[id];
@@ -439,7 +440,7 @@
   /* ---------------- 动效 ---------------- */
   function playEntrance() {
     if (!mapSvg) return;
-    if (reduceMotion) return;
+    if (reduceMotion) { setSheet("half"); return; }
     const M = window.Motion;
     // 地面层淡入
     M?.animate(mapSvg.querySelector(".rk-ground"), { opacity: [0, 1] }, { duration: 0.7, ease: "easeOut" });
@@ -586,10 +587,8 @@
       next = ratios[0][0];
     }
     drag = null;
-    state.sheet = next;
-    const screen = document.querySelector(".rank-screen");
-    if (screen) screen.dataset.sheet = next;
-    document.getElementById("rank-sheet")?.setAttribute("data-state", next);
+    state.sheetTouched = true;
+    setSheet(next);
   }
 
   /* ---------------- 事件（独立于 prototype.js 的委托） ----------------
@@ -619,13 +618,9 @@
       if (ref) setTimeout(() => focusSpot(ref), 350);
       return;
     }
-    // 点地图空白处：收起地点卡，收抽屉到 peek
+    // 点地图空白处：收抽屉到 peek，专心看地图
     if (event.target.closest(".rank-map-host") && !event.target.closest(".rank-marker")) {
-      if (state.sheet !== "peek") {
-        state.sheet = "peek";
-        document.querySelector(".rank-screen")?.setAttribute("data-sheet", "peek");
-        document.getElementById("rank-sheet")?.setAttribute("data-state", "peek");
-      }
+      if (state.sheet !== "peek") { state.sheetTouched = true; setSheet("peek"); }
     }
   });
 

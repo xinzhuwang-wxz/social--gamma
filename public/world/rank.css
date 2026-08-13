@@ -90,7 +90,7 @@
 .rank-grip i { display: block; width: 44px; height: 5px; margin: 0 auto; border-radius: 999px; background: #ddceaa; transition: background .2s; }
 .rank-grip:active i { background: #b98c50; }
 
-.rank-sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 16px 92px; scrollbar-width: none; overscroll-behavior: contain; }
+.rank-sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 16px 118px; scrollbar-width: none; overscroll-behavior: contain; }
 .rank-sheet-body::-webkit-scrollbar { display: none; }
 .rank-sheet[data-state="peek"] .rank-sheet-body { overflow: hidden; }
 
@@ -221,19 +221,6 @@
 .rank-spot-seed small { color: #99937a; font-size: 9.5px; }
 .rank-plant-cta { margin-top: 3px; }
 .rank-back-board { border: 0; padding: 5px; color: #847e6c; background: transparent; font-size: 11.5px; font-weight: 700; }
-
-/* ---------- 花园里的风物榜木牌入口 ---------- */
-.rank-sign { position: absolute; z-index: 24; right: 14px; top: 208px; border: 0; padding: 0; background: transparent; filter: drop-shadow(0 4px 4px rgba(55, 58, 30, .22)); }
-.rank-sign i {
-  display: block; padding: 7px 9px 6px; font-style: normal; writing-mode: vertical-rl;
-  border: 2px solid #8a6a34; border-radius: 8px;
-  font-family: "Songti SC", STSong, serif; font-size: 13px; font-weight: 700; letter-spacing: 4px;
-  color: #5f4a26; background: linear-gradient(180deg, #e0b083, #c99e63);
-  box-shadow: inset 0 2px 0 rgba(255, 235, 195, .7);
-}
-.rank-sign span { display: block; width: 7px; height: 26px; margin: -1px auto 0; border-radius: 0 0 3px 3px; background: linear-gradient(180deg, #a97e46, #8a6234); }
-.rank-sign::after { content: "NEW"; position: absolute; top: -7px; right: -9px; border-radius: 999px; padding: 2px 5px; background: #df6434; color: #fff7e6; font-size: 7px; font-weight: 900; letter-spacing: .5px; }
-.rank-sign:active { transform: scale(.94); }
 
 /* ---------- dock 微调（7 格布局 + 自绘图标） ---------- */
 .world-dock.dock-7 { grid-template-columns: 1fr 1fr 1fr 58px 1fr 1fr 1fr; }
