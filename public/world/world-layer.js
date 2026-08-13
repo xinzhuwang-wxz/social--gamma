@@ -83,6 +83,18 @@
     { x: 80, y: 45, label: "石灯" }, { x: 20, y: 38, label: "灌木丛" },
     { x: 68, y: 34, label: "花圃" }, { x: 41, y: 49, label: "小路边" },
   ];
+  const walkableZones = [
+    { cx: 48, cy: 49, rx: 28, ry: 17 },
+    { cx: 42, cy: 61, rx: 25, ry: 13 },
+    { cx: 55, cy: 70, rx: 21, ry: 9 },
+    { cx: 31, cy: 76, rx: 15, ry: 8 },
+  ];
+  const blockedZones = [
+    { cx: 67, cy: 73, rx: 15, ry: 24 },
+    { cx: 24, cy: 57, rx: 15, ry: 17 },
+    { cx: 48, cy: 34, rx: 31, ry: 8 },
+  ];
+  const butterflyAssets = ["insect-butterfly.png", "insect-butterfly-blue.png", "insect-butterfly-pink.png", "insect-butterfly-orange.png"];
 
   const savePreferences = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
   const saveAnchors = () => localStorage.setItem(ANCHOR_KEY, JSON.stringify(anchorOverrides));
@@ -140,6 +152,30 @@
     button.style.setProperty("--butterfly-y", `${y}%`);
   }
 
+  function butterflyHint(flight) {
+    if (!flight) return "一颗路过花园的新种子";
+    const detail = flight.seed.tags?.[0] || flight.seed.type;
+    return `${detail} · ${flight.seed.time.split(" ")[0]} · ${flight.seed.title.slice(0, 7)}…`;
+  }
+
+  function isInsideEllipse(point, zone) {
+    return ((point.x - zone.cx) / zone.rx) ** 2 + ((point.y - zone.cy) / zone.ry) ** 2 <= 1;
+  }
+
+  function nearestWalkablePoint(point) {
+    const insideWalkable = walkableZones.some(zone => isInsideEllipse(point, zone));
+    const insideBlocked = blockedZones.some(zone => isInsideEllipse(point, zone));
+    if (insideWalkable && !insideBlocked) return point;
+    const candidates = [];
+    walkableZones.forEach(zone => {
+      const dx = point.x - zone.cx;
+      const dy = point.y - zone.cy;
+      const scale = 1 / Math.max(1, Math.sqrt((dx / zone.rx) ** 2 + (dy / zone.ry) ** 2));
+      candidates.push({ x: zone.cx + dx * scale * .92, y: zone.cy + dy * scale * .92 });
+    });
+    return candidates.filter(candidate => !blockedZones.some(zone => isInsideEllipse(candidate, zone))).sort((a, b) => Math.hypot(a.x - point.x, a.y - point.y) - Math.hypot(b.x - point.x, b.y - point.y))[0] || { x: 46, y: 51 };
+  }
+
   function removeButterfly(button) {
     clearButterflyTimer(button);
     if (activeChase === button) activeChase = null;
@@ -168,7 +204,7 @@
       if (!button.isConnected || button.classList.contains("targeted")) return;
       button.classList.add("resting");
       button.dataset.state = "resting";
-      button.querySelector("span").textContent = `停在${perch.label}`;
+      button.querySelector("span").textContent = butterflyHint(seedFlights.find(item => item.id === button.dataset.seedFlight));
     }, flightTime);
     const next = setTimeout(() => roamButterfly(button, stepsLeft - 1), flightTime + restTime);
     butterflyTimers.set(button, [settle, next]);
@@ -186,7 +222,7 @@
     button.className = "seed-butterfly entering";
     button.dataset.seedFlight = flight.id;
     button.setAttribute("aria-label", `捕捉从${flight.garden}飞来的蝴蝶`);
-    button.innerHTML = `<img src="assets/insect-butterfly.png" alt=""><span>${flight.garden}</span>`;
+    button.innerHTML = `<img src="assets/${butterflyAssets[(butterflySerial - 1) % butterflyAssets.length]}" alt=""><span>${butterflyHint(flight)}</span>`;
     setButterflyPosition(button, fromLeft ? -8 : 108, 24 + Math.random() * 30, "entering");
     layer.append(button);
     requestAnimationFrame(() => {
@@ -274,7 +310,7 @@
     routeTimers.push(setTimeout(() => { setPetBehavior(behavior, false); currentRoute = destinationRoute; }, route.length * 1350 + 100));
   }
 
-  function movePetTo(x, y, line = "我来啦！", onArrive) {
+  function movePetTo(x, y, line = "", onArrive) {
     const pet = document.querySelector(".living-pet");
     if (!pet) return;
     clearRouteTimers();
@@ -283,7 +319,7 @@
     const behavior = { id: "walk", asset: "pet-walk.png", line, route: [[x, y]] };
     setPetBehavior(behavior, true);
     pet.classList.toggle("facing-left", goingLeft);
-    pet.classList.add("directed");
+    pet.classList.toggle("directed", Boolean(line));
     pet.style.setProperty("--pet-x", `${x}%`);
     pet.style.setProperty("--pet-y", `${y}%`);
     currentPoint = { x, y };
@@ -364,9 +400,9 @@
     if (activeChase || event.target.closest("button, .world-tools, .world-dock, .game-hud, .world-modal-backdrop")) return;
     const scene = event.currentTarget;
     const rect = scene.getBoundingClientRect();
-    const x = Math.max(9, Math.min(91, (event.clientX - rect.left) / rect.width * 100));
-    const y = Math.max(28, Math.min(72, (event.clientY - rect.top) / rect.height * 100));
-    movePetTo(x, y, "你点哪里，我就走到哪里。", null);
+    const requested = { x: Math.max(9, Math.min(91, (event.clientX - rect.left) / rect.width * 100)), y: Math.max(28, Math.min(82, (event.clientY - rect.top) / rect.height * 100)) };
+    const destination = nearestWalkablePoint(requested);
+    movePetTo(destination.x, destination.y, "", null);
   }
 
   function cyclePet(force = false) {
