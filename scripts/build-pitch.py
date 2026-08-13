@@ -13,7 +13,7 @@ def b64(path):
     return 'data:'+mime+';base64,'+base64.b64encode(open(path,'rb').read()).decode()
 def rd(p): return open(p, encoding='utf-8').read()
 
-html, css, js = rd(os.path.join(P,'index.html')), rd(os.path.join(P,'pitch.css')), rd(os.path.join(P,'pitch.js'))
+html, css, js = rd(os.path.join(P,'deck.html')), rd(os.path.join(P,'pitch.css')), rd(os.path.join(P,'pitch.js'))
 
 world = {  # 大图 PNG → 仓库内压缩 webp
   '../world/assets/garden-world-v2.png':'garden.webp',
@@ -56,7 +56,7 @@ try:
     from fontTools import ttLib
     fnt = ttLib.TTFont(os.path.join(P,'assets','lxgw-sub.woff2'))
     have = set(fnt.getBestCmap().keys())
-    text = rd(os.path.join(P,'index.html')) + rd(os.path.join(P,'pitch.js'))
+    text = rd(os.path.join(P,'deck.html')) + rd(os.path.join(P,'pitch.js'))
     miss = sorted({c for c in text if c.isprintable() and ord(c) > 0x2000 and ord(c) not in have and not (0xFE00 <= ord(c) <= 0xFE0F)})
     if miss: print('⚠ 新增文字缺字（会回退系统楷体）:', ''.join(miss), '\n  需要重做字体子集的话找 Bamboo/Claude。')
     else: print('字体子集覆盖完整 ✓')
