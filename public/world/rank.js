@@ -22,7 +22,7 @@
   const state = {
     board: "planted",
     spot: null,          // 选中的地点 id（地点模式）
-    sheet: "half",       // peek | half | full
+    sheet: "peek",       // peek | half | full；入场先看地图全景，入场动画结束后自动升到 half
     entered: false,      // 入场动画是否已放过
     playedBoards: new Set(),
     hintDone: (() => { try { return localStorage.getItem(HINT_KEY) === "1"; } catch { return true; } })(),
@@ -52,7 +52,9 @@
     if (mapSvg) return mapSvg;
     const cm = mapData();
     const [, , vw, vh] = cm.viewBox;
-    const svg = svgEl("svg", { viewBox: cm.viewBox.join(" "), class: "rank-map-svg", "aria-label": "紫金港校园手绘地图" });
+    // 元素尺寸固定为 viewBox 像素（1 地图单位 = 1px）：否则 100% 尺寸下 preserveAspectRatio
+    // 的 letterbox 缩放会让 flyTo/fitCampus 的坐标换算整体偏移
+    const svg = svgEl("svg", { viewBox: cm.viewBox.join(" "), width: vw, height: vh, style: `width:${vw}px;height:${vh}px`, class: "rank-map-svg", "aria-label": "紫金港校园手绘地图" });
 
     const defs = svgEl("defs", {}, svg);
     defs.innerHTML = `
@@ -74,20 +76,20 @@
       return g;
     };
 
-    group("rk-green", L.green, { fill: "#dde3b1", stroke: "none" });
-    group("rk-pitch", L.pitches, { fill: "#cdd98b", stroke: "#b9c775", "stroke-width": 1.5 });
+    group("rk-green", L.green, { fill: "#d4dd9b", stroke: "none" });
+    group("rk-pitch", L.pitches, { fill: "#c3d178", stroke: "#a3b45c", "stroke-width": 1.5 });
     // 水系
     const waterG = svgEl("g", { class: "rk-water" }, ground);
-    for (const d of L.rivers) svgEl("path", { d, fill: "none", stroke: "#aed6e5", "stroke-width": 7, "stroke-linecap": "round" }, waterG);
-    for (const d of L.water) svgEl("path", { d, fill: "url(#rk-lake)", stroke: "#8cc3d8", "stroke-width": 2 }, waterG);
+    for (const d of L.rivers) svgEl("path", { d, fill: "none", stroke: "#9ecfe0", "stroke-width": 8, "stroke-linecap": "round" }, waterG);
+    for (const d of L.water) svgEl("path", { d, fill: "url(#rk-lake)", stroke: "#74aec4", "stroke-width": 2.4, "fill-rule": "evenodd" }, waterG);
     // 道路：主路带描边、校园路奶油色、小径虚线
     const roadsG = svgEl("g", { class: "rk-roads" }, ground);
-    for (const r of L.roads) svgEl("path", { d: r.d, fill: "none", stroke: r.major ? "#e7d9b4" : "#f7efd7", "stroke-width": r.major ? 11 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", class: "rk-road" }, roadsG);
+    for (const r of L.roads) svgEl("path", { d: r.d, fill: "none", stroke: r.major ? "#dcc99b" : "#f6ecce", "stroke-width": r.major ? 11 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", class: "rk-road" }, roadsG);
     const pathsG = svgEl("g", { class: "rk-paths" }, ground);
-    for (const d of L.paths) svgEl("path", { d, fill: "none", stroke: "#e3d6ae", "stroke-width": 2.2, "stroke-dasharray": "7 6", "stroke-linecap": "round" }, pathsG);
+    for (const d of L.paths) svgEl("path", { d, fill: "none", stroke: "#d9c99a", "stroke-width": 2.4, "stroke-dasharray": "7 6", "stroke-linecap": "round" }, pathsG);
     // 建筑
     const bldgG = svgEl("g", { class: "rk-buildings" }, ground);
-    for (const d of L.buildings) svgEl("path", { d, fill: "#efe4c6", stroke: "#c9b585", "stroke-width": 1.4, "stroke-linejoin": "round" }, bldgG);
+    for (const d of L.buildings) svgEl("path", { d, fill: "#eadbb4", stroke: "#b59d6c", "stroke-width": 1.5, "stroke-linejoin": "round" }, bldgG);
 
     // 楼名小字（不加 wobble，保证可读）
     const labelG = svgEl("g", { class: "rk-labels" }, svg);
@@ -107,6 +109,7 @@
       const g = svgEl("g", {
         class: "rank-marker",
         "data-rank-spot": spot.id,
+        "data-ax": anchor[0], "data-ay": anchor[1],
         transform: `translate(${anchor[0]} ${anchor[1]})`,
         style: `--halo:${TONE_COLOR[spot.tone] || "#d89a43"}`,
         tabindex: "0", role: "button", "aria-label": `${spot.name}：本周 ${spot.seeds} 颗种子，${spot.blooms} 朵开花`,
@@ -138,6 +141,8 @@
           <button class="rank-hud-locate" data-rank-reset aria-label="回到全景">◎<small>全景</small></button>
         </header>
         ${state.hintDone ? "" : `<div class="rank-hint">轻点一朵花，看看那里正在发生什么</div>`}
+        <span class="rank-map-stamp" aria-hidden="true">紫金港校区</span>
+        <span class="rank-map-compass" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#fffaf0" stroke="#8a7a52" stroke-width="1.4"/><path d="M12 5.5 L14.6 15 12 12.8 9.4 15Z" fill="#df6434"/></svg><b>北</b></span>
         <p class="rank-attribution">演示数据 · 地图 © OpenStreetMap</p>
       </div>
       <section class="rank-sheet" id="rank-sheet" data-state="${state.sheet}">
@@ -184,6 +189,21 @@
       <footer class="rank-footer">榜单只统计种子与行动地点 · 投票来自同学社区，花匠只整理不投票</footer>`;
   }
 
+  // 手绘奖章（内联 SVG，避免奖杯 emoji 跨端渲染不一致）
+  function medalSvg(place) {
+    const tone = place === 1
+      ? { main: "#e2ae4f", dark: "#a8782b", ribbon: "#df6434" }
+      : place === 2
+        ? { main: "#c9c2b0", dark: "#8f8874", ribbon: "#8fa05a" }
+        : { main: "#c99e63", dark: "#96682a", ribbon: "#b98c50" };
+    return `<svg viewBox="0 0 24 30" aria-hidden="true">
+      <path d="M8.6 15.5 6.2 27l5.8-3.4 5.8 3.4-2.4-11.5" fill="${tone.ribbon}" stroke="${tone.dark}" stroke-width="1.2" stroke-linejoin="round"/>
+      <circle cx="12" cy="10" r="8" fill="${tone.main}" stroke="${tone.dark}" stroke-width="1.5"/>
+      <circle cx="12" cy="10" r="5.4" fill="none" stroke="rgba(255,251,232,.75)" stroke-width="1.1" stroke-dasharray="2.4 2"/>
+      <text x="12" y="13.4" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fffbe8">${place}</text>
+    </svg>`;
+  }
+
   function podium(top3, board) {
     const order = [top3[1], top3[0], top3[2]]; // 视觉顺序：2 1 3
     const places = [2, 1, 3];
@@ -194,7 +214,7 @@
         const spot = spotById(item.spot);
         const value = item[board.metric];
         return `<button class="rank-podium-item place-${place}" role="listitem" data-rank-celebrate="${place}" data-spot-ref="${esc(item.spot)}">
-          <span class="rank-podium-medal">${place === 1 ? "🏆" : place === 2 ? "🥈" : "🥉"}</span>
+          <span class="rank-podium-medal">${medalSvg(place)}</span>
           <img class="rank-podium-flower" src="assets/${TONE_ASSET[spot?.tone] || "flower-3.png"}" alt="">
           <span class="rank-podium-pot"></span>
           <strong>${esc(item.title)}</strong>
@@ -221,7 +241,7 @@
       <div class="rank-row-main">
         <h3>${esc(item.title)}</h3>
         ${sub}
-        <button class="rank-spot-chip" data-rank-spot="${esc(item.spot)}" aria-label="在地图上查看${esc(spot?.name || "")}">📍${esc(spot?.name || "")}</button>
+        <button class="rank-spot-chip" data-rank-spot="${esc(item.spot)}" aria-label="在地图上查看${esc(spot?.name || "")}"><svg class="rk-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.2-5.4-6.2-10.2a6.2 6.2 0 0 1 12.4 0C18.2 15.6 12 21 12 21Z" fill="#df6434" stroke="#a34424" stroke-width="1.4" stroke-linejoin="round"/><circle cx="12" cy="10.6" r="2.2" fill="#fff7e6"/></svg>${esc(spot?.name || "")}</button>
       </div>
       <div class="rank-row-side"><b><i class="rank-num" data-count="${value}">0</i></b><small>${board.unit}</small>${deltaHtml}</div>
     </li>`;
@@ -260,9 +280,9 @@
   }
 
   /* ---------------- 挂载与交互 ---------------- */
-  function mount(activeNow) {
+  function mount() {
     const host = document.getElementById("rank-map-host");
-    if (!activeNow || !host) { flyToken++; return; }
+    if (!host) { flyToken++; return; }
     if (!window.CampusMap || !window.RankData) return;
 
     const svg = buildMap();
@@ -270,17 +290,50 @@
       host.appendChild(svg);
       if (!panzoomInstance && window.panzoom) {
         panzoomInstance = window.panzoom(svg, {
-          maxZoom: 4, minZoom: 0.9, bounds: true, boundsPadding: 0.22,
+          maxZoom: 4, minZoom: 0.3, bounds: true, boundsPadding: 0.32,
           zoomDoubleClickSpeed: 2.4, smoothScroll: true,
           beforeMouseDown: e => e.target.closest(".rank-marker") ? true : false,
           onTouch: e => !e.target.closest(".rank-marker"),
         });
+        panzoomInstance.on("transform", syncMarkerZoom);
         fitCampus(false);
+        syncMarkerZoom();
       }
     }
     syncMarkerActive();
     if (!state.entered) { state.entered = true; playEntrance(); }
+    else finalizeEntrance(); // SVG 被 render() 挪动会冻结进行中的动画，重挂载时直接恢复终态
     playCounters();
+    animateTabPill();
+  }
+
+  // 把入场动画涉及的图层全部落到终态（清内联样式，回到属性/CSS 默认值）
+  function finalizeEntrance() {
+    if (!mapSvg) return;
+    for (const sel of [".rk-ground", ".rk-paths", ".rk-labels"]) {
+      const layer = mapSvg.querySelector(sel);
+      if (layer) { layer.style.opacity = ""; layer.getAnimations?.().forEach(a => a.finish?.()); }
+    }
+    mapSvg.querySelectorAll(".rk-road").forEach(path => {
+      path.style.strokeDasharray = ""; path.style.strokeDashoffset = ""; path.style.transition = "";
+    });
+    mapSvg.querySelectorAll(".rank-marker .rk-marker-inner").forEach(inner => {
+      const t = inner.getAttribute("transform") || "";
+      if (t.includes("scale(0)")) inner.setAttribute("transform", t.replace(/ scale\(0\)$/, ""));
+    });
+  }
+
+  // 标记反向补偿缩放：地图放大时名牌/花朵不至于巨大，缩小时也不至于看不见
+  function syncMarkerZoom() {
+    if (!markerLayer || !panzoomInstance) return;
+    const zoom = panzoomInstance.getTransform().scale || 1;
+    const k = Math.min(1.25, Math.max(0.45, 1 / zoom));
+    for (const marker of markerLayer.querySelectorAll(".rank-marker")) {
+      marker.setAttribute("transform", `translate(${marker.dataset.ax} ${marker.dataset.ay}) scale(${k.toFixed(3)})`);
+    }
+    // 底图楼名同步反向补偿字号（锚点不动，只缩字），放大后不至于满屏巨字
+    const labelK = Math.min(1, Math.max(0.5, 1 / zoom));
+    mapSvg?.style.setProperty("--label-size", `${(12.5 * labelK).toFixed(1)}px`);
   }
 
   function stageSize() {
@@ -317,11 +370,15 @@
     requestAnimationFrame(step);
   }
 
+  // 抽屉上方还露出的地图窗口占整屏的比例
+  function visibleRatio() { return 1 - (SHEET_RATIO[state.sheet] ?? 0.52); }
+
   function fitCampus(smooth = true) {
     const [, , vw, vh] = mapData().viewBox;
     const [cw, ch] = stageSize();
-    const zoom = Math.max(cw / vw, (ch * 0.96) / vh) * 1.02;
-    flyTo(vw / 2, vh * 0.47, zoom, { smooth, anchorY: 0.46 });
+    const zoom = (cw / vw) * 1.02;               // 贴住宽度：整幅校园横向都在画面里
+    const anchorY = visibleRatio() * 0.5;        // 校园核心落在抽屉上方窗口的中央
+    flyTo(vw / 2, vh * 0.46, zoom, { smooth, anchorY });
   }
 
   function focusSpot(id, { fly = true } = {}) {
@@ -333,7 +390,7 @@
     if (fly && anchor) {
       const [cw] = stageSize();
       const zoom = Math.max(1.9, (cw / mapData().viewBox[2]) * 2.6);
-      flyTo(anchor[0], anchor[1] - 14, zoom, { anchorY: 0.3 });
+      flyTo(anchor[0], anchor[1] - 14, zoom, { anchorY: visibleRatio() * 0.46 });
     }
     syncMarkerActive();
     burstAtSpot(id);
@@ -408,6 +465,16 @@
         marker.classList.add("rk-pop");
       }, 650 + i * 90);
     });
+    setTimeout(finalizeEntrance, 700 + markers.length * 90 + 900); // 双保险：无论动画是否被打断都落到终态
+    // 入场看完全景后，抽屉自动升起来引导看榜单（用户已自己动过就不打扰）
+    setTimeout(() => { if (state.sheet === "peek" && !state.sheetTouched) setSheet("half"); }, 2400);
+  }
+
+  // 统一的抽屉状态切换（同步 DOM 三处属性）
+  function setSheet(next) {
+    state.sheet = next;
+    document.querySelector(".rank-screen")?.setAttribute("data-sheet", next);
+    document.getElementById("rank-sheet")?.setAttribute("data-state", next);
   }
 
   function playCounters() {
@@ -525,21 +592,27 @@
     document.getElementById("rank-sheet")?.setAttribute("data-state", next);
   }
 
-  /* ---------------- 事件（独立于 prototype.js 的委托） ---------------- */
+  /* ---------------- 事件（独立于 prototype.js 的委托） ----------------
+     本脚本先于 prototype.js（module）加载，监听器先注册；对榜单内部控件
+     调用 stopImmediatePropagation，避免 prototype.js 的历史 rank 处理器重复响应。
+     data-rank-plant / data-action 保持冒泡，交给 prototype.js 处理。 */
   document.addEventListener("click", event => {
     if (!document.querySelector(".rank-screen")) return;
+    const stop = () => event.stopImmediatePropagation();
+    if (event.target.closest("[data-rank-plant], [data-action]")) return; // 交给 prototype.js
     const spotTrigger = event.target.closest("[data-rank-spot]");
-    if (spotTrigger) { focusSpot(spotTrigger.dataset.rankSpot); return; }
-    if (event.target.closest("[data-rank-close]")) { closeSpot(); return; }
-    if (event.target.closest("[data-rank-reset]")) { state.spot = null; rerenderLocal(); syncMarkerActive(); fitCampus(); return; }
+    if (spotTrigger) { stop(); focusSpot(spotTrigger.dataset.rankSpot); return; }
+    if (event.target.closest("[data-rank-close]")) { stop(); closeSpot(); return; }
+    if (event.target.closest("[data-rank-reset]")) { stop(); state.spot = null; rerenderLocal(); syncMarkerActive(); fitCampus(); return; }
     const boardBtn = event.target.closest("[data-rank-board]");
-    if (boardBtn && boardBtn.dataset.rankBoard !== state.board) {
-      state.board = boardBtn.dataset.rankBoard;
-      rerenderLocal();
+    if (boardBtn) {
+      stop();
+      if (boardBtn.dataset.rankBoard !== state.board) { state.board = boardBtn.dataset.rankBoard; rerenderLocal(); }
       return;
     }
     const celebrate = event.target.closest("[data-rank-celebrate]");
     if (celebrate) {
+      stop();
       const rect = celebrate.getBoundingClientRect();
       burst((rect.left + rect.width / 2) / window.innerWidth, rect.top / window.innerHeight, celebrate.dataset.rankCelebrate === "1" ? 26 : 14);
       const ref = celebrate.dataset.spotRef;
@@ -567,5 +640,8 @@
     if (event.key === "Escape" && state.spot) closeSpot();
   });
 
-  window.CampusRank = { page, mount };
+  // 对外接口：兼容 prototype.js 已有的 RankPage 接线（markup/mount/state）
+  const api = { state, page, markup: page, mount };
+  window.CampusRank = api;
+  window.RankPage = api;
 })();

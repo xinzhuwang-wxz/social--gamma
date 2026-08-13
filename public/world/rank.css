@@ -19,7 +19,7 @@
 }
 
 .rk-map-label {
-  font-family: "Songti SC", STSong, serif; font-size: 12.5px; fill: #8b8266;
+  font-family: "Songti SC", STSong, serif; font-size: var(--label-size, 12.5px); fill: #8b8266;
   paint-order: stroke; stroke: rgba(250, 245, 224, .9); stroke-width: 3px;
   text-anchor: middle; letter-spacing: .5px; pointer-events: none;
 }
@@ -34,7 +34,7 @@
 .rk-flower { transform-box: fill-box; transform-origin: 50% 100%; }
 .rank-marker.rk-popped .rk-flower, .rank-marker .rk-pop .rk-flower { animation: rk-sway 4.5s ease-in-out infinite; }
 @keyframes rk-sway { 25% { transform: rotate(2.4deg); } 75% { transform: rotate(-2.2deg); } }
-.rank-marker-name { font-family: "Songti SC", STSong, serif; font-size: 11.5px; font-weight: 700; fill: #4d572e; text-anchor: middle; }
+.rk-marker-name { font-family: "Songti SC", STSong, serif; font-size: 11.5px; font-weight: 700; fill: #4d572e; text-anchor: middle; }
 .rank-marker.active .rk-marker-inner { transform: scale(1.28) !important; }
 .rank-marker:focus-visible .rk-heat { stroke: #89974b; stroke-width: 2; }
 .rk-ring-path { pointer-events: none; animation: rk-ring-in .5s cubic-bezier(.34, 1.56, .5, 1); transform-box: fill-box; transform-origin: center; }
@@ -222,6 +222,19 @@
 .rank-plant-cta { margin-top: 3px; }
 .rank-back-board { border: 0; padding: 5px; color: #847e6c; background: transparent; font-size: 11.5px; font-weight: 700; }
 
+/* ---------- 花园里的风物榜木牌入口 ---------- */
+.rank-sign { position: absolute; z-index: 24; right: 14px; top: 208px; border: 0; padding: 0; background: transparent; filter: drop-shadow(0 4px 4px rgba(55, 58, 30, .22)); }
+.rank-sign i {
+  display: block; padding: 7px 9px 6px; font-style: normal; writing-mode: vertical-rl;
+  border: 2px solid #8a6a34; border-radius: 8px;
+  font-family: "Songti SC", STSong, serif; font-size: 13px; font-weight: 700; letter-spacing: 4px;
+  color: #5f4a26; background: linear-gradient(180deg, #e0b083, #c99e63);
+  box-shadow: inset 0 2px 0 rgba(255, 235, 195, .7);
+}
+.rank-sign span { display: block; width: 7px; height: 26px; margin: -1px auto 0; border-radius: 0 0 3px 3px; background: linear-gradient(180deg, #a97e46, #8a6234); }
+.rank-sign::after { content: "NEW"; position: absolute; top: -7px; right: -9px; border-radius: 999px; padding: 2px 5px; background: #df6434; color: #fff7e6; font-size: 7px; font-weight: 900; letter-spacing: .5px; }
+.rank-sign:active { transform: scale(.94); }
+
 /* ---------- dock 微调（7 格布局 + 自绘图标） ---------- */
 .world-dock.dock-7 { grid-template-columns: 1fr 1fr 1fr 58px 1fr 1fr 1fr; }
 .world-dock.dock-7 small { font-size: 9px; }
@@ -235,3 +248,29 @@
   .rank-marker .rk-heat, .place-1 .rank-podium-flower, .rank-hint { animation: none; }
   .rank-sheet { transition: none; }
 }
+
+/* ---------- 内联 SVG 图标（气象/奖章/图钉/图章） ---------- */
+.rank-hud-back { flex: none; width: 40px; height: 40px; border: 1px solid #dfcda5; border-radius: 13px; color: #6f6a56; background: rgba(255, 253, 244, .9); font-size: 20px; line-height: 1; font-family: Georgia, serif; }
+.rank-stat-icon { width: 17px; height: 17px; display: inline-block; fill: none; stroke: #6c7937; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.rank-podium-medal svg { width: 17px; height: 21px; display: block; }
+.place-1 .rank-podium-medal svg { width: 22px; height: 27px; }
+.rk-pin { width: 11px; height: 11px; display: inline-block; margin-right: 2px; vertical-align: -1px; }
+.rk-stamp-text { font-family: "Songti SC", STSong, serif; font-size: 12.5px; font-weight: 700; fill: #8a6a34; letter-spacing: 3px; text-anchor: middle; }
+
+/* ---------- 屏幕固定角标：校名图章 + 指北针（不随地图缩放） ---------- */
+.rank-map-stamp {
+  position: absolute; z-index: 4; left: 14px; top: 96px; pointer-events: none;
+  border: 1.4px solid rgba(183, 169, 126, .8); border-radius: 8px; padding: 4px 10px;
+  transform: rotate(-2.5deg);
+  color: #8a6a34; background: rgba(255, 250, 240, .82);
+  font-family: "Songti SC", STSong, serif; font-size: 11.5px; font-weight: 700; letter-spacing: 3px;
+  box-shadow: 0 2px 8px rgba(109, 91, 48, .12);
+}
+.rank-map-compass {
+  position: absolute; z-index: 4; right: 16px; top: 92px; pointer-events: none;
+  display: grid; justify-items: center; gap: 1px;
+  filter: drop-shadow(0 2px 4px rgba(109, 91, 48, .18));
+}
+.rank-map-compass svg { width: 26px; height: 26px; }
+.rank-map-compass b { color: #8a7a52; font-family: "Songti SC", STSong, serif; font-size: 9px; }
+.rank-screen[data-mode="spot"] .rank-map-stamp { opacity: 0; transition: opacity .3s; }
