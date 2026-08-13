@@ -32,7 +32,7 @@ export function seedToCard(s: typeof schema.seeds.$inferSelect): SeedCard {
  * 匹配管线（发布种子后异步执行）：
  * 真实 LLM 评估候选池 → 对值得投递的 Top3 生成 A2A → 写入投递记录。
  */
-export async function runMatching(seedId: string) {
+export async function runMatching(seedId: string, restrictSimTo?: string[]) {
   const [seed] = await db.select().from(schema.seeds).where(eq(schema.seeds.id, seedId));
   if (!seed || seed.status !== "matching") return;
 
@@ -45,10 +45,13 @@ export async function runMatching(seedId: string) {
     .select()
     .from(schema.users)
     .where(ne(schema.users.id, seed.ownerId));
+  const pool = restrictSimTo ? new Set(restrictSimTo) : null;
   const candidates = allOthers
     .filter((u) =>
       simOn
-        ? u.isSim || (!u.isPersona && !u.isSim) // 仿真同伴 + 真人
+        ? u.isSim
+          ? !pool || pool.has(u.id) // 仿真同伴：若限定则只取本次新捏的（避免历史人格污染/重名）
+          : !u.isPersona // 真人
         : !u.isSim // 无仿真回归：预设 persona + 真人
     )
     .map(toProfile);
@@ -61,7 +64,7 @@ export async function runMatching(seedId: string) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  // 并行生成 A2A
+  // 并行生成 A2A（保留：A2A 是红线#3 的技术栈体现；已用 mini + 2-3 轮轻量化）
   const withA2a = await Promise.all(
     deliverable.map(async (r) => {
       const cand = candidates.find((c) => c.id === r.candidateId);

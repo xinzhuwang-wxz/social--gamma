@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { currentUser, uid } from "@/lib/session";
-import { draftPact } from "@/lib/ai/room";
-import { seedToCard } from "@/lib/matching";
 import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
 import { readJson, badRequest } from "@/lib/http";
 import { simOnPactConfirmed } from "@/lib/sim";
+import { createPactDraft } from "@/lib/pacts";
 
 /**
  * POST /api/rooms/:id/pact
@@ -42,47 +41,11 @@ export async function POST(
     .limit(1);
 
   if (action === "draft") {
-    const [seed] = await db.select().from(schema.seeds).where(eq(schema.seeds.id, room.seedId));
-    const msgs = await db
-      .select({ m: schema.messages, u: schema.users })
-      .from(schema.messages)
-      .leftJoin(schema.users, eq(schema.messages.senderId, schema.users.id))
-      .where(eq(schema.messages.roomId, id))
-      .orderBy(asc(schema.messages.createdAt));
-
     try {
-      const draft = await draftPact(
-        seedToCard(seed),
-        msgs
-          .filter(({ m }) => m.kind === "text")
-          .map(({ m, u }) => ({ senderName: u?.name ?? "?", content: m.content, kind: m.kind }))
-      );
-      const version = (latest?.version ?? 0) + 1;
-      await db.insert(schema.pacts).values({
-        id: `pact_${uid()}`,
-        roomId: id,
-        content: {
-          what: draft.what,
-          when: draft.when,
-          where: draft.where,
-          meet: draft.meet,
-          notes: [
-            ...draft.notes,
-            ...draft.missing.map((m) => `待商量：${m.replace(/待(商量|确认|定)$/, "").trim()}`),
-          ],
-        },
-        status: "draft",
-        ownerConfirmed: false,
-        partnerConfirmed: false,
-        version,
-        createdAt: new Date(),
-      });
-      // 草稿出现 → 植物进入生长期
-      if (room.stage === "leafing" || room.stage === "sprout") {
-        await db.update(schema.rooms).set({ stage: "growing" }).where(eq(schema.rooms.id, id));
-      }
+      const draft = await createPactDraft(id);
+      if (!draft) return NextResponse.json({ error: "draft_unavailable" }, { status: 409 });
       emitRoom(id);
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, pactId: draft.id });
     } catch (e) {
       console.error("pact draft error", e);
       return NextResponse.json({ error: "ai_failed" }, { status: 502 });

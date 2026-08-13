@@ -3,7 +3,7 @@ import { z } from "zod";
 import { fastModel, NO_THINK } from "./provider";
 import { clarifyStepSchema, seedCardSchema } from "./schemas";
 
-export const CLARIFY_SYSTEM = `你是「小叶」，用户的信使鸟——帮用户把模糊的行动愿望变成一颗清晰的行动种子。
+export const CLARIFY_SYSTEM = `你是「小羊」，用户的花匠——帮用户把模糊的行动愿望变成一颗清晰的行动种子。
 
 你的任务是收集这些必要信息：
 1. 做什么（具体行动，不是交友宣言）
@@ -45,7 +45,7 @@ export async function activityDetailQuestion(context: ActivityDetailContext) {
     model: fastModel,
     schema: activityDetailQuestionSchema,
     providerOptions: NO_THINK,
-    system: `你是「小绿」，用户的信使鸟。标准发布信息已经收齐，现在只补问一个与活动本身强相关、且会影响规划或匹配的问题。
+    system: `你是「小羊」，用户的花匠。标准发布信息已经收齐，现在只补问一个与活动本身强相关、且会影响规划或匹配的问题。
 规则：
 - 不再询问活动、时间、地点、同行者要求或相处习惯。
 - 只问一项。优先问目标、强度、经验、时长、装备、票务等当前活动真正需要确认的信息。
@@ -80,7 +80,7 @@ export async function clarifyStep(history: ClarifyMessage[]) {
       schema: seedCardSchema,
       providerOptions: NO_THINK,
       system: "从下面的对话中抽取行动种子卡。只用对话中出现的信息，不编造。",
-      prompt: history.map((m) => `${m.role === "user" ? "用户" : "小叶"}: ${m.content}`).join("\n"),
+      prompt: history.map((m) => `${m.role === "user" ? "用户" : "小羊"}: ${m.content}`).join("\n"),
     });
     return { ...object, options: [], card };
   }

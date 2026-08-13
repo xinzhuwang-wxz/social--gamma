@@ -6,6 +6,7 @@ import { roomKickoff, roomKickoffGroup } from "@/lib/ai/room";
 import { seedToCard, toProfile } from "@/lib/matching";
 import { simOnRoomCreated } from "@/lib/sim";
 import { readJson, badRequest } from "@/lib/http";
+import { insertEventAiMessage } from "@/lib/event-coordinator";
 
 /** POST /api/seeds/:id/choose
  * 单选：{ matchId }        → 1 对 1，兼容旧路径
@@ -140,16 +141,18 @@ export async function POST(
   ];
   await db.insert(schema.roomMembers).values(memberValues);
 
-  // 方案 A 交接模型：不自动破冰，只发一条系统交接提示；第一句真人自己说。
-  // 破冰话术保留在 room.icebreak，作为可选「开场灵感」供用户点选，不自动发送。
   await db.insert(schema.messages).values({
     id: `msg_${uid()}`,
     roomId,
     senderId: null,
     kind: "system",
-    content:
-      "两位 Agent 已完成交接。接下来由你们决定具体怎么安排；聊到卡住时，可以请小苗帮忙。",
+    content: "你们已经组队成功，开始聊聊具体安排吧。",
     createdAt: new Date(),
+  });
+  await insertEventAiMessage(roomId, {
+    action: "icebreak",
+    text: kickoff.icebreak.message,
+    options: kickoff.icebreak.quickReplies.slice(0, 3),
   });
 
   simOnRoomCreated(req.nextUrl.origin, roomId);

@@ -6,6 +6,7 @@ import { roomForUser } from "@/lib/room-access";
 import { emitRoom } from "@/lib/room-events";
 import { readJson, badRequest } from "@/lib/http";
 import { simOnHumanMessage } from "@/lib/sim";
+import { coordinateRoomAction } from "@/lib/event-coordinator";
 
 /** POST /api/rooms/:id/messages — { content } 发送真人消息 */
 export async function POST(
@@ -57,6 +58,11 @@ export async function POST(
   }
 
   emitRoom(id);
+  try {
+    await coordinateRoomAction(id);
+  } catch (error) {
+    console.error("[event coordinator]", error);
+  }
   if (!me.isSim) simOnHumanMessage(req.nextUrl.origin, id);
   return NextResponse.json({ ok: true });
 }

@@ -13,6 +13,7 @@ import { db, schema } from "./db/client";
 import { fastModel, NO_THINK } from "./ai/provider";
 import { uid } from "./session";
 import type { SeedCard } from "./ai/schemas";
+import { readableMessage } from "./event-message";
 
 export function simEnabled() {
   return process.env.SIM_MODE !== "0";
@@ -216,7 +217,7 @@ async function generateSimChat(origin: string, roomId: string) {
     prompt: `种子：${JSON.stringify(seed && { title: seed.title, when: seed.whenText, where: seed.whereText })}
 约定状态：${pact ? pact.status : "未形成"}
 最近对话：
-${msgs.slice(-12).map(({ m, u }) => `${m.kind === "text" ? (u?.name ?? "?") : "系统/AI"}: ${m.content}`).join("\n")}
+${msgs.slice(-12).map(({ m, u }) => `${m.kind === "text" ? (u?.name ?? "?") : "系统/AI"}: ${readableMessage(m.content)}`).join("\n")}
 
 以${speaker.name}的身份回复一条。`,
   });

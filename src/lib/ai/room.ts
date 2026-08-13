@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
-import { fastModel, strongModel, NO_THINK } from "./provider";
-import { kickoffSchema, nudgeSchema, pactDraftSchema, memorySummarySchema } from "./schemas";
+import { fastModel, NO_THINK } from "./provider";
+import { eventInterventionSchema, kickoffSchema, pactDraftSchema, memorySummarySchema } from "./schemas";
 import type { CandidateProfile } from "./match";
 import type { SeedCard } from "./schemas";
 
@@ -18,12 +18,13 @@ export async function roomKickoff(
   a2a: A2A | null
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
     system: `两位用户刚为一次共同行动成局，你是属于这次事件的小苗。生成：
 1. 给发起人看的对方摘要卡（forOwner：介绍同行者）和给同行者看的摘要卡（forPartner：介绍发起人）——只讲与本次事件相关的特点、共同点、待沟通事项。
-2. 一次破冰消息（你只有这一次主动发言的机会）：必须基于双方共同点或本次事件，自然、不尬，一句话；再配 3 个与事件相关的快捷回复供双方一键使用。
+2. 一次破冰消息（你只有这一次主动发言的机会）：像群聊里的行动小助手一样自然说话，直接问一个有助于确定时间、地点、路线或集合方式的具体问题；一句话；再配 3 个可直接回答这个问题的快捷回复。
+房间成员已经确定，不得提议再邀请其他人；不解释自己的 AI 身份，不使用「推进、协作、事件 AI」等产品术语。
 不编造给定信息之外的内容。`,
     prompt: `## 行动种子
 ${JSON.stringify(seed, null, 2)}
@@ -48,13 +49,14 @@ export async function roomKickoffGroup(
   a2aList: (A2A | null)[]
 ) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: kickoffSchema,
     providerOptions: NO_THINK,
     system: `多位用户刚为一次共同行动成局（${partners.length + 1} 人），你是属于这次事件的小苗。生成：
 1. forOwner（给发起人看）：介绍所有同行者的特点、与事件的共同点、还需讨论的事项。
 2. forPartner（给所有同行者看）：介绍发起人及其他成员，与事件的共同点，还需大家一起讨论的事项。
-3. 一次破冰消息（唯一一次主动发言）：基于所有成员的共同点，自然地点名每位成员参与，一句话；配 3 个供全体一键使用的快捷回复。
+3. 一次破冰消息（唯一一次主动发言）：像群聊里的行动小助手一样自然说话，直接问一个有助于确定时间、地点、路线或集合方式的具体问题；一句话；配 3 个可直接回答这个问题的快捷回复。
+房间成员已经确定，不得提议再邀请其他人；不解释自己的 AI 身份，不使用「推进、协作、事件 AI」等产品术语。
 不编造给定信息之外的内容。`,
     prompt: `## 行动种子
 ${JSON.stringify(seed, null, 2)}
@@ -73,22 +75,35 @@ ${a2aList.map((a, i) => `### 与 ${partners[i]?.name ?? `同行者${i + 1}`} 的
 
 export type RoomMessage = { senderName: string; content: string; kind: string };
 
-/** 推进：一次只处理一个卡点 */
-export async function nudge(
+/** 事件 AI 决策：只在能推动行动跨过一个卡点时介入。 */
+export async function planEventIntervention(
   seed: SeedCard,
   messages: RoomMessage[],
   pact: { status: string; content: unknown } | null
 ) {
   const { object } = await generateObject({
     model: fastModel,
-    schema: nudgeSchema,
+    schema: eventInterventionSchema,
     providerOptions: NO_THINK,
-    system: `你是这次共同行动的小苗。用户主动点了「推进」按钮请你帮忙。你要根据当前对话，只处理眼前的一个卡点：
-- 如果讨论刚开始/发散：kind=summary，简短总结聊到哪里、还差什么要素（时间/地点/集合方式）。
-- 如果双方在某个具体决策上犹豫（如去哪条路线）：kind=options，把讨论中出现过的方案整理成 2-3 个选项。
-- 如果双方其实已达成一致但没明说：kind=consensus，把共识说出来向双方确认。
-- 如果时间地点集合方式都已谈妥：kind=pact_suggest，建议把共识整理成行动约定。
-规则：不发起新话题、不替用户做决定、不给完整计划书、语气轻，一次只说一件事，不超过 60 字。选项只能来自对话中出现过的内容。`,
+    system: `你是属于这次事件的中立行动推进者。每次收到新真人消息后，判断现在是否存在一个明确、低成本、能让行动更接近发生的下一步。
+
+只有下列情况才介入：
+- ask_missing：行动落地还缺一个关键要素，只问最接近落地的那一项。
+- offer_choices：对话里已经出现 2-3 个具体方案，需要收敛选择。
+- request_decision：卡点已经明确，需要点名某一方给出决定。
+- confirm_decision：双方已出现潜在共识，需要用一句话请求确认。
+- create_pact：做什么、时间、地点/集合方式已经谈得足够具体，可以生成行动约定。
+
+否则 shouldIntervene=false、action=none、text=""、options=[]，让真人继续聊。
+
+硬规则：
+- 推进而不是总结；复述只能作为提出下一步的半句话，不能独立成为消息。
+- 你是双方共同的中立主持人，所有公开发言都面向房间里的全体成员；使用「你们、大家、哪一位」等中立称呼，不把当前发消息的人当作唯一听众，也不偏袒任何一方。
+- 需要某个人回答时，根据对话明确点名；需要共识时同时请求双方确认。
+- 一次只处理一个卡点，不替用户承诺，不编造未出现的决定。
+- options 只能来自对话或行动种子已有信息，并且可以直接作为真人回复发送。
+- 如果上一条事件 AI 的问题还没人回应，保持沉默。
+- 介入文案不超过 70 字。`,
     prompt: `## 行动种子
 ${JSON.stringify(seed, null, 2)}
 
@@ -101,10 +116,13 @@ ${messages.map((m) => `${m.senderName}: ${m.content}`).join("\n")}`,
   return object;
 }
 
+/** 兼容旧调用名：手动推进接口与自动协调器共享同一套决策。 */
+export const nudge = planEventIntervention;
+
 /** 行动约定草稿：只整理双方谈过的内容 */
 export async function draftPact(seed: SeedCard, messages: RoomMessage[]) {
   const { object } = await generateObject({
-    model: strongModel,
+    model: fastModel,
     schema: pactDraftSchema,
     providerOptions: NO_THINK,
     system: `把两位用户聊天中「已经谈妥」的内容整理成行动约定。

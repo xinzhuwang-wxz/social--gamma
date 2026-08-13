@@ -36,7 +36,7 @@ export const matchEvalSchema = z.object({
       reasons: z
         .array(
           z.object({
-            type: z.enum(["time", "place", "interest", "experience"]),
+            type: z.string().describe("匹配维度，取 time / place / interest / experience 之一"),
             text: z.string().describe("一句话理由，面向候选人展示"),
           })
         )
@@ -55,9 +55,9 @@ export const a2aSchema = z.object({
         text: z.string(),
       })
     )
-    .describe("4-6 轮双方 Agent 的简短对话，只谈本次事件相关信息"),
-  commonalities: z.array(z.string()).describe("双方与本次事件相关的共同点 2-3 条"),
-  icebreakHints: z.array(z.string()).describe("给真人破冰准备的素材 2-3 条"),
+    .describe("2-3 轮双方 Agent 的简短对话（会展示给用户看），只谈本次事件相关信息"),
+  commonalities: z.array(z.string()).describe("双方与本次事件相关的共同点 2 条"),
+  icebreakHints: z.array(z.string()).describe("给真人破冰准备的素材 2 条"),
 });
 
 /** 成局时的房间开场：双向摘要卡 + 一次破冰 */
@@ -78,19 +78,28 @@ export const kickoffSchema = z.object({
   }),
 });
 
-/** 推进（一次只处理一个卡点） */
-export const nudgeSchema = z.object({
-  kind: z
-    .enum(["summary", "options", "consensus", "pact_suggest"])
+/** 事件 AI 的一次行动推进。没有明确下一步时必须保持沉默。 */
+export const eventInterventionSchema = z.object({
+  shouldIntervene: z.boolean().describe("本轮是否真的能推动行动跨过一个卡点"),
+  action: z
+    .enum([
+      "none",
+      "ask_missing",
+      "offer_choices",
+      "request_decision",
+      "confirm_decision",
+      "create_pact",
+    ])
     .describe(
-      "summary=总结讨论到哪里；options=为眼前一个卡点整理有限选项；consensus=提取已形成的共识；pact_suggest=信息足够建议整理行动约定"
+      "none=保持沉默；ask_missing=补一个缺项；offer_choices=给有限方案；request_decision=请某位成员决定；confirm_decision=请双方确认共识；create_pact=信息足够生成行动约定"
     ),
-  text: z.string().describe("小苗 的话，简短温和"),
+  text: z.string().describe("面向群聊的推进话术；沉默时为空字符串，介入时不超过 70 字"),
   options: z
     .array(z.string())
-    .nullable()
-    .describe("kind=options 时给 2-3 个选项（不含「继续聊聊」，界面会自动保留）"),
+    .max(3)
+    .describe("0-3 个可直接作为真人回复发送的选项，只能来自对话或种子已有信息"),
 });
+export type EventIntervention = z.infer<typeof eventInterventionSchema>;
 
 /** 行动约定草稿（只整理已谈内容） */
 export const pactDraftSchema = z.object({
