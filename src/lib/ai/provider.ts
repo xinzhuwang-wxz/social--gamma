@@ -13,8 +13,8 @@ const ark = createOpenAICompatible({
   supportsStructuredOutputs: true,
 });
 
-export const FAST_MODEL = process.env.ARK_CHAT_MODEL ?? "doubao-seed-2-0-mini-260428";
-export const STRONG_MODEL = process.env.ARK_CHAT_MODEL_STRONG ?? "doubao-seed-2-0-mini-260428";
+export const FAST_MODEL = process.env.ARK_CHAT_MODEL ?? "doubao-seed-2-0-lite-260428";
+export const STRONG_MODEL = process.env.ARK_CHAT_MODEL_STRONG ?? "doubao-seed-2-0-lite-260428";
 
 export const fastModel = ark(FAST_MODEL);
 export const strongModel = ark(STRONG_MODEL);

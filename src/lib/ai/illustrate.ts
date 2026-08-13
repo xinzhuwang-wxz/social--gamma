@@ -20,7 +20,7 @@ export async function generateMemoryIllustration({
   const baseUrl =
     process.env.ARK_BASE_URL ?? "https://ark.cn-beijing.volces.com/api/v3";
   const model =
-    process.env.ARK_IMAGE_MODEL ?? "doubao-seedream-4-0-250828";
+    process.env.ARK_IMAGE_MODEL ?? "doubao-seedream-5-0-260128";
 
   if (!apiKey) throw new Error("ARK_API_KEY not set");
 

@@ -134,3 +134,138 @@
 .a2a-chat-row.peer > span { background: #f4dfcf; }
 .a2a-chat-row b { color: #607067; font-size: 8px; }
 .a2a-chat-row p { margin: 4px 0 0; font-size: 9px; line-height: 1.6; }
+
+/* Relationship blooms: several real experiences can grow into one additive relationship flower. */
+.relationship-section { margin: 13px 0 20px; }
+.relationship-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 10px; margin: 0 2px 9px; }
+.relationship-section-heading span, .memory-section-label > span { color: #9c7d43; font-size: 7px; font-weight: 900; letter-spacing: 1.3px; }
+.relationship-section-heading h2, .memory-section-label h2 { margin: 3px 0 0; font-family: "Songti SC", STSong, serif; font-size: 17px; }
+.relationship-section-heading > small { border-radius: 999px; padding: 5px 7px; color: #677848; background: #e8efd9; font-size: 7px; font-weight: 900; }
+.relationship-bloom-card { width: 100%; min-height: 142px; display: grid; grid-template-columns: 126px minmax(0,1fr); align-items: center; gap: 5px; overflow: hidden; border: 1px solid rgba(120,102,60,.15); border-radius: 23px; padding: 6px 12px 7px 5px; color: #514b3b; background: radial-gradient(circle at 21% 36%,rgba(255,235,191,.94),transparent 31%),linear-gradient(140deg,#fffaf0,#e7eed6); box-shadow: 0 11px 25px rgba(69,74,43,.11); text-align: left; }
+.relationship-bloom-card.is-ready { background: radial-gradient(circle at 21% 36%,rgba(255,221,171,.92),transparent 32%),linear-gradient(140deg,#fff9e8,#dce9c8); }
+.relationship-copy, .relationship-copy small, .relationship-copy strong, .relationship-copy p, .relationship-copy b { min-width: 0; display: block; }
+.relationship-copy small { color: #8c8067; font-size: 7px; }
+.relationship-copy strong { margin-top: 4px; font-family: "Songti SC",STSong,serif; font-size: 14px; line-height: 1.35; }
+.relationship-copy p { margin: 5px 0 8px; color: #746d5a; font-size: 8px; line-height: 1.5; }
+.relationship-copy b { color: #687b43; font-size: 8px; }
+.memory-section-label { margin: 0 2px 10px; }
+.memory-section-label h2 { font-size: 14px; }
+
+.relationship-flower-art { width: 178px; height: 188px; position: relative; margin: 0 auto; }
+.relationship-flower-art.compact { width: 122px; height: 126px; }
+.relationship-flower-art .relationship-aura { width: 134px; height: 134px; position: absolute; left: 22px; top: 10px; border-radius: 50%; background: radial-gradient(circle,rgba(255,224,155,.72),rgba(234,194,211,.28) 44%,transparent 70%); filter: blur(1px); animation: relationship-pulse 2.8s ease-in-out infinite; }
+.relationship-flower-art.compact .relationship-aura { width: 94px; height: 94px; left: 14px; top: 4px; }
+.relationship-stem { width: 7px; height: 86px; position: absolute; left: 86px; bottom: 2px; border-radius: 100% 0 100% 0; background: linear-gradient(90deg,#657e38,#93a85a); transform: rotate(3deg); box-shadow: 16px 28px 0 -2px #829a4e,-15px 43px 0 -2px #758e43; }
+.compact .relationship-stem { width: 5px; height: 57px; left: 59px; }
+.source-petal { width: 104px; height: 125px; position: absolute; left: 20px; top: 5px; object-fit: contain; filter: drop-shadow(0 6px 4px rgba(70,62,36,.19)); transform-origin: 65% 74%; transition: transform .5s ease; }
+.source-petal-1 { transform: rotate(-17deg) translate(-1px,9px); }
+.source-petal-2 { left: 57px; transform: rotate(18deg) translate(1px,-2px); }
+.source-petal-3 { left: 35px; top: -2px; transform: scale(.75); }
+.relationship-flower-art.compact .source-petal { width: 74px; height: 89px; left: 12px; top: 0; }
+.relationship-flower-art.compact .source-petal-2 { left: 37px; }
+.relationship-flower-art.is-fused .source-petal-1 { transform: rotate(-23deg) translate(-4px,8px) scale(1.04); }
+.relationship-flower-art.is-fused .source-petal-2 { transform: rotate(24deg) translate(2px,-3px) scale(1.04); }
+.relationship-core { width: 37px; height: 37px; display: grid; place-items: center; position: absolute; z-index: 3; left: 72px; top: 47px; border: 3px solid rgba(255,250,219,.9); border-radius: 50%; color: white; background: #af8651; box-shadow: 0 3px 10px rgba(91,61,35,.18); font-size: 10px; font-weight: 900; }
+.compact .relationship-core { width: 28px; height: 28px; left: 47px; top: 29px; border-width: 2px; font-size: 8px; }
+.resonance-mark { width: 34px; height: 34px; display: grid; place-items: center; position: absolute; z-index: 3; left: 72px; top: 51px; border-radius: 50%; color: #846945; background: rgba(255,246,210,.88); font-size: 22px; font-weight: 900; animation: resonance-mark 1.8s ease-in-out infinite; }
+.compact .resonance-mark { width: 27px; height: 27px; left: 47px; top: 31px; font-size: 17px; }
+.generated-relationship-flower { width: 100%; height: 100%; display: block; object-fit: contain; filter: drop-shadow(0 8px 7px rgba(67,61,37,.2)); }
+@keyframes relationship-pulse { 50% { opacity: .6; transform: scale(1.08); } }
+@keyframes resonance-mark { 50% { transform: scale(1.12) rotate(8deg); } }
+
+.relationship-world-flower { width: 96px; height: 118px; position: absolute; z-index: 3; right: 7px; top: 47%; border: 0; color: #665f44; background: transparent; }
+.relationship-world-flower .relationship-flower-art { transform: scale(.67); transform-origin: top left; }
+.relationship-world-flower > span { width: max-content; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 999px; padding: 4px 7px; background: rgba(255,248,217,.91); box-shadow: 0 3px 8px rgba(70,64,38,.12); font-size: 7px; font-weight: 900; }
+.garden-resonance-entry { width: 246px; min-height: 72px; display: grid; grid-template-columns: 88px minmax(0,1fr); align-items: center; position: absolute; z-index: 38; left: 50%; bottom: 81px; transform: translateX(-50%); overflow: visible; border: 2px solid rgba(116,91,49,.45); border-radius: 20px; padding: 5px 10px 5px 5px; color: #544d39; background: linear-gradient(120deg,rgba(255,246,209,.97),rgba(235,240,204,.97)); box-shadow: 0 9px 24px rgba(62,61,32,.24),inset 0 0 0 2px rgba(255,255,255,.55); text-align: left; animation: resonance-entry-in .6s cubic-bezier(.2,.8,.2,1) both; }
+.resonance-flower-pair { height: 61px; display: flex; align-items: center; justify-content: center; position: relative; }
+.resonance-flower-pair img { width: 49px; height: 58px; position: absolute; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(67,57,32,.2)); }
+.resonance-flower-pair img:first-child { left: 1px; transform: rotate(-11deg); }
+.resonance-flower-pair img:last-child { right: 1px; transform: rotate(11deg); }
+.resonance-flower-pair i { width: 24px; height: 24px; display: grid; place-items: center; position: relative; z-index: 2; border: 2px solid #fff9df; border-radius: 50%; color: white; background: #9f8050; box-shadow: 0 3px 8px rgba(76,53,27,.18); font-size: 14px; font-style: normal; font-weight: 900; animation: fusion-plus-pulse 1.5s ease-in-out infinite; }
+.resonance-entry-copy small,.resonance-entry-copy strong,.resonance-entry-copy b { display: block; }
+.resonance-entry-copy small { color: #9c7140; font-size: 7px; font-weight: 900; letter-spacing: .6px; }
+.resonance-entry-copy strong { margin: 2px 0 4px; font-family: "Songti SC",STSong,serif; font-size: 13px; }
+.resonance-entry-copy b { color: #647a3f; font-size: 8px; }
+.forest-dock-entry { position: relative; }
+.fusion-ready-badge { width: max-content; position: absolute; right: -3px; top: -6px; border: 2px solid #fff4d3; border-radius: 999px; padding: 2px 5px; color: white; background: #c57a49; box-shadow: 0 3px 8px rgba(93,57,30,.24); font-family: "PingFang SC",sans-serif; font-size: 6px; line-height: 1.25; }
+@keyframes resonance-entry-in { from { opacity: 0; transform: translate(-50%,12px) scale(.94); } }
+@keyframes fusion-plus-pulse { 50% { transform: scale(1.13); box-shadow: 0 0 0 6px rgba(255,244,204,.42); } }
+
+.bloom-fusion-page { padding-bottom: 110px; color: #514c3c; background: linear-gradient(180deg,#fff7dc 0,#f7f7e8 42%,#e8efd7 100%); }
+.flower-detail-showcase { min-height: 330px; display: grid; justify-items: center; margin: -1px 0 14px; border-radius: 0 0 27px 27px; padding: 18px 18px 22px; background: radial-gradient(circle at 50% 40%,rgba(255,224,157,.72),transparent 30%),linear-gradient(155deg,#f7dfc0,#edf0cf 58%,#d9e6c3); text-align: center; box-shadow: 0 10px 22px rgba(76,71,42,.1); }
+.flower-detail-showcase .flower-detail-art { width: 100%; height: 196px; display: grid; place-items: center; margin: 1px 0 -4px; }
+.flower-detail-showcase .flower-detail-art > img { width: 210px; height: 190px; object-fit: contain; filter: drop-shadow(0 10px 8px rgba(67,61,37,.2)); }
+.flower-detail-showcase .flower-detail-art .relationship-flower-art { margin: 0; }
+.flower-detail-showcase > small { color:#a07d48; font-size:7px; font-weight:900; letter-spacing:.15em; }
+.flower-detail-showcase > h2 { margin:4px 0 5px; font-family:"Songti SC",STSong,serif; font-size:22px; line-height:1.25; }
+.flower-detail-showcase > p { max-width:320px; margin:0; color:#746c57; font-family:"Kaiti SC",STKaiti,serif; font-size:10px; line-height:1.7; }
+.fusion-detail-status { margin:-4px 14px 12px; }
+.fusion-hero { min-height: 260px; display: grid; justify-items: center; margin: -1px -1px 14px; border-radius: 0 0 27px 27px; padding: 18px 16px 17px; background: radial-gradient(circle at 50% 41%,rgba(255,221,163,.65),transparent 31%),linear-gradient(155deg,#f7dfc0,#edf0cf 58%,#d9e6c3); text-align: center; box-shadow: 0 10px 22px rgba(76,71,42,.1); }
+.fusion-hero > p { max-width: 302px; margin: -4px 0 0; color: #746c57; font-family: "Kaiti SC",STKaiti,serif; font-size: 11px; line-height: 1.7; }
+.fusion-hero > h2 { margin: -6px 0 5px; font-family: "Songti SC",STSong,serif; font-size: 22px; }
+.tier-pill { border: 1px solid rgba(121,102,59,.18); border-radius: 999px; padding: 6px 10px; color: #80653e; background: rgba(255,250,229,.78); font-size: 8px; font-weight: 900; letter-spacing: .5px; }
+.fusion-story-card, .fusion-rule-card, .relationship-journal, .growth-ladder { margin: 12px 0; border: 1px solid rgba(113,96,61,.13); border-radius: 21px; padding: 15px; background: rgba(255,252,242,.9); box-shadow: 0 7px 18px rgba(73,68,40,.07); }
+.fusion-story-card > small, .relationship-journal header > small, .growth-ladder > small { color: #9a7843; font-size: 7px; font-weight: 900; letter-spacing: 1.2px; }
+.fusion-story-card > h2, .relationship-journal h2, .growth-ladder h2 { margin: 4px 0 12px; font-family: "Songti SC",STSong,serif; font-size: 16px; line-height: 1.4; }
+.source-flower-list { display: grid; gap: 8px; }
+.source-flower-list button { min-width: 0; display: grid; grid-template-columns: 62px minmax(0,1fr) auto; align-items: center; gap: 8px; border: 1px solid rgba(113,96,61,.11); border-radius: 15px; padding: 8px; color: inherit; background: #fffdf7; text-align: left; }
+.source-flower-list img { width: 60px; height: 68px; object-fit: contain; }
+.source-flower-list span, .source-flower-list small, .source-flower-list strong, .source-flower-list p { min-width: 0; display: block; }
+.source-flower-list small { color: #95886d; font-size: 7px; }
+.source-flower-list strong { margin: 3px 0; font-size: 10px; line-height: 1.35; }
+.source-flower-list p { margin: 0; color: #7a725d; font-size: 7px; line-height: 1.5; }
+.source-flower-list i { color: #8e9a57; font-size: 17px; font-style: normal; }
+.fusion-rule-card > div:first-child { display: flex; align-items: center; justify-content: space-between; }
+.fusion-rule-card > div:first-child span { border-radius: 999px; padding: 5px 8px; color: white; background: #83934c; font-size: 8px; font-weight: 900; }
+.fusion-rule-card > div:first-child b { color: #a06e47; font-size: 8px; }
+.fusion-rule-card > p { color: #746c58; font-size: 9px; line-height: 1.7; }
+.motif-preview, .relationship-journal footer > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.motif-preview span, .relationship-journal footer span { border-radius: 999px; padding: 5px 7px; color: #657543; background: #eaf0d7; font-size: 7px; font-weight: 800; }
+.fusion-cta { margin-top: 17px; }
+.fusion-consent-note { display: block; margin-top: 7px; color: #91876f; font-size: 7px; text-align: center; }
+.fusion-empty { display: grid; justify-items: center; margin-top: 80px; text-align: center; }
+.fusion-empty > span { font-size: 46px; }.fusion-empty h2 { margin-bottom: 4px; }.fusion-empty p { color: #7b7462; font-size: 9px; }
+
+.generation-status { width: 100%; display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 8px; margin-top: 13px; border: 1px dashed #c5a872; border-radius: 14px; padding: 9px 10px; background: rgba(255,249,227,.75); text-align: left; }
+.generation-status > i { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(#d59473,#e1bd6f,#86a260,#d59473); -webkit-mask: radial-gradient(circle,transparent 43%,#000 46%); mask: radial-gradient(circle,transparent 43%,#000 46%); }
+.generation-status b, .generation-status small { display: block; }.generation-status b { font-size: 8px; }.generation-status small { margin-top: 2px; color: #887c63; font-size: 7px; line-height: 1.45; }
+.fusion-library-status { width:100%; display:grid; grid-template-columns:1fr auto; gap:2px 8px; align-items:center; margin-top:9px; border-radius:13px; padding:9px 10px; color:#625b40; background:rgba(238,242,207,.88); text-align:left; }.fusion-library-status span,.fusion-library-status strong { display:block; }.fusion-library-status span { font-size:7px; }.fusion-library-status strong { font-size:8px; }.fusion-library-status button { grid-column:2; grid-row:1 / 3; border:0; color:#71813c; background:transparent; font-size:7px; font-weight:900; }
+.evolution-roadmap { margin: 12px 14px; padding: 15px 13px; border: 1px solid rgba(101,92,52,.16); border-radius: 20px; background: rgba(255,253,243,.9); }
+.evolution-roadmap header small { color: #a37f49; font-size: 7px; letter-spacing: .13em; }
+.evolution-roadmap header h2 { margin: 4px 0; color: #4d512d; font-size: 13px; }
+.evolution-roadmap header p { color: #8b816c; font-size: 8px; line-height: 1.55; }
+.evolution-roadmap > div { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin-top: 12px; }
+.evolution-roadmap article { min-height: 82px; position: relative; display: flex; flex-direction: column; align-items: center; padding: 8px 3px 7px; overflow: hidden; border: 1px solid #e4dcc7; border-radius: 13px; background: #f8f3e8; text-align: center; }
+.evolution-roadmap article.current { border-color: #c59d50; background: #fff6d8; box-shadow: 0 4px 12px rgba(151,116,54,.12); }
+.evolution-roadmap article.passed { opacity: .62; }
+.evolution-roadmap article b { color: #b47c3a; font-size: 9px; }.evolution-roadmap article strong { margin-top: 2px; color: #4f5432; font-size: 7px; }.evolution-roadmap article span { margin-top: 2px; color: #91856c; font-size: 6px; line-height: 1.25; }
+.evolution-roadmap article i { width: calc(11px + var(--stage-scale) * 5px); height: calc(11px + var(--stage-scale) * 5px); position: absolute; bottom: 6px; border-radius: 50% 50% 45% 55%; background: radial-gradient(circle at 40% 35%,#ffe38e 0 16%,#dca6d2 18% 45%,#829a58 47% 64%,transparent 66%); transform: rotate(45deg); }
+
+/* Forest is one complete inventory with composable level and person filters. */
+.flower-library-page { background:linear-gradient(180deg,#fff9df,#eef1d4 44%,#f8f1df); }
+.forest-space-intro { margin:0 0 13px; border-radius:22px; padding:16px; color:#4d5131; background:linear-gradient(145deg,#fff4c9,#dae5ae); box-shadow:var(--card-shadow); }.forest-space-intro > span,.flower-library header small { color:#9b7941; font-size:7px; font-weight:900; letter-spacing:.12em; }.forest-space-intro h2 { margin:5px 0; font-size:17px; line-height:1.25; }.forest-space-intro p { margin:0; color:#777157; font-size:9px; line-height:1.55; }.forest-space-intro button { margin-top:10px; border:0; border-radius:999px; padding:7px 10px; color:#fff; background:#788942; font-size:8px; font-weight:900; }
+.flower-library { margin-top:12px; border:1px solid rgba(74,88,48,.08); border-radius:22px; padding:14px; background:rgba(255,253,242,.92); box-shadow:var(--card-shadow); }.flower-library header h2 { margin:3px 0; font-size:15px; }.flower-library header p { margin:0; color:#8a826b; font-size:8px; line-height:1.5; }.relationship-avatar { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; color:white; background:linear-gradient(135deg,#d9a6ac,#879b56); font-family:serif; font-size:15px; }
+.level-filter { display:flex; gap:5px; margin:11px 0; overflow-x:auto; }.level-filter button { min-width:38px; border:1px solid #ddd3b7; border-radius:999px; padding:6px 9px; color:#80765e; background:#f8f3e4; font-size:8px; font-weight:800; }.level-filter button.active { border-color:#788942; color:white; background:#788942; }
+.semantic-filter-block { margin-top:11px; }.semantic-filter-block > small { display:block; margin-bottom:5px; color:#93876d; font-size:7px; font-weight:900; }.semantic-filter-block .level-filter { margin:0; }
+.person-filter { display:flex; gap:5px; margin-top:6px; overflow-x:auto; scrollbar-width:none; }.person-filter button { flex:0 0 auto; border:1px solid #ddd3b7; border-radius:999px; padding:6px 9px; color:#80765e; background:#f8f3e4; font-size:8px; font-weight:800; }.person-filter button.active { border-color:#788942; color:#fff; background:#788942; }
+.forest-person-search { display:flex; align-items:center; gap:6px; border:1px solid #ddd3b7; border-radius:12px; padding:7px 9px; background:#fffdf6; }.forest-person-search span { color:#84904e; }.forest-person-search input { width:100%; border:0; outline:0; color:#5f5c44; background:transparent; font-size:8px; }.active-filter-summary { margin:10px 0; border-radius:10px; padding:7px 9px; color:#64703c; background:#eef0d7; font-size:8px; font-weight:900; }
+.flower-library-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }.flower-library-grid article { overflow:hidden; border:1px solid #e4dbc2; border-radius:16px; background:#fffdf5; }.flower-library-art { width:100%; height:128px; position:relative; border:0; padding:8px; background:linear-gradient(155deg,#f4e9c7,#e4ebcf); }.flower-library-art img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 5px 4px rgba(65,66,33,.14)); }.flower-library-art span { position:absolute; z-index:2; left:7px; top:7px; border-radius:999px; padding:4px 6px; color:#695a36; background:rgba(255,250,224,.91); font-size:6px; font-weight:900; }.flower-library-grid article > div { padding:9px; }.flower-library-grid article small { color:#9a8d70; font-size:7px; }.flower-library-grid article h3 { min-height:32px; margin:3px 0 7px; font-size:9px; line-height:1.35; }.garden-placement-button { width:100%; border:1px solid #85934e; border-radius:999px; padding:6px; color:#71813e; background:#f3f3db; font-size:7px; font-weight:900; }.garden-placement-button.planted { border-color:#d5c9a7; color:#8d8368; background:#f4efe2; }.empty-level { display:grid; place-items:center; min-height:150px; color:#817961; text-align:center; }.empty-level span { font-size:27px; }.empty-level strong { margin-top:5px; font-size:11px; }.empty-level p { font-size:8px; }
+.relationship-journal { position: relative; overflow: hidden; padding: 19px 16px; background: linear-gradient(rgba(149,126,81,.07) 1px,transparent 1px),#fffaf0; background-size: 100% 24px; }
+.relationship-journal::after { content: "✦"; position: absolute; right: 15px; top: 13px; color: rgba(162,131,74,.22); font-size: 38px; }
+.relationship-journal header { position: relative; z-index: 1; }
+.relationship-journal header > p { margin: -4px 0 17px; color: #81765f; font-size: 8px; line-height: 1.65; }
+.relationship-timeline { position: relative; display: grid; gap: 0; }
+.relationship-timeline::before { content: ""; width: 2px; position: absolute; left: 14px; top: 18px; bottom: 24px; background: linear-gradient(#dfb9b0,#b9a05b,#87a156); }
+.relationship-timeline > section { display: grid; grid-template-columns: 31px 1fr; gap: 10px; position: relative; padding: 5px 0 20px; }
+.chapter-index { width: 30px; height: 30px; display: grid; place-items: center; position: relative; z-index: 1; border: 3px solid #fff8e8; border-radius: 50%; color: white; background: #9f8052; font-size: 8px; font-weight: 900; }
+.relationship-timeline small { color: #9a8b6c; font-size: 7px; }.relationship-timeline h3 { margin: 3px 0 5px; font-family: "Songti SC",STSong,serif; font-size: 13px; }.relationship-timeline p { margin: 0; color: #706852; font-size: 9px; line-height: 1.7; }.relationship-timeline blockquote { margin: 8px 0; border-left: 2px solid #c9ae72; padding-left: 8px; color: #866d4f; font-family: "Kaiti SC",STKaiti,serif; font-size: 9px; line-height: 1.55; }.relationship-timeline button { border: 0; padding: 0; color: #6d8247; background: transparent; font-size: 8px; font-weight: 900; }
+.relationship-timeline .journal-photo-story { margin:10px 0 12px; }
+.relationship-timeline .journal-photo-story header { display:flex; justify-content:space-between; gap:7px; margin-bottom:7px; color:#8e8067; font-size:7px; }
+.relationship-timeline .journal-photo-grid { margin-bottom:10px; }
+.relationship-timeline .journal-photo-grid img { height:76px; }
+.relationship-journal footer { border-top: 1px dashed #d9c38f; padding-top: 13px; }.relationship-journal footer > small { display: block; margin-bottom: 7px; color: #887b60; font-size: 7px; font-weight: 800; }
+.growth-ladder h2 { margin-bottom: 9px; }.growth-ladder > div { height: 8px; overflow: hidden; border-radius: 999px; background: #e2e8d2; }.growth-ladder > div i { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg,#839b52,#d6a866); }.growth-ladder > p { margin: 8px 0 0; color: #817760; font-size: 8px; line-height: 1.55; }
+
+@media (prefers-reduced-motion: reduce) {
+  .relationship-flower-art .relationship-aura, .resonance-mark, .garden-resonance-entry, .resonance-flower-pair i { animation: none; }
+}

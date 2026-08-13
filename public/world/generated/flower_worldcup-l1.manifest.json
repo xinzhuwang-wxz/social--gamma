@@ -1,0 +1,202 @@
+{
+  "eventId": "event_world_cup_final_watch",
+  "title": "在天亮以前看完世界杯决赛",
+  "selection": {
+    "speciesId": "sunflower",
+    "displayName": "向日葵",
+    "englishName": "sunflower",
+    "latinName": "Helianthus annuus",
+    "reason": "deterministic-core-library-score",
+    "isHybrid": false,
+    "meanings": [
+      "joy",
+      "passion"
+    ],
+    "eventMeaning": "比分属于赛史，那阵同时响起的欢呼只属于一起守到终场的人"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 4,
+      "mode": "countable",
+      "unit": "flower-heads",
+      "description": "Show exactly 4 clearly countable participant-linked flower heads. Preserve the natural anatomy of sunflower."
+    },
+    "participantRelationship": "celebrating-together",
+    "relationshipDescription": "The participant-linked blooms open outward around one shared bright center.",
+    "palette": {
+      "colors": [
+        "pitch green",
+        "night charcoal",
+        "trophy gold",
+        "golden-yellow",
+        "warm-orange"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "firework-spark",
+        "sourceFact": "四个人为终场结果一起欢呼",
+        "evidenceRef": "event-letters-evidence-v2.md#07",
+        "intensity": "visible",
+        "prompt": "a small soft firework-like starburst appears above the flower crown; intensity: visible; it must not obscure species recognition"
+      },
+      {
+        "type": "sunrise-ray",
+        "sourceFact": "通宵看完比赛时窗外已经泛白",
+        "evidenceRef": "event-letters-evidence-v2.md#07",
+        "intensity": "subtle",
+        "prompt": "one restrained warm-gold sunrise ray touches the petal edges; intensity: subtle; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "large round dark centers, broad golden ray petals, sturdy stems and heart-shaped leaves",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real sunflower plant (Helianthus annuus), recognizable by large round dark centers, broad golden ray petals, sturdy stems and heart-shaped leaves. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 4 and only 4 sunflower flower heads total. Count them visibly: one top-left, one top-right, one lower-left, one lower-right. No fifth central flower, no hidden blossom, no buds. The four participant-linked blooms open outward from one shared branching stem. Palette: pitch green, night charcoal, trophy gold, golden-yellow, warm-orange. Use flat pastel fills and minimal internal detail. Event memory glyph: one small soft firework-like starburst floats above the four-head crown and one restrained warm-gold sunrise edge touches the petals. Emotional meaning in CoBloom: 比分属于赛史，那阵同时响起的欢呼只属于一起守到终场的人. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "core",
+    "explicitSpeciesMatched": false,
+    "rankedCandidates": [
+      {
+        "speciesId": "sunflower",
+        "displayName": "向日葵",
+        "score": 145,
+        "meaningMatches": [
+          "joy",
+          "passion"
+        ],
+        "eventMatches": [
+          "sports",
+          "celebration",
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "gerbera",
+        "displayName": "非洲菊",
+        "score": 125,
+        "meaningMatches": [
+          "joy",
+          "friendship"
+        ],
+        "eventMatches": [
+          "sports",
+          "celebration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "tulip",
+        "displayName": "郁金香",
+        "score": 120,
+        "meaningMatches": [
+          "joy",
+          "passion",
+          "companionship"
+        ],
+        "eventMatches": [
+          "celebration"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "cosmos",
+        "displayName": "波斯菊",
+        "score": 104,
+        "meaningMatches": [
+          "joy",
+          "companionship"
+        ],
+        "eventMatches": [
+          "sports"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "nasturtium",
+        "displayName": "旱金莲",
+        "score": 95,
+        "meaningMatches": [
+          "joy"
+        ],
+        "eventMatches": [
+          "sports",
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "gladiolus",
+        "displayName": "剑兰",
+        "score": 85,
+        "meaningMatches": [],
+        "eventMatches": [
+          "sports",
+          "celebration",
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "forget-me-not",
+        "displayName": "勿忘我",
+        "score": 67,
+        "meaningMatches": [
+          "companionship",
+          "friendship"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "osmanthus",
+        "displayName": "桂花",
+        "score": 67,
+        "meaningMatches": [
+          "joy",
+          "companionship"
+        ],
+        "eventMatches": [],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "dahlia",
+        "displayName": "大丽花",
+        "score": 65,
+        "meaningMatches": [],
+        "eventMatches": [
+          "celebration",
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "evening-primrose",
+        "displayName": "月见草",
+        "score": 54,
+        "meaningMatches": [
+          "companionship"
+        ],
+        "eventMatches": [],
+        "seasonMatch": true
+      }
+    ],
+    "evidenceRefs": [
+      "event-letters-evidence-v2.md#07",
+      "event-letters-evidence-v2.md#07"
+    ]
+  }
+}

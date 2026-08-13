@@ -1,0 +1,199 @@
+{
+  "eventId": "event_hackathon_overnight",
+  "title": "酒店大堂里亮到清晨的黑客松",
+  "selection": {
+    "speciesId": "wallflower",
+    "displayName": "桂竹香",
+    "englishName": "wallflower",
+    "latinName": "Erysimum cheiri",
+    "reason": "deterministic-core-library-score",
+    "isHybrid": false,
+    "meanings": [
+      "persistence",
+      "mutual-support"
+    ],
+    "eventMeaning": "四种不同的能力在同一张桌上汇合，把一个想法一起推到下一程"
+  },
+  "visualDNA": {
+    "participantStructure": {
+      "count": 4,
+      "mode": "countable",
+      "unit": "flowering-stems",
+      "description": "Show exactly 4 clearly countable participant-linked flowering stems. Preserve the natural anatomy of wallflower."
+    },
+    "participantRelationship": "converging-collaboration",
+    "relationshipDescription": "The participant-linked stems converge toward one shared floral crown.",
+    "palette": {
+      "colors": [
+        "warm laptop amber",
+        "midnight indigo",
+        "award pink",
+        "gold",
+        "orange"
+      ],
+      "sourceOrder": [
+        "confirmed-event-colors",
+        "species-natural-colors",
+        "season"
+      ]
+    },
+    "memoryGlyphs": [
+      {
+        "type": "pixel-circuit",
+        "sourceFact": "四台电脑在酒店大堂并排亮着",
+        "evidenceRef": "event-media/hackathon/cover.jpg",
+        "intensity": "visible",
+        "prompt": "a restrained pastel pixel-and-circuit pattern runs through selected leaf veins; intensity: visible; it must not obscure species recognition"
+      },
+      {
+        "type": "shared-light",
+        "sourceFact": "四位成员在晋级合照中一起展示项目",
+        "evidenceRef": "event-media/hackathon/detail-1.jpg",
+        "intensity": "subtle",
+        "prompt": "several participant-linked light points gather around one shared center; intensity: subtle; it must not obscure species recognition"
+      }
+    ],
+    "speciesRecognition": "upright spikes of clustered four-petaled flowers with narrow leaves",
+    "styleVersion": "cobloom-flower-v2"
+  },
+  "prompt": "Use case: stylized-concept. Asset type: CoBloom collectible mature memory flower for a mobile garden card. Create one real wallflower (Erysimum cheiri), unmistakably recognizable by exactly four separate upright flower spikes, each spike densely lined with many small four-petaled cross-shaped flowers, with narrow lance-shaped leaves. Do not turn it into hydrangea-like round clusters, cherry blossoms, or a tree canopy. Do not mix it with any other species. Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, minimal internal details, layered plant heights, rounded organic silhouettes, cozy mobile game aesthetic. A single complete plant, front-facing with a slight three-quarter view, centered, full silhouette visible, generous transparent padding, designed to fit naturally inside a miniature garden diorama. Show exactly 4 and only 4 clearly countable flowering spikes, one for each participant, all rising from one shared base and gently converging without overlapping into a single blob. Palette: warm laptop amber, midnight indigo, award pink, gold, orange. Use flat pastel fills and minimal internal detail. Event memory glyph: a restrained pastel pixel-and-circuit pattern runs through selected leaf veins; several tiny shared light points sit between the four spike tips. Emotional meaning in CoBloom: 四种不同的能力在同一张桌上汇合，把一个想法一起推到下一程. Constraints: isHybrid is false; every visible element must belong to or gently decorate the single plant; no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane.",
+  "negativePrompt": "no text, no letters, no logo, no signature, no UI, no people, no faces, no hands, no photorealism, no full garden scene, no room interior, no landscape background, no literal event props dominating the plant, no collage, no sticker-like objects, no mixed flower species, no hybrid anatomy, no cast shadow, no ground plane",
+  "output": {
+    "size": "1024x1024",
+    "format": "png",
+    "background": "transparent-preferred"
+  },
+  "audit": {
+    "libraryVersion": "cobloom-flower-language-v1",
+    "ruleVersion": "generate-memory-flower-v1",
+    "selectionMode": "core",
+    "explicitSpeciesMatched": false,
+    "rankedCandidates": [
+      {
+        "speciesId": "wallflower",
+        "displayName": "桂竹香",
+        "score": 108,
+        "meaningMatches": [
+          "persistence",
+          "mutual-support"
+        ],
+        "eventMatches": [
+          "competition",
+          "persistence"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "hydrangea",
+        "displayName": "绣球花",
+        "score": 105,
+        "meaningMatches": [
+          "collaboration",
+          "mutual-support"
+        ],
+        "eventMatches": [
+          "creative-collaboration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "orchid",
+        "displayName": "兰花",
+        "score": 105,
+        "meaningMatches": [
+          "collaboration",
+          "creativity"
+        ],
+        "eventMatches": [
+          "creative-collaboration"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "dahlia",
+        "displayName": "大丽花",
+        "score": 95,
+        "meaningMatches": [
+          "creativity"
+        ],
+        "eventMatches": [
+          "creative-collaboration",
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "gladiolus",
+        "displayName": "剑兰",
+        "score": 95,
+        "meaningMatches": [
+          "persistence"
+        ],
+        "eventMatches": [
+          "competition",
+          "persistence"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "plum-blossom",
+        "displayName": "梅花",
+        "score": 79,
+        "meaningMatches": [
+          "persistence"
+        ],
+        "eventMatches": [
+          "competition",
+          "persistence"
+        ],
+        "seasonMatch": false
+      },
+      {
+        "speciesId": "sunflower",
+        "displayName": "向日葵",
+        "score": 75,
+        "meaningMatches": [
+          "mutual-support"
+        ],
+        "eventMatches": [
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "nasturtium",
+        "displayName": "旱金莲",
+        "score": 45,
+        "meaningMatches": [],
+        "eventMatches": [
+          "competition"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "chamomile",
+        "displayName": "洋甘菊",
+        "score": 43,
+        "meaningMatches": [],
+        "eventMatches": [
+          "persistence"
+        ],
+        "seasonMatch": true
+      },
+      {
+        "speciesId": "camellia",
+        "displayName": "山茶花",
+        "score": 30,
+        "meaningMatches": [],
+        "eventMatches": [
+          "persistence"
+        ],
+        "seasonMatch": false
+      }
+    ],
+    "evidenceRefs": [
+      "event-media/hackathon/cover.jpg",
+      "event-media/hackathon/detail-1.jpg"
+    ]
+  }
+}

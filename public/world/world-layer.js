@@ -11,12 +11,15 @@
       anchors: {
         home: { x: 1, y: 45, w: 38, h: 20 },
         mailbox: { x: 17, y: 66, w: 25, h: 14 },
+        bridge: { x: 48, y: 66, w: 26, h: 14 },
       },
       plants: {
         current: { x: 60.4, y: 40, scale: .66, route: [[46, 51], [51, 50], [56, 49]] },
         ride: { x: 29.2, y: 37.1, scale: .65, route: [[46, 51], [46, 47], [45, 46]] },
         photo: { x: 55.5, y: 31.2, scale: .62, route: [[46, 51], [48, 45], [51, 40]] },
+        center: { x: 47.5, y: 50.5, scale: .62, route: [[46, 51], [48, 55], [50, 58]] },
         study: { x: 41.5, y: 61, scale: .62, route: [[46, 51], [50, 56], [53, 62]] },
+        bottom: { x: 33, y: 77, scale: .62, route: [[46, 51], [43, 63], [39, 74]] },
       },
     },
     home: {
@@ -84,15 +87,13 @@
     { x: 68, y: 34, label: "花圃" }, { x: 41, y: 49, label: "小路边" },
   ];
   const walkableZones = [
-    { cx: 48, cy: 49, rx: 28, ry: 17 },
-    { cx: 42, cy: 61, rx: 25, ry: 13 },
-    { cx: 55, cy: 70, rx: 21, ry: 9 },
-    { cx: 31, cy: 76, rx: 15, ry: 8 },
+    { cx: 47, cy: 51, rx: 38, ry: 27 },
+    { cx: 38, cy: 73, rx: 28, ry: 17 },
+    { cx: 34, cy: 81, rx: 18, ry: 8 },
   ];
+  const bridgeWalkableZone = { cx: 58, cy: 73, rx: 8, ry: 7 };
   const blockedZones = [
-    { cx: 67, cy: 73, rx: 15, ry: 24 },
-    { cx: 24, cy: 57, rx: 15, ry: 17 },
-    { cx: 48, cy: 34, rx: 31, ry: 8 },
+    { cx: 69, cy: 73, rx: 13, ry: 25 },
   ];
   const butterflyAssets = ["insect-butterfly.png", "insect-butterfly-blue.png", "insect-butterfly-pink.png", "insect-butterfly-orange.png"];
 
@@ -162,18 +163,43 @@
     return ((point.x - zone.cx) / zone.rx) ** 2 + ((point.y - zone.cy) / zone.ry) ** 2 <= 1;
   }
 
+  function isWalkablePoint(point) {
+    if (isInsideEllipse(point, bridgeWalkableZone)) return true;
+    return walkableZones.some(zone => isInsideEllipse(point, zone))
+      && !blockedZones.some(zone => isInsideEllipse(point, zone));
+  }
+
   function nearestWalkablePoint(point) {
-    const insideWalkable = walkableZones.some(zone => isInsideEllipse(point, zone));
-    const insideBlocked = blockedZones.some(zone => isInsideEllipse(point, zone));
-    if (insideWalkable && !insideBlocked) return point;
+    if (isWalkablePoint(point)) return point;
+
+    // Sample every legal area's inner edge. Unlike the old radial projection,
+    // this also finds a valid destination when the tapped point sits inside a
+    // river or another blocked shape that overlaps a broad walking zone.
     const candidates = [];
-    walkableZones.forEach(zone => {
-      const dx = point.x - zone.cx;
-      const dy = point.y - zone.cy;
-      const scale = 1 / Math.max(1, Math.sqrt((dx / zone.rx) ** 2 + (dy / zone.ry) ** 2));
-      candidates.push({ x: zone.cx + dx * scale * .92, y: zone.cy + dy * scale * .92 });
+    [...walkableZones, bridgeWalkableZone].forEach(zone => {
+      candidates.push({ x: zone.cx, y: zone.cy });
+      for (let step = 0; step < 96; step += 1) {
+        const angle = step / 96 * Math.PI * 2;
+        candidates.push({
+          x: zone.cx + Math.cos(angle) * zone.rx * .94,
+          y: zone.cy + Math.sin(angle) * zone.ry * .94,
+        });
+      }
     });
-    return candidates.filter(candidate => !blockedZones.some(zone => isInsideEllipse(candidate, zone))).sort((a, b) => Math.hypot(a.x - point.x, a.y - point.y) - Math.hypot(b.x - point.x, b.y - point.y))[0] || { x: 46, y: 51 };
+    blockedZones.forEach(zone => {
+      for (let step = 0; step < 96; step += 1) {
+        const angle = step / 96 * Math.PI * 2;
+        candidates.push({
+          x: zone.cx + Math.cos(angle) * zone.rx * 1.04,
+          y: zone.cy + Math.sin(angle) * zone.ry * 1.04,
+        });
+      }
+    });
+
+    return candidates
+      .filter(isWalkablePoint)
+      .sort((a, b) => Math.hypot(a.x - point.x, a.y - point.y) - Math.hypot(b.x - point.x, b.y - point.y))[0]
+      || { x: 46, y: 51 };
   }
 
   function removeButterfly(button) {

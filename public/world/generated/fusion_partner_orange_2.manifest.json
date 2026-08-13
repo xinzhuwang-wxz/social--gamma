@@ -1,0 +1,97 @@
+{
+  "fusionId": "fusion_partner_orange_2",
+  "sourceFlowerIds": [
+    "flower_photo",
+    "flower_film"
+  ],
+  "sourceImages": [
+    "/world/generated/flower_photo-l1.png",
+    "/world/generated/flower_film-l1.png"
+  ],
+  "sourceMemories": [
+    "2026-04-05，校园樱花道：花瓣落在肩上时，我们刚好在笑一个很普通的笑话。",
+    "2026-06-19，校园各处：不能重拍以后，我们反而更敢按下快门。"
+  ],
+  "tier": {
+    "name": "双生共鸣花",
+    "minimumExperiences": 2,
+    "band": "双生阶段",
+    "form": "双层同心花冠",
+    "scale": 1.22,
+    "complexity": 2,
+    "visualRule": "形成一个统一的新轮廓；花冠至少增加一层，并可辨认地继承两朵源花各一个特征",
+    "level": 2
+  },
+  "plan": {
+    "silhouette": "由单条流畅渐粗的肉质主干从地面向上自然分出三组错落侧枝，整体呈舒展的倒卵状饱满花株轮廓，无人工拼接痕迹；相比两株独立L1源花的零散单枝，它的分枝层级清晰从主干依次过渡到内层花冠托瓣再到外层延展瓣，支撑出直径比两株L1总展幅大22%的连续自然整体，彻底摆脱单花孤立感。",
+    "sourceOneInheritance": [
+      "保留樱花标志性的顶端微缺五瓣瓣缘形态",
+      "继承源樱花枝的木质化柔曲分枝走向",
+      "延续樱花粉与春日白的基底花瓣色彩"
+    ],
+    "sourceTwoInheritance": [
+      "保留勿忘我的暖黄色核心花心结构",
+      "继承源勿忘我纤细匀净的侧分枝生长节奏",
+      "延续胶片金与树影绿的低饱和附属色阶"
+    ],
+    "relationshipGlyphs": [
+      "内层花冠每枚瓣片的边缘排列细密等距的胶片齿孔纹，对应胶片拍摄不能重拍的校园夏日回忆",
+      "外层粉白色瓣片表面晕出浅淡不规则的夏日树影纹理，对应校园树荫下按快门的松弛时刻",
+      "两层花冠之间的衔接处嵌有一圈半透明的相机光圈环状薄壁，对应樱花道上举相机抓拍落瓣人像的瞬间"
+    ],
+    "paletteStrategy": "从主干基部的浅树影绿向上自然晕染，过渡到内层花冠的暖胶片金花心，再向外层花瓣逐步融合春日白与樱花粉的渐变，两株源花的配色在花冠层级间平滑衔接无生硬边界。",
+    "upgradeSignals": [
+      "形成明确的双层同心花冠结构，内层为聚拢的胶片金色调托瓣层，外层为舒展的粉白渐变主瓣层，是单L1花不存在的全新花冠层级",
+      "分枝从单花的一级分枝进化为主干-侧枝-花托枝的三级连续分枝系统，支撑力与结构复杂度大幅提升",
+      "花体的记忆纹样不再是单花局部点缀，而是沿花冠同心秩序形成连贯的联动排布",
+      "没有使用任何人工几何结构，所有轮廓细节都符合真实木本草本融合植物的生长逻辑",
+      "整体花株的体量严格为两株源花平均大小的1.22倍，比例舒展协调而非突兀膨大",
+      "两层花冠的瓣片数量与排列密度经过精确校准，视觉秩序远高于两株独立L1单花的零散排布"
+    ],
+    "uniquenessStatement": "这株双生共鸣花并非樱花与勿我的简单拼接，而是把两段校园共处的拍摄回忆完全嵌入植物的生长逻辑里，每一处结构细节都对应共同度过的春日落樱与夏日胶片时刻，是仅属于这两份共经经历的不可复制的关系进化体。"
+  },
+  "prompt": "Create ONE complete collectible 双生共鸣花, level 2, as a coherent new botanical organism. Use both attached source flower images as authoritative visual references. Do not place them side by side and do not make a collage. Use the plan only as semantic guidance, but replace any dish, fan, arch, rainbow, mandala or mechanical ring idea with a NATURAL BOTANICAL CROWN. Target form: 双层同心花冠; the flower crown should read roughly 22% grander than either L1 source while keeping generous padding. Clearly inherit from source image one: 保留樱花标志性的顶端微缺五瓣瓣缘形态, 继承源樱花枝的木质化柔曲分枝走向, 延续樱花粉与春日白的基底花瓣色彩. The OUTER crown must visibly use pink five-petal cherry-blossom lobes with their shallow notches. Clearly inherit from source image two: 保留勿忘我的暖黄色核心花心结构, 继承源勿忘我纤细匀净的侧分枝生长节奏, 延续胶片金与树影绿的低饱和附属色阶. The INNER crown must contain at least five clearly visible sky-blue five-petal forget-me-not blossoms with warm yellow centers. Do not replace their blue with green. Transform the two memories into restrained botanical glyphs: 内层花冠每枚瓣片的边缘排列细密等距的胶片齿孔纹，对应胶片拍摄不能重拍的校园夏日回忆, 外层粉白色瓣片表面晕出浅淡不规则的夏日树影纹理，对应校园树荫下按快门的松弛时刻, 两层花冠之间的衔接处嵌有一圈半透明的相机光圈环状薄壁，对应樱花道上举相机抓拍落瓣人像的瞬间. Palette strategy: 从主干基部的浅树影绿向上自然晕染，过渡到内层花冠的暖胶片金花心，再向外层花瓣逐步融合春日白与樱花粉的渐变，两株源花的配色在花冠层级间平滑衔接无生硬边界。. Relationship uniqueness: 这株双生共鸣花并非樱花与勿我的简单拼接，而是把两段校园共处的拍摄回忆完全嵌入植物的生长逻辑里，每一处结构细节都对应共同度过的春日落樱与夏日胶片时刻，是仅属于这两份共经经历的不可复制的关系进化体。. Visible upgrade signals: 形成明确的双层同心花冠结构，内层为聚拢的胶片金色调托瓣层，外层为舒展的粉白渐变主瓣层，是单L1花不存在的全新花冠层级, 分枝从单花的一级分枝进化为主干-侧枝-花托枝的三级连续分枝系统，支撑力与结构复杂度大幅提升, 花体的记忆纹样不再是单花局部点缀，而是沿花冠同心秩序形成连贯的联动排布, 没有使用任何人工几何结构，所有轮廓细节都符合真实木本草本融合植物的生长逻辑, 整体花株的体量严格为两株源花平均大小的1.22倍，比例舒展协调而非突兀膨大, 两层花冠的瓣片数量与排列密度经过精确校准，视觉秩序远高于两株独立L1单花的零散排布. Art direction: Japanese storybook illustration, simplified botanical shapes, thick soft dark-purple outlines, flat pastel colors, rounded organic silhouette, cozy premium mobile-game collectible, centered front-facing slight three-quarter view, full plant visible. Required anatomy: one uninterrupted central stem grows from the bottom and divides organically into exactly three supporting branches; every blossom visibly grows from those branches. Form a rounded heart-or-crown silhouette: larger pink five-petal cherry blossoms are the outer supporting layer, while at least five smaller sky-blue five-petal forget-me-nots rise as the inner layer. The result must have a new unmistakable silhouette, a shared living core, more ordered detail and branching than either source. Keep botanical areas dominant. Integrate one camera-aperture sparkle into one golden flower core and put a restrained film-perforation rhythm on ONE leaf vein only, never as a literal grid or row of circles. Background: transparent if supported; otherwise a single flat warm rice-white #F7F0DE. No scenery, no ground, no pot, no people, no text, no letters, no logo, no UI, no label, no border, no photorealism, no cast shadow. ABSOLUTELY NO fan, folding fan, arch, rainbow, wreath, badge, mandala, circular frame, geometric device, or disconnected plant parts.",
+  "review": {
+    "upgradedAtFirstGlance": true,
+    "singleCoherentPlant": true,
+    "sourceOneVisible": true,
+    "sourceTwoVisible": true,
+    "relationshipMemoriesVisible": true,
+    "score": 92,
+    "evidence": [
+      "生成的L2关系花整体尺寸明显高于两朵普通L1源花，视觉上是统一的单株植物，形成了整合后的完整新轮廓",
+      "可清晰辨认继承了源花一的粉色五瓣樱花特征，外围的拱形环形枝条也完全保留了源花一的拱形枝条属性",
+      "完整继承了源花二的蓝色五瓣勿忘我、黄色花心特征，主体花茎上的纤细分枝与特殊带白点的叶片也完全沿用自源花二",
+      "花冠层数相比两朵源花都明显增加，外层粉色樱花层+内层蓝色勿忘我层的双层以上花冠结构清晰",
+      "中心圆形带纹理的区域是相机光圈的克制抽象痕迹，画面内的光点元素对应闪光痕迹，边缘类排布细节呼应胶片齿孔的抽象表现"
+    ],
+    "issues": [
+      "胶片齿孔的抽象痕迹表现相对隐晦，没有做出更明确的排布暗示",
+      "融合后的植物底部收窄设计可以更自然地统一两类不同枝条的衔接过渡"
+    ]
+  },
+  "reviews": [
+    {
+      "upgradedAtFirstGlance": true,
+      "singleCoherentPlant": true,
+      "sourceOneVisible": true,
+      "sourceTwoVisible": true,
+      "relationshipMemoriesVisible": true,
+      "score": 92,
+      "evidence": [
+        "生成的L2关系花整体尺寸明显高于两朵普通L1源花，视觉上是统一的单株植物，形成了整合后的完整新轮廓",
+        "可清晰辨认继承了源花一的粉色五瓣樱花特征，外围的拱形环形枝条也完全保留了源花一的拱形枝条属性",
+        "完整继承了源花二的蓝色五瓣勿忘我、黄色花心特征，主体花茎上的纤细分枝与特殊带白点的叶片也完全沿用自源花二",
+        "花冠层数相比两朵源花都明显增加，外层粉色樱花层+内层蓝色勿忘我层的双层以上花冠结构清晰",
+        "中心圆形带纹理的区域是相机光圈的克制抽象痕迹，画面内的光点元素对应闪光痕迹，边缘类排布细节呼应胶片齿孔的抽象表现"
+      ],
+      "issues": [
+        "胶片齿孔的抽象痕迹表现相对隐晦，没有做出更明确的排布暗示",
+        "融合后的植物底部收窄设计可以更自然地统一两类不同枝条的衔接过渡"
+      ]
+    }
+  ],
+  "provider": "volcengine-ark",
+  "model": "doubao-seedream-5-0-260128",
+  "generatedAt": "2026-08-13T07:26:38.346Z"
+}
