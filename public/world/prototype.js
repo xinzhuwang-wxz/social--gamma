@@ -729,8 +729,13 @@ function render() {
 }
 
 function syncPhoneScale() {
-  const scale = Math.min(1, (window.innerWidth - 20) / 390, (window.innerHeight - 20) / 780);
-  document.documentElement.style.setProperty("--phone-scale", String(Math.max(.62, scale)));
+  // 用 visualViewport 的「实际可见」尺寸（会随移动端浏览器/微信工具条的出现而收缩），
+  // 并给底部留出安全区，避免手机壳的底部 dock 被 iOS/微信底部工具条挡住。
+  const vv = window.visualViewport;
+  const vw = (vv && vv.width) || window.innerWidth;
+  const vh = (vv && vv.height) || window.innerHeight;
+  const scale = Math.min(1, (vw - 12) / 390, (vh - 28) / 780);
+  document.documentElement.style.setProperty("--phone-scale", String(Math.max(.5, scale)));
 }
 
 function goBack() {
@@ -998,4 +1003,9 @@ document.addEventListener("submit", async event => {
 
 window.addEventListener("popstate", render);
 window.addEventListener("resize", syncPhoneScale);
+// 移动端浏览器/微信工具条显隐时，visualViewport 尺寸会变，需重算缩放
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", syncPhoneScale);
+  window.visualViewport.addEventListener("scroll", syncPhoneScale);
+}
 api("/api/demo").then(render);
