@@ -6,7 +6,7 @@ import { simOpeningLine } from "@/lib/demo/sim";
 export async function POST(req: NextRequest) {
   const body = (await readJson<{ name?: string }>(req)) ?? {};
   const s = getState();
-  const name = body.name || s.candidates[0]?.name || "小林";
+  const name = body.name || s.candidates[0]?.name || "橘子汽水";
   s.selectedCandidate = name;
   s.slots.people = true;
   const idea = s.draft?.idea || "一起做点事";

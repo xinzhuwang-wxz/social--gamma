@@ -121,6 +121,48 @@
 .experience-card small { color: var(--muted); font-size: 7px; }
 .experience-card h3 { margin: 3px 0; font-size: 11px; }
 .experience-card p { margin: 0; color: var(--muted); font-size: 8px; }
+.profile-name-link { display: block; border: 0; padding: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.letter-avatar[data-person-profile], .avatar[data-person-profile], .agent-avatar[data-person-profile] { border: 0; cursor: pointer; }
+.person-profile-summary { margin-top: 12px; padding: 16px; }
+.person-profile-summary > small { color: var(--muted); font-size: 9px; font-weight: 800; }
+.person-profile-summary h3 { margin: 4px 0 7px; font-size: 16px; }
+.person-profile-summary p { margin: 0 0 12px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.person-profile-summary .seed-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.person-profile-summary .seed-tags span { border-radius: 999px; padding: 6px 9px; color: var(--primary); background: var(--soft); font-size: 9px; font-weight: 800; }
+
+/* A person's profile is their garden world, not a social-media profile feed. */
+.person-garden-world { background: #dce8bd; }
+.person-garden-background { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+.person-garden-hud { position: absolute; z-index: 45; left: 13px; right: 13px; top: 31px; display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,.66); border-radius: 18px; padding: 10px; color: white; background: rgba(48,70,43,.63); box-shadow: 0 8px 22px rgba(36,53,30,.18); backdrop-filter: blur(10px); }
+.person-garden-hud > button { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.46); border-radius: 50%; color: white; background: rgba(255,255,255,.14); font-size: 23px; }
+.person-garden-hud small, .person-garden-hud strong, .person-garden-hud span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-garden-hud small { font-size: 8px; opacity: .76; }
+.person-garden-hud strong { margin: 2px 0; font-size: 15px; }
+.person-garden-hud span { font-size: 8px; opacity: .9; }
+.person-gardener { width: 100px; height: 126px; position: absolute; z-index: 31; left: 50%; top: 48%; transform: translate(-50%,-50%); border: 0; padding: 0; color: #4e5435; background: transparent; filter: drop-shadow(0 7px 6px rgba(52,67,35,.25)); }
+.person-gardener img { width: 100%; height: 100%; display: block; object-fit: contain; animation: pet-bob 1.8s ease-in-out infinite; }
+.person-gardener span { width: max-content; position: absolute; left: 58%; bottom: 1px; transform: translateX(-10%); border: 1px solid rgba(103,104,61,.28); border-radius: 999px; padding: 5px 8px; background: rgba(255,253,229,.92); box-shadow: 0 4px 12px rgba(58,62,35,.14); font-size: 8px; font-weight: 900; }
+.person-experience-flowers { position: absolute; z-index: 27; inset: 0; pointer-events: none; }
+.person-experience-flower { width: 72px; height: 91px; position: absolute; border: 0; padding: 0; color: #4f5434; background: transparent; pointer-events: auto; filter: drop-shadow(0 5px 5px rgba(55,67,32,.2)); }
+.person-experience-flower img { width: 62px; height: 72px; display: block; margin: 0 auto; object-fit: contain; transform-origin: 50% 90%; animation: decor-sway 3.2s ease-in-out infinite alternate; }
+.person-experience-flower span { display: block; width: max-content; max-width: 92px; position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); overflow: hidden; border-radius: 999px; padding: 4px 7px; background: rgba(255,253,229,.92); box-shadow: 0 3px 9px rgba(54,61,34,.14); font-size: 7px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.flower-position-1 { left: 12%; top: 36%; }
+.flower-position-2 { right: 11%; top: 48%; }
+.flower-position-3 { left: 22%; top: 67%; }
+.person-garden-hint { position: absolute; z-index: 44; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; border: 1px solid rgba(255,255,255,.65); border-radius: 999px; padding: 7px 10px; color: white; background: rgba(48,70,43,.62); box-shadow: 0 6px 16px rgba(37,52,31,.16); backdrop-filter: blur(8px); font-size: 8px; font-weight: 800; }
+.profile-world-modal { z-index: 85; }
+.gardener-profile-card, .garden-memory-card { width: 100%; position: relative; border: 2px solid rgba(100,96,57,.72); border-radius: 24px; padding: 20px; color: #4e4b34; background: #fff9de; box-shadow: 0 20px 50px rgba(37,45,25,.34); text-align: center; }
+.profile-modal-close { width: 32px; height: 32px; position: absolute; z-index: 2; right: 13px; top: 13px; border: 0; border-radius: 50%; color: #625f42; background: #ece2b8; font-size: 19px; }
+.gardener-profile-card > img { width: 138px; height: 138px; display: block; margin: -6px auto 2px; object-fit: contain; }
+.gardener-profile-card > small, .garden-memory-card > small { color: #85805e; font-size: 9px; font-weight: 900; letter-spacing: .6px; }
+.gardener-profile-card h2, .garden-memory-card h2 { margin: 5px 0 8px; font-size: 22px; }
+.gardener-profile-card > p, .garden-memory-card > p { margin: 0; color: #6f6a50; font-size: 11px; line-height: 1.7; }
+.gardener-profile-card dl { margin: 13px 0; border-radius: 14px; padding: 11px; background: rgba(223,232,190,.58); text-align: left; }
+.gardener-profile-card dt { margin-bottom: 4px; color: #738044; font-size: 8px; font-weight: 900; }
+.gardener-profile-card dd { margin: 0; font-size: 10px; line-height: 1.6; }
+.gardener-profile-card blockquote { margin: 0; color: #6c673f; font-family: "Songti SC", serif; font-size: 11px; line-height: 1.7; }
+.garden-memory-card > img { width: 116px; height: 136px; display: block; margin: -5px auto 3px; object-fit: contain; }
+.garden-memory-card footer { margin-top: 14px; border-top: 1px dashed #cfbf8c; padding-top: 12px; color: #817859; font-size: 9px; line-height: 1.6; }
 
 .a2a-disclosure { display: grid; grid-template-columns: 26px 1fr; gap: 8px; border-radius: 15px; padding: 11px 12px; background: var(--soft); }
 .a2a-disclosure p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.55; }

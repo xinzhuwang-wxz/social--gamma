@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getState, appendEvent, snapshot } from "@/lib/demo/state";
 import { readJson } from "@/lib/http";
-import { fabricateCandidates } from "@/lib/demo/sim";
+import { fabricateCandidates, getPresetCandidates } from "@/lib/demo/sim";
 
 export async function POST(req: NextRequest) {
   const body =
@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     habit: String(body.habit || "").trim(),
     activityDetail: String(body.activityDetail || "").trim(),
   };
-  // 真实 LLM 即时捏出正好合拍的仿真候选人（用户侧无感）
+  // 预置需求使用稳定候选人保证演示；自由输入继续由 LLM 即时生成。
   try {
-    s.candidates = await fabricateCandidates(s.draft);
+    s.candidates = getPresetCandidates(s.draft.idea) ?? (await fabricateCandidates(s.draft));
   } catch (err) {
     console.error("[demo] fabricateCandidates failed", err);
     s.candidates = [];
